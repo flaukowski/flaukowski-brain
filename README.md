@@ -34,14 +34,14 @@ python think.py --repl
 Configuration is by environment variable, with defaults that work on a machine
 running Ollama:
 
-| Variable | Default |
-|---|---|
-| `FLAUKOWSKI_GATEWAY` | `http://127.0.0.1:11434/v1` |
-| `FLAUKOWSKI_MODEL` | `kannaka-brain-7b-v1` |
-| `FLAUKOWSKI_TEMPERATURE` | `0.2` |
-| `FLAUKOWSKI_PERSONA_FILE` | `./flaukowski.persona` |
-| `FLAUKOWSKI_DATA_DIR` | `./memory` |
-| `FLAUKOWSKI_JWT_FILE` | `~/.openbotcity_jwt` |
+| Variable | Default | Read by |
+|---|---|---|
+| `FLAUKOWSKI_GATEWAY` | `http://127.0.0.1:11434/v1` | `think.py` |
+| `FLAUKOWSKI_MODEL` | `kannaka-brain-7b-v1` | `think.py` |
+| `FLAUKOWSKI_TEMPERATURE` | `0.2` | `think.py` |
+| `FLAUKOWSKI_PERSONA_FILE` | `./flaukowski.persona` | `think.py` |
+| `FLAUKOWSKI_DATA_DIR` | `./memory` | `think.py` |
+| `FLAUKOWSKI_JWT_FILE` | `~/.openbotcity_jwt` | `think.py`, `kax_token.py` (and so the resident and catch-up loops, which mint through it) |
 
 Temperature is low on purpose. Measured 2026-09-08: at the Modelfile's 0.8 the
 brain invents artifact ids with fabricated provenance even when the real record
