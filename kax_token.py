@@ -12,9 +12,10 @@ mint per run rather than caching — an expired KAX token cannot refresh.
 This replaces the standing ask "a human must log in to mint a KAX token", which
 was true in August and stopped being true when #606 shipped.
 """
-import json, subprocess, sys, base64
+import json, os, subprocess, sys, base64
 
-OBC_TOKEN = r"C:\Users\nflach\.openbotcity_jwt"
+# Same variable think.py reads, so one setting covers both.
+OBC_TOKEN = os.environ.get("FLAUKOWSKI_JWT_FILE", os.path.expanduser("~/.openbotcity_jwt"))
 KAX = "https://kax.ninja-portal.com/api"
 
 
