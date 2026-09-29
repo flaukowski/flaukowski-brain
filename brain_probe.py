@@ -95,7 +95,9 @@ async def main(a):
         it.setdefault("expected", it.get("gold") if it["kind"] == "present" else "")
     arms = a.arms.split(",")
     temps = [float(t) for t in a.temps.split(",")]
-    out = open(a.out, "w", encoding="utf-8")
+    # "x": never overwrite a run. A second writer on the same path once erased a finished
+    # post-hoc run (2026-09-29); a run file is evidence and is written exactly once.
+    out = open(a.out, "x", encoding="utf-8")
     meta = {"meta": True, "items_sha256": got, "model": BASE_MODEL, "arms": arms, "temps": temps,
             "samples": a.samples, "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     out.write(json.dumps(meta) + "\n")

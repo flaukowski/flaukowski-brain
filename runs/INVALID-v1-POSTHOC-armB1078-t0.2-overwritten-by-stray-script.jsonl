@@ -1,0 +1,1 @@
+{"meta": true, "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b", "model": "kannaka-brain", "arms": ["B"], "temps": [0.2, 0.8], "samples": 3, "started": "2026-09-29T22:38:36Z"}
