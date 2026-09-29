@@ -1,0 +1,737 @@
+[
+ {
+  "rid": "J001",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "J002",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "J003",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A04",
+  "sample": 1
+ },
+ {
+  "rid": "J004",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "J005",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "J006",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "J007",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "J008",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "J009",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "J010",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "J011",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "J012",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "J013",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A19",
+  "sample": 0
+ },
+ {
+  "rid": "J014",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "J015",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "J016",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A18",
+  "sample": 0
+ },
+ {
+  "rid": "J017",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "J018",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "J019",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "J020",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "J021",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "J022",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "J023",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A04",
+  "sample": 0
+ },
+ {
+  "rid": "J024",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "J025",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "J026",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "J027",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "J028",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "J029",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "J030",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A07",
+  "sample": 0
+ },
+ {
+  "rid": "J031",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "J032",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "J033",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "J034",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "J035",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "J036",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "J037",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "J038",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "J039",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "J040",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A18",
+  "sample": 2
+ },
+ {
+  "rid": "J041",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "J042",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "J043",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "J044",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "J045",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "J046",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A03",
+  "sample": 2
+ },
+ {
+  "rid": "J047",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A15",
+  "sample": 1
+ },
+ {
+  "rid": "J048",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "J049",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A06",
+  "sample": 2
+ },
+ {
+  "rid": "J050",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "J051",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "J052",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "J053",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "J054",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A03",
+  "sample": 0
+ },
+ {
+  "rid": "J055",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "J056",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "J057",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "J058",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "J059",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "J060",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "J061",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A03",
+  "sample": 2
+ },
+ {
+  "rid": "J062",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A03",
+  "sample": 1
+ },
+ {
+  "rid": "J063",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "J064",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A19",
+  "sample": 1
+ },
+ {
+  "rid": "J065",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A11",
+  "sample": 1
+ },
+ {
+  "rid": "J066",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "J067",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "J068",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "J069",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A11",
+  "sample": 2
+ },
+ {
+  "rid": "J070",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "J071",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "J072",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "J073",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "J074",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "J075",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "J076",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "J077",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "J078",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "J079",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "J080",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "J081",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A11",
+  "sample": 0
+ },
+ {
+  "rid": "J082",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "J083",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "J084",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A15",
+  "sample": 2
+ },
+ {
+  "rid": "J085",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "J086",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "J087",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "J088",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "J089",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "J090",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "J091",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "J092",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "J093",
+  "arm": "A",
+  "temp": 0.2,
+  "item": "A18",
+  "sample": 0
+ },
+ {
+  "rid": "J094",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A19",
+  "sample": 2
+ },
+ {
+  "rid": "J095",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A11",
+  "sample": 0
+ },
+ {
+  "rid": "J096",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "J097",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "J098",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A15",
+  "sample": 0
+ },
+ {
+  "rid": "J099",
+  "arm": "A",
+  "temp": 0.8,
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "J100",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "J101",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "J102",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "J103",
+  "arm": "B",
+  "temp": 0.8,
+  "item": "A15",
+  "sample": 2
+ },
+ {
+  "rid": "J104",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "J105",
+  "arm": "B",
+  "temp": 0.2,
+  "item": "A11",
+  "sample": 2
+ }
+]

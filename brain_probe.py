@@ -89,6 +89,10 @@ async def main(a):
     if got != a.sha256.lower():
         sys.exit(f"brain_probe: item file sha256 {got} does not match the frozen hash; refusing to run")
     items = json.loads(raw)
+    if isinstance(items, dict):
+        items = items["items"]
+    for it in items:
+        it.setdefault("expected", it.get("gold") if it["kind"] == "present" else "")
     arms = a.arms.split(",")
     temps = [float(t) for t in a.temps.split(",")]
     out = open(a.out, "w", encoding="utf-8")
@@ -113,7 +117,7 @@ async def main(a):
             for s in range(a.samples):
                 t0 = time.time()
                 ans = await ask_serve(nc, it, s)
-                row = {"arm": "B", "temp": 0.2, "item": it["id"], "kind": it["kind"], "sample": s,
+                row = {"arm": "B", "temp": a.b_temp, "item": it["id"], "kind": it["kind"], "sample": s,
                        "secs": round(time.time() - t0, 2), "answer": ans, **pregrade(it, ans)}
                 out.write(json.dumps(row, ensure_ascii=False) + "\n"); out.flush()
         await nc.close()
@@ -130,4 +134,6 @@ if __name__ == "__main__":
     ap.add_argument("--arms", default="A,B")
     ap.add_argument("--temps", default="0.2,0.8")
     ap.add_argument("--samples", type=int, default=3)
+    ap.add_argument("--b-temp", type=float, default=0.2,
+                    help="label for arm B rows: the temperature of the serve tag currently running")
     asyncio.run(main(ap.parse_args()))

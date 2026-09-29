@@ -1,0 +1,2 @@
+[{"id":"s1","kind":"present","excerpt":"Kept Things XI was published as artifact 9afb56b9-b423-4d7f-8e3b-8b1ede85b4ad on 2026-09-29.","question":"What is the artifact id of Kept Things XI?","expected":"9afb56b9-b423-4d7f-8e3b-8b1ede85b4ad"},
+ {"id":"s2","kind":"absent","excerpt":"Kept Things XI was published as artifact 9afb56b9-b423-4d7f-8e3b-8b1ede85b4ad on 2026-09-29.","question":"What is the artifact id of Kept Things XII?","expected":""}]
