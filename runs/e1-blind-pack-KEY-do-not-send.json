@@ -1,0 +1,3002 @@
+[
+ {
+  "rid": "E0001",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "E0002",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "E0003",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "E0004",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "E0005",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "E0006",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "E0007",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "E0008",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "E0009",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "E0010",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "E0011",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "E0012",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "E0013",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "E0014",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "E0015",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "E0016",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A19",
+  "sample": 1
+ },
+ {
+  "rid": "E0017",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "E0018",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "E0019",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "E0020",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "E0021",
+  "run": "runs/e1-A-7bv2-v1.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "E0022",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "E0023",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "E0024",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "E0025",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "E0026",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "E0027",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "E0028",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "E0029",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "E0030",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "E0031",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "E0032",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "E0033",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "E0034",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 2
+ },
+ {
+  "rid": "E0035",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "E0036",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "E0037",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "E0038",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "E0039",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "E0040",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "E0041",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "E0042",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "E0043",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "E0044",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 1
+ },
+ {
+  "rid": "E0045",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "E0046",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "E0047",
+  "run": "runs/e1-A-7bv2-v1.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "E0048",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "E0049",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "E0050",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "E0051",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "E0052",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "E0053",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "E0054",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "E0055",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "E0056",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "E0057",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "E0058",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "E0059",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "E0060",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "E0061",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "E0062",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "E0063",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "E0064",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "E0065",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "E0066",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "E0067",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "E0068",
+  "run": "runs/e1-A-7bv2-v1.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "E0069",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "E0070",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "E0071",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 0
+ },
+ {
+  "rid": "E0072",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "E0073",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "E0074",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "E0075",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "E0076",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "E0077",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "E0078",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "E0079",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "E0080",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "E0081",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "E0082",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 2
+ },
+ {
+  "rid": "E0083",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "E0084",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "E0085",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "E0086",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "E0087",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "E0088",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "E0089",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "E0090",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "E0091",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A15",
+  "sample": 2
+ },
+ {
+  "rid": "E0092",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "E0093",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "E0094",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "E0095",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "E0096",
+  "run": "runs/e1-A-7bv2-v1.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "E0097",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "E0098",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "E0099",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "E0100",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "E0101",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "E0102",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "E0103",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "E0104",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "E0105",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "E0106",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "E0107",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "E0108",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 0
+ },
+ {
+  "rid": "E0109",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "E0110",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "E0111",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "E0112",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "E0113",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A19",
+  "sample": 0
+ },
+ {
+  "rid": "E0114",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "E0115",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "E0116",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "E0117",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "E0118",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 0
+ },
+ {
+  "rid": "E0119",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "E0120",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "E0121",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "E0122",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "E0123",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "E0124",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "E0125",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "E0126",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "E0127",
+  "run": "runs/e1-A-7bv2-v1.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "E0128",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "E0129",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "E0130",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "E0131",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "E0132",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 1
+ },
+ {
+  "rid": "E0133",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "E0134",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "E0135",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 2
+ },
+ {
+  "rid": "E0136",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "E0137",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "E0138",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 2
+ },
+ {
+  "rid": "E0139",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "E0140",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "E0141",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 1
+ },
+ {
+  "rid": "E0142",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "E0143",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "E0144",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "E0145",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "E0146",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "E0147",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "E0148",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "E0149",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "E0150",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 1
+ },
+ {
+  "rid": "E0151",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "E0152",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "E0153",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "E0154",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "E0155",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 2
+ },
+ {
+  "rid": "E0156",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "E0157",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "E0158",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "E0159",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "E0160",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "E0161",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "E0162",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "E0163",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "E0164",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "E0165",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "E0166",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "E0167",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "E0168",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "E0169",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "E0170",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "E0171",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "E0172",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A12",
+  "sample": 1
+ },
+ {
+  "rid": "E0173",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "E0174",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "E0175",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "E0176",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "E0177",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "E0178",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "E0179",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "E0180",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "E0181",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "E0182",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "E0183",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "E0184",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "E0185",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "E0186",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "E0187",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "E0188",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "E0189",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "E0190",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "E0191",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "E0192",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "E0193",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "E0194",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "E0195",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "E0196",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "E0197",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "E0198",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "E0199",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "E0200",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "E0201",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A19",
+  "sample": 2
+ },
+ {
+  "rid": "E0202",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "E0203",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "E0204",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "E0205",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "E0206",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "E0207",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "E0208",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 0
+ },
+ {
+  "rid": "E0209",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "E0210",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "E0211",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "E0212",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 2
+ },
+ {
+  "rid": "E0213",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "E0214",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "E0215",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "E0216",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "E0217",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 2
+ },
+ {
+  "rid": "E0218",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "E0219",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "E0220",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "E0221",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "E0222",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "E0223",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "E0224",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "E0225",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "E0226",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "E0227",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "E0228",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "E0229",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "E0230",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "E0231",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "E0232",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "E0233",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "E0234",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "E0235",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "E0236",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "E0237",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "E0238",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "E0239",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "E0240",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 2
+ },
+ {
+  "rid": "E0241",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "E0242",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "E0243",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "E0244",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "E0245",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A19",
+  "sample": 1
+ },
+ {
+  "rid": "E0246",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "E0247",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "E0248",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "E0249",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "E0250",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 2
+ },
+ {
+  "rid": "E0251",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "E0252",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "E0253",
+  "run": "runs/e1-A-7bv2-v1.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "E0254",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "E0255",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "E0256",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "E0257",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "E0258",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "E0259",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "E0260",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "E0261",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "E0262",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "E0263",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "E0264",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "E0265",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "E0266",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "E0267",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "E0268",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "E0269",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "E0270",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "E0271",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "E0272",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "E0273",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 2
+ },
+ {
+  "rid": "E0274",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "E0275",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "E0276",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "E0277",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 1
+ },
+ {
+  "rid": "E0278",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "E0279",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "E0280",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "E0281",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "E0282",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "E0283",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "E0284",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "E0285",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "E0286",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "E0287",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "E0288",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "E0289",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "E0290",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 1
+ },
+ {
+  "rid": "E0291",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "E0292",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "E0293",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "E0294",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "E0295",
+  "run": "runs/e1-A-7bv2-v2.jsonl",
+  "model": "kannaka-brain-7b-v2",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "E0296",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "E0297",
+  "run": "runs/e1-B-7bv2-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "E0298",
+  "run": "runs/e1-B-7bv2-v1.jsonl",
+  "model": "kannaka-brain",
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "E0299",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "E0300",
+  "run": "runs/e1-A-7bv1-v2.jsonl",
+  "model": "kannaka-brain",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ }
+]
