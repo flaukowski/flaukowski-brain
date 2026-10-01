@@ -104,6 +104,8 @@ async def main(a):
         it.setdefault("expected", it.get("gold") if it["kind"] == "present" else "")
     arms = a.arms.split(",")
     temps = [float(t) for t in a.temps.split(",")]
+    if "B" in arms and not a.serve_model:
+        sys.exit("brain_probe: arm B needs --serve-model (the [llm] model the running serve was started with)")
     # "x": never overwrite a run. A second writer on the same path once erased a finished
     # post-hoc run (2026-09-29); a run file is evidence and is written exactly once.
     out = open(a.out, "x", encoding="utf-8")
@@ -121,8 +123,6 @@ async def main(a):
                            "secs": round(time.time() - t0, 2), "answer": ans, **pregrade(it, ans)}
                     out.write(json.dumps(row, ensure_ascii=False) + "\n"); out.flush()
             print(f"arm A temp {temp}: done", file=sys.stderr)
-    if "B" in arms and not a.serve_model:
-        sys.exit("brain_probe: arm B needs --serve-model (the [llm] model the running serve was started with)")
     if "B" in arms:
         import nats
         nc = await nats.connect("nats://swarm.ninja-portal.com:4222",
