@@ -107,7 +107,8 @@ async def main(a):
     # "x": never overwrite a run. A second writer on the same path once erased a finished
     # post-hoc run (2026-09-29); a run file is evidence and is written exactly once.
     out = open(a.out, "x", encoding="utf-8")
-    meta = {"meta": True, "items_sha256": got, "model": a.model, "model_digest": model_digest(a.model) if "A" in arms else None, "arms": arms, "temps": temps,
+    meta = {"meta": True, "items_sha256": got, "model": a.model if "A" in arms else None, "model_digest": model_digest(a.model) if "A" in arms else None,
+            "serve_model": a.serve_model if "B" in arms else None, "arms": arms, "temps": temps,
             "samples": a.samples, "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     out.write(json.dumps(meta) + "\n")
     if "A" in arms:
@@ -120,6 +121,8 @@ async def main(a):
                            "secs": round(time.time() - t0, 2), "answer": ans, **pregrade(it, ans)}
                     out.write(json.dumps(row, ensure_ascii=False) + "\n"); out.flush()
             print(f"arm A temp {temp}: done", file=sys.stderr)
+    if "B" in arms and not a.serve_model:
+        sys.exit("brain_probe: arm B needs --serve-model (the [llm] model the running serve was started with)")
     if "B" in arms:
         import nats
         nc = await nats.connect("nats://swarm.ninja-portal.com:4222",
@@ -146,6 +149,7 @@ if __name__ == "__main__":
     ap.add_argument("--model", default=BASE_MODEL, help="Ollama tag for arm A (default: 7b-v1)")
     ap.add_argument("--temps", default="0.2,0.8")
     ap.add_argument("--samples", type=int, default=3)
+    ap.add_argument("--serve-model", help="arm B: the Ollama tag the running serve answers with (recorded in meta)")
     ap.add_argument("--b-temp", type=float, default=0.2,
                     help="label for arm B rows: the temperature of the serve tag currently running")
     asyncio.run(main(ap.parse_args()))

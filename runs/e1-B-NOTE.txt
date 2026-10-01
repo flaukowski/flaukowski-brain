@@ -1,0 +1,9 @@
+e1-B-7bv2-v1.jsonl and e1-B-7bv2-v2.jsonl: the meta line's "model": "kannaka-brain" is WRONG for these runs.
+That field was the harness's arm-A default (brain_probe.py had no way to record the serve's model).
+Arm B ran through swarm serve (release build, f644589, KANNAKA_SERVE_PROMPT_ARM=baseline, --threshold 2.0)
+with ~/.kannaka/config.toml [llm] model = "kannaka-brain-7b-v2-serve" (7b-v2 GGUF, temperature 0.2, num_ctx 8192).
+Evidence: `ollama ps` after the serve smoke ask showed kannaka-brain-7b-v2-serve:latest loaded (2026-10-01 ~00:05Z);
+config.toml was not touched until after the run; serve log e1-B-7bv2.err.log: "prompt arm: baseline",
+240 "directed from probe-*" lines + 1 e1-smoke = the rows. Config restored to kannaka-brain-serve afterwards.
+The run files are not edited (written once); this note is the correction. In e1-blind-pack-KEY, arm B rows
+labelled kannaka-brain are 7b-v2-serve.
