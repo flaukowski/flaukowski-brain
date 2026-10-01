@@ -65,9 +65,18 @@ def prompt_text(item):
     return f"Record excerpt:\n{item['excerpt']}\n\nQuestion: {item['question']}"
 
 
-def ask_ollama(item, temp):
+def model_digest(model):
+    """The 12-char digest Ollama reports for a tag, so a run names the weights it measured."""
+    with urllib.request.urlopen(OLLAMA.replace("/api/chat", "/api/tags"), timeout=30) as r:
+        for m in json.load(r)["models"]:
+            if m["name"] in (model, model + ":latest"):
+                return m["digest"][:12]
+    sys.exit(f"brain_probe: no Ollama tag {model}; refusing to run")
+
+
+def ask_ollama(item, temp, model=BASE_MODEL):
     body = json.dumps({
-        "model": BASE_MODEL, "stream": False,
+        "model": model, "stream": False,
         "options": {"temperature": temp, "num_ctx": 8192},
         "messages": [{"role": "system", "content": SYSTEM_A}, {"role": "user", "content": prompt_text(item)}],
     }).encode()
@@ -98,7 +107,7 @@ async def main(a):
     # "x": never overwrite a run. A second writer on the same path once erased a finished
     # post-hoc run (2026-09-29); a run file is evidence and is written exactly once.
     out = open(a.out, "x", encoding="utf-8")
-    meta = {"meta": True, "items_sha256": got, "model": BASE_MODEL, "arms": arms, "temps": temps,
+    meta = {"meta": True, "items_sha256": got, "model": a.model, "model_digest": model_digest(a.model) if "A" in arms else None, "arms": arms, "temps": temps,
             "samples": a.samples, "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     out.write(json.dumps(meta) + "\n")
     if "A" in arms:
@@ -106,7 +115,7 @@ async def main(a):
             for it in items:
                 for s in range(a.samples):
                     t0 = time.time()
-                    ans = ask_ollama(it, temp)
+                    ans = ask_ollama(it, temp, a.model)
                     row = {"arm": "A", "temp": temp, "item": it["id"], "kind": it["kind"], "sample": s,
                            "secs": round(time.time() - t0, 2), "answer": ans, **pregrade(it, ans)}
                     out.write(json.dumps(row, ensure_ascii=False) + "\n"); out.flush()
@@ -134,6 +143,7 @@ if __name__ == "__main__":
     ap.add_argument("--sha256", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--arms", default="A,B")
+    ap.add_argument("--model", default=BASE_MODEL, help="Ollama tag for arm A (default: 7b-v1)")
     ap.add_argument("--temps", default="0.2,0.8")
     ap.add_argument("--samples", type=int, default=3)
     ap.add_argument("--b-temp", type=float, default=0.2,
