@@ -1,0 +1,5802 @@
+[
+ {
+  "rid": "F0001",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "F0002",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "F0003",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "F0004",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "F0005",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "F0006",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0007",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "F0008",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "F0009",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0010",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0011",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "F0012",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0013",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0014",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "F0015",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "F0016",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "F0017",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "F0018",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 0
+ },
+ {
+  "rid": "F0019",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "F0020",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 0
+ },
+ {
+  "rid": "F0021",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0022",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0023",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "F0024",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "F0025",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "F0026",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "F0027",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "F0028",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "F0029",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0030",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "F0031",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0032",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "F0033",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "F0034",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "F0035",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "F0036",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "F0037",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "F0038",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0039",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "F0040",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "F0041",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "F0042",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "F0043",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 0
+ },
+ {
+  "rid": "F0044",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0045",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "F0046",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "F0047",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0048",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "F0049",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0050",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "F0051",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "F0052",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "F0053",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "F0054",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "F0055",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "F0056",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "F0057",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "F0058",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "F0059",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "F0060",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "F0061",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A19",
+  "sample": 1
+ },
+ {
+  "rid": "F0062",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "F0063",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0064",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "F0065",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A19",
+  "sample": 0
+ },
+ {
+  "rid": "F0066",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "F0067",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "F0068",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "F0069",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "F0070",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "F0071",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 1
+ },
+ {
+  "rid": "F0072",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "F0073",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "F0074",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "F0075",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "F0076",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "F0077",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "F0078",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0079",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "F0080",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "F0081",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0082",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0083",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "F0084",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "F0085",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "F0086",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "F0087",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "F0088",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "F0089",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "F0090",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "F0091",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "F0092",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0093",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0094",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0095",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "F0096",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "F0097",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "F0098",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "F0099",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "F0100",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "F0101",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "F0102",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "F0103",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "F0104",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "F0105",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "F0106",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "F0107",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 2
+ },
+ {
+  "rid": "F0108",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "F0109",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "F0110",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "F0111",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "F0112",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 2
+ },
+ {
+  "rid": "F0113",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "F0114",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 1
+ },
+ {
+  "rid": "F0115",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "F0116",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0117",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "F0118",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0119",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "F0120",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "F0121",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0122",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 1
+ },
+ {
+  "rid": "F0123",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "F0124",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 0
+ },
+ {
+  "rid": "F0125",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "F0126",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "F0127",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "F0128",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "F0129",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0130",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0131",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "F0132",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "F0133",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "F0134",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "F0135",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "F0136",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "F0137",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "F0138",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0139",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0140",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "F0141",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "F0142",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "F0143",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "F0144",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "F0145",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "F0146",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "F0147",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0148",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0149",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0150",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 1
+ },
+ {
+  "rid": "F0151",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "F0152",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "F0153",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 1
+ },
+ {
+  "rid": "F0154",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "F0155",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 0
+ },
+ {
+  "rid": "F0156",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0157",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "F0158",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 1
+ },
+ {
+  "rid": "F0159",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0160",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "F0161",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "F0162",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "F0163",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "F0164",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "F0165",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 1
+ },
+ {
+  "rid": "F0166",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "F0167",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "F0168",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "F0169",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "F0170",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "F0171",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "F0172",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "F0173",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0174",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "F0175",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "F0176",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0177",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "F0178",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "F0179",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "F0180",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 1
+ },
+ {
+  "rid": "F0181",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0182",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "F0183",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "F0184",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "F0185",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "F0186",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "F0187",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "F0188",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0189",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "F0190",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "F0191",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "F0192",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "F0193",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0194",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "F0195",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "F0196",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "F0197",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "F0198",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0199",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "F0200",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "F0201",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "F0202",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "F0203",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "F0204",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 0
+ },
+ {
+  "rid": "F0205",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "F0206",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0207",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "F0208",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "F0209",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "F0210",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A11",
+  "sample": 1
+ },
+ {
+  "rid": "F0211",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0212",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "F0213",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "F0214",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "F0215",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "F0216",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "F0217",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "F0218",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "F0219",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "F0220",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "F0221",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "F0222",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "F0223",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 2
+ },
+ {
+  "rid": "F0224",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0225",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "F0226",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "F0227",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "F0228",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "F0229",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "F0230",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "F0231",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "F0232",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "F0233",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "F0234",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0235",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "F0236",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "F0237",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0238",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "F0239",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A15",
+  "sample": 1
+ },
+ {
+  "rid": "F0240",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "F0241",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "F0242",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "F0243",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 0
+ },
+ {
+  "rid": "F0244",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "F0245",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "F0246",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "F0247",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0248",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "F0249",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "F0250",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 1
+ },
+ {
+  "rid": "F0251",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "F0252",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0253",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A19",
+  "sample": 1
+ },
+ {
+  "rid": "F0254",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "F0255",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "F0256",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A15",
+  "sample": 1
+ },
+ {
+  "rid": "F0257",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0258",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0259",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "F0260",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0261",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "F0262",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0263",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0264",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 0
+ },
+ {
+  "rid": "F0265",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0266",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 2
+ },
+ {
+  "rid": "F0267",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "F0268",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "F0269",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "F0270",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "F0271",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "F0272",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "F0273",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "F0274",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "F0275",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 2
+ },
+ {
+  "rid": "F0276",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0277",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "F0278",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "F0279",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "F0280",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "F0281",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 1
+ },
+ {
+  "rid": "F0282",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "F0283",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "F0284",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0285",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "F0286",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "F0287",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0288",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "F0289",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "F0290",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0291",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "F0292",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "F0293",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "F0294",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "F0295",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "F0296",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "F0297",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "F0298",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "F0299",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 2
+ },
+ {
+  "rid": "F0300",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0301",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "F0302",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "F0303",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "F0304",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "F0305",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "F0306",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "F0307",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "F0308",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0309",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0310",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "F0311",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A03",
+  "sample": 2
+ },
+ {
+  "rid": "F0312",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "F0313",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "F0314",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "F0315",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "F0316",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "F0317",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "F0318",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "F0319",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "F0320",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "F0321",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "F0322",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "F0323",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "F0324",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "F0325",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "F0326",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "F0327",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0328",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "F0329",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0330",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0331",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0332",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0333",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "F0334",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "F0335",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 0
+ },
+ {
+  "rid": "F0336",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "F0337",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "F0338",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "F0339",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "F0340",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "F0341",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "F0342",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "F0343",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A04",
+  "sample": 2
+ },
+ {
+  "rid": "F0344",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 1
+ },
+ {
+  "rid": "F0345",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "F0346",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "F0347",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "F0348",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0349",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "F0350",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "F0351",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "F0352",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "F0353",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0354",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "F0355",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0356",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "F0357",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "F0358",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "F0359",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0360",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "F0361",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "F0362",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "F0363",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 1
+ },
+ {
+  "rid": "F0364",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "F0365",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "F0366",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "F0367",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "F0368",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "F0369",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0370",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "F0371",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 1
+ },
+ {
+  "rid": "F0372",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "F0373",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "F0374",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "F0375",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "F0376",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "F0377",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "F0378",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "F0379",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "F0380",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 1
+ },
+ {
+  "rid": "F0381",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0382",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "F0383",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "F0384",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0385",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "F0386",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "F0387",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "F0388",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 0
+ },
+ {
+  "rid": "F0389",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "F0390",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0391",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "F0392",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0393",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "F0394",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "F0395",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "F0396",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 1
+ },
+ {
+  "rid": "F0397",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "F0398",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "F0399",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "F0400",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "F0401",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "F0402",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "F0403",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 1
+ },
+ {
+  "rid": "F0404",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "F0405",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 1
+ },
+ {
+  "rid": "F0406",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "F0407",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "F0408",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "F0409",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "F0410",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 2
+ },
+ {
+  "rid": "F0411",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0412",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0413",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "F0414",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "F0415",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "F0416",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "F0417",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 2
+ },
+ {
+  "rid": "F0418",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "F0419",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "F0420",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "F0421",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "F0422",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "F0423",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "F0424",
+  "run": "runs/e2s-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0425",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "F0426",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 2
+ },
+ {
+  "rid": "F0427",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "F0428",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 1
+ },
+ {
+  "rid": "F0429",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0430",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "F0431",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "F0432",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "F0433",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "F0434",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0435",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "F0436",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "F0437",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "F0438",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "F0439",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "F0440",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "F0441",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "F0442",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "F0443",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "F0444",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "F0445",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 2
+ },
+ {
+  "rid": "F0446",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0447",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "F0448",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0449",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "F0450",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "F0451",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "F0452",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A18",
+  "sample": 2
+ },
+ {
+  "rid": "F0453",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 1
+ },
+ {
+  "rid": "F0454",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "F0455",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "F0456",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "F0457",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "F0458",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 2
+ },
+ {
+  "rid": "F0459",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "F0460",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "F0461",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "F0462",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 2
+ },
+ {
+  "rid": "F0463",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "F0464",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 2
+ },
+ {
+  "rid": "F0465",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "F0466",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0467",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "F0468",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "F0469",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "F0470",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0471",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "F0472",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "F0473",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0474",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 0
+ },
+ {
+  "rid": "F0475",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0476",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "F0477",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "F0478",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0479",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "F0480",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "F0481",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "F0482",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "F0483",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "F0484",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "F0485",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0486",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0487",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A07",
+  "sample": 0
+ },
+ {
+  "rid": "F0488",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 1
+ },
+ {
+  "rid": "F0489",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "F0490",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0491",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0492",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A12",
+  "sample": 0
+ },
+ {
+  "rid": "F0493",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "F0494",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "F0495",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0496",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 0
+ },
+ {
+  "rid": "F0497",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "F0498",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "F0499",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "F0500",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "F0501",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "F0502",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "F0503",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "F0504",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "F0505",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "F0506",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "F0507",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0508",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "F0509",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "F0510",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0511",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A15",
+  "sample": 0
+ },
+ {
+  "rid": "F0512",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0513",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 1
+ },
+ {
+  "rid": "F0514",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "F0515",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "F0516",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0517",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A10",
+  "sample": 2
+ },
+ {
+  "rid": "F0518",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0519",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A01",
+  "sample": 0
+ },
+ {
+  "rid": "F0520",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0521",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "F0522",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "F0523",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "F0524",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "F0525",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "F0526",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "F0527",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A06",
+  "sample": 0
+ },
+ {
+  "rid": "F0528",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "F0529",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "F0530",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0531",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "F0532",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "F0533",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "F0534",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "F0535",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "F0536",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "F0537",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "F0538",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "F0539",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0540",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "F0541",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "F0542",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "F0543",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "F0544",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0545",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "F0546",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 2
+ },
+ {
+  "rid": "F0547",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A03",
+  "sample": 2
+ },
+ {
+  "rid": "F0548",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A09",
+  "sample": 2
+ },
+ {
+  "rid": "F0549",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "F0550",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A08",
+  "sample": 1
+ },
+ {
+  "rid": "F0551",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "F0552",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "F0553",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0554",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "F0555",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "F0556",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "F0557",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A11",
+  "sample": 2
+ },
+ {
+  "rid": "F0558",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 2
+ },
+ {
+  "rid": "F0559",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "F0560",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "F0561",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "F0562",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "F0563",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "F0564",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A14",
+  "sample": 2
+ },
+ {
+  "rid": "F0565",
+  "run": "runs/e2s-no-state-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A09",
+  "sample": 0
+ },
+ {
+  "rid": "F0566",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "F0567",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "F0568",
+  "run": "runs/e2s-prod-baseline-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "A13",
+  "sample": 0
+ },
+ {
+  "rid": "F0569",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "F0570",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "F0571",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 1
+ },
+ {
+  "rid": "F0572",
+  "run": "runs/e2s-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A13",
+  "sample": 2
+ },
+ {
+  "rid": "F0573",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "F0574",
+  "run": "runs/e2s-no-state-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "F0575",
+  "run": "runs/e2s-no-state-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "F0576",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "F0577",
+  "run": "runs/e2s-prod-baseline-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "F0578",
+  "run": "runs/e2s-no-state-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A02",
+  "sample": 0
+ },
+ {
+  "rid": "F0579",
+  "run": "runs/e2s-no-reference-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A17",
+  "sample": 1
+ },
+ {
+  "rid": "F0580",
+  "run": "runs/e2s-no-reference-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "A14",
+  "sample": 2
+ }
+]
