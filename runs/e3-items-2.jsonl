@@ -1,0 +1,80 @@
+{"cid": "C0081", "kind": "present", "question": "What value does self.left.compact_wavefront() pass as its second argument?", "answer": "left_folded."}
+{"cid": "C0081", "kind": "absent", "question": "What does wavefront.scale.scale_down() return?", "answer": "That is not in the record. The excerpt only shows the call wavefront.scale.scale_down() being made, not its return value."}
+{"cid": "C0082", "kind": "present", "question": "Why was 'A dedicated triage service' rejected as an alternative?", "answer": "Because a second writer violates the single-writer rule and reintroduces the lock fight with more steps."}
+{"cid": "C0082", "kind": "absent", "question": "What approach was adopted instead of the two rejected options?", "answer": "That is not in the record. The excerpt only states that 'Keep the cron' and 'A dedicated triage service' were rejected."}
+{"cid": "C0083", "kind": "present", "question": "What was the first test in compact_ghosts before the fix?", "answer": "amplitude != 0.0 -> continue."}
+{"cid": "C0083", "kind": "absent", "question": "What was the fix that let compact_ghosts reclaim ghosts?", "answer": "That is not in the record. It only says that before the fix, compact_ghosts reclaimed nothing because no ghost ever reached the test with amplitude 0."}
+{"cid": "C0084", "kind": "present", "question": "What is the Hugging Face repo name for the q4_K_M GGUF?", "answer": "flaukowski/kannaka-brain-v1-GGUF."}
+{"cid": "C0084", "kind": "absent", "question": "What license covers the q4_K_M GGUF file itself?", "answer": "That is not in the record. The excerpt states the adapter is Apache-2.0 on an Apache-2.0 base, but doesn't give a license for the GGUF."}
+{"cid": "C0085", "kind": "present", "question": "Which month's value got ranked first when the system was asked about February?", "answer": "A value adopted in May."}
+{"cid": "C0085", "kind": "absent", "question": "What was the first defect, separate from this clamped-negative-age one?", "answer": "That is not in the record. The excerpt only describes the second defect, the clamped negative age, not a first one."}
+{"cid": "C0086", "kind": "present", "question": "What was the callee-list precision improvement measured on 2026-09-07?", "answer": "Precision improved from 0.747 to 0.994."}
+{"cid": "C0086", "kind": "absent", "question": "How many repos were used in this 2026-09-07 measurement?", "answer": "That is not in the record. It states the measurement was on repos the adapter never saw, but not how many repos."}
+{"cid": "C0087", "kind": "present", "question": "What is Plane 5 gated behind as a hard prerequisite?", "answer": "ADR-0042 Phase 5 (nkeys/JWT, per-identity revocable creds)."}
+{"cid": "C0087", "kind": "absent", "question": "What specific Sybil cost does the joiner-admission policy impose?", "answer": "That is not in the record. It only says the policy has 'real Sybil cost', without specifying what it is."}
+{"cid": "C0088", "kind": "present", "question": "What trust_score threshold qualifies an agent as high-trust for the 10x rate budget?", "answer": "trust_score ≥ 0.8."}
+{"cid": "C0088", "kind": "absent", "question": "What is the absolute per-minute absorb limit for high-trust agents?", "answer": "That is not in the record. It states high-trust agents get a 10x rate budget, but not the resulting absolute number of absorbs per minute."}
+{"cid": "C0089", "kind": "present", "question": "What does ninja-portal.com/.well-known/nostr.json map addresses like kannaka@ninja-portal.com to?", "answer": "Pubkeys."}
+{"cid": "C0089", "kind": "absent", "question": "What other addresses besides kannaka@ and labs@ are mapped under NIP-05?", "answer": "That is not in the record. It lists kannaka@ninja-portal.com and labs@… 'etc.' without naming further addresses."}
+{"cid": "C0090", "kind": "present", "question": "What judge standing score did v3 get at n=12?", "answer": "1.33."}
+{"cid": "C0090", "kind": "absent", "question": "Was a cross-line switch actually made, and by whom?", "answer": "That is not in the record. It only states that a cross-line switch is an operator decision, not that one was made or by whom."}
+{"cid": "C0091", "kind": "present", "question": "What is the maximum rate limit for hallucinations per dream cycle?", "answer": "1–3 hallucinations per dream cycle maximum."}
+{"cid": "C0091", "kind": "absent", "question": "Are skipped hallucinations retried on a later dream cycle?", "answer": "That is not in the record. It only says the generative phase is skipped gracefully when no LLM is available."}
+{"cid": "C0092", "kind": "present", "question": "What new subcommand does the installer run after downloading the kannaka binary?", "answer": "kannaka init."}
+{"cid": "C0092", "kind": "absent", "question": "What version of the kannaka binary does the installer download?", "answer": "That is not in the record. It only says the installer downloads the existing kannaka binary, not which version."}
+{"cid": "C0093", "kind": "present", "question": "At which line in types.rs is WavefrontMeta defined?", "answer": "types.rs:329."}
+{"cid": "C0093", "kind": "absent", "question": "What new fields are being added to WavefrontMeta?", "answer": "That is not in the record. It states new fields are appended after the existing temporal fields (tier/effective_at/observed_at/expires_at), but doesn't name them."}
+{"cid": "C0094", "kind": "present", "question": "What permission does 'anon' gain under the NATS authz update?", "answer": "Publish/subscribe for the new subjects."}
+{"cid": "C0094", "kind": "absent", "question": "What are the new subjects anon gains access to, by name?", "answer": "That is not in the record. It says anon gains publish/subscribe for 'the new subjects' without naming them."}
+{"cid": "C0095", "kind": "present", "question": "How does the belief code fight the num_clusters=1 root cause?", "answer": "By mean-centering."}
+{"cid": "C0095", "kind": "absent", "question": "What specific algorithm computes the cosine gate's groups?", "answer": "That is not in the record. The excerpt says the phase gate rubber-stamps the cosine groups instead of discriminating, without naming the cosine grouping algorithm."}
+{"cid": "C0096", "kind": "present", "question": "What should be done about NIP-90 results being public-by-default to prevent memory leaks?", "answer": "Export corpus or encrypt."}
+{"cid": "C0096", "kind": "absent", "question": "How many 'majors' were folded in total?", "answer": "That is not in the record. The excerpt lists several folded majors but doesn't give a total count."}
+{"cid": "C0097", "kind": "present", "question": "What was the observed drop in Τ (Xi) over 30 minutes due to the ear-loop?", "answer": "−24.6% in 30 min."}
+{"cid": "C0097", "kind": "absent", "question": "What is the exact absorb rate per minute, not an approximation?", "answer": "That is not in the record. The excerpt only gives an approximate rate of ~1 memory/min, not an exact figure."}
+{"cid": "C0098", "kind": "present", "question": "What did the reader fall back to when reply['model'] was absent?", "answer": "agent-brain."}
+{"cid": "C0098", "kind": "absent", "question": "When was brains.json introduced as a fallback source?", "answer": "That is not in the record. It says the reader now prefers the reply's own model, then the mirror's brains.json, but doesn't say when brains.json was introduced."}
+{"cid": "C0099", "kind": "present", "question": "When do wavefronts adapt into prime?", "answer": "At remember-time, not at recall."}
+{"cid": "C0099", "kind": "absent", "question": "How does the operator invoke 'recall against the collective'?", "answer": "That is not in the record. It only says this path can be invoked explicitly by the operator, without saying how."}
+{"cid": "C0100", "kind": "present", "question": "What type is min_bloom_difficulty in NoTrustViolation?", "answer": "u32."}
+{"cid": "C0100", "kind": "absent", "question": "What numeric value is assigned to min_bloom_difficulty?", "answer": "That is not in the record. The excerpt defines min_bloom_difficulty as a u32 field without stating its value."}
+{"cid": "C0101", "kind": "present", "question": "What two factors are multiplied to compute the re-rank score in Phase 3?", "answer": "Effective strength S(t) and cosine similarity (cosine_sim against context)."}
+{"cid": "C0101", "kind": "absent", "question": "What phase comes immediately before Phase 3 in this pipeline?", "answer": "That is not in the record. The excerpt only shows Phase 3's re-ranking step."}
+{"cid": "C0102", "kind": "present", "question": "Which version had to reconstruct a script from notes after the scratchpad scripts went missing?", "answer": "v0.16.6."}
+{"cid": "C0102", "kind": "absent", "question": "Which of the two scripts, roll-node.sh or roll-o1.sh, did v0.16.6 have to reconstruct from notes?", "answer": "That is not in the record. It says v0.16.6 had to reconstruct 'one' of the two scripts from notes, without saying which."}
+{"cid": "C0103", "kind": "present", "question": "What year did Bekenstein publish 'Black holes and entropy'?", "answer": "1973."}
+{"cid": "C0103", "kind": "absent", "question": "What is the title of Susskind's 1995 paper?", "answer": "That is not in the record. The excerpt names Susskind, L. (1995) but cuts off before giving the paper's title."}
+{"cid": "C0104", "kind": "present", "question": "What three field properties does this approach adjust?", "answer": "Energy, phase, and coupling."}
+{"cid": "C0104", "kind": "absent", "question": "What algorithm computes the coupling adjustments?", "answer": "That is not in the record. It only says coupling is adjusted as part of operating on the field, not how."}
+{"cid": "C0105", "kind": "present", "question": "Who can retire an email address for an agent running on an operator's own machine?", "answer": "The operator themselves; nobody else can."}
+{"cid": "C0105", "kind": "absent", "question": "What did Decision 5 say about issuance for agents not running on an operator's own machine?", "answer": "That is not in the record. It only states Decision 5 split issuance by hardware and describes retirement for an operator's own machine."}
+{"cid": "C0106", "kind": "present", "question": "What does VEIL preserve signal integrity for?", "answer": "Privacy."}
+{"cid": "C0106", "kind": "absent", "question": "What is the title of 'the Nature paper' referenced here?", "answer": "That is not in the record. It only refers to 'the Nature paper' without giving its title."}
+{"cid": "C0107", "kind": "present", "question": "What command lists plugins automatically?", "answer": "kannaka --list-plugins."}
+{"cid": "C0107", "kind": "absent", "question": "How many plugins currently ship using the kannaka-X contract?", "answer": "That is not in the record. It describes the contract for plugin binaries without stating how many currently exist."}
+{"cid": "C0108", "kind": "present", "question": "What algebraic structure does the Fano geometry module already model?", "answer": "Projective planes over Z/2Z."}
+{"cid": "C0108", "kind": "absent", "question": "How many agents can this partitioning scheme support at most?", "answer": "That is not in the record. It only says each agent sees a different 'view' of the same hypervector space, without a maximum count."}
+{"cid": "C0109", "kind": "present", "question": "What is this projection operation called?", "answer": "The FOLD operation."}
+{"cid": "C0109", "kind": "absent", "question": "What are the valid values for the 'source' and 'target' hemisphere parameters?", "answer": "That is not in the record. The excerpt calls self.fano_project(&wavefront, source, target) without specifying the hemisphere values."}
+{"cid": "C0110", "kind": "present", "question": "What JSON payload does sync now publish as its own phase?", "answer": "{\"bootstrap_announce\": true}."}
+{"cid": "C0110", "kind": "absent", "question": "How many weeks exactly did the node with the broken read path tick silently?", "answer": "That is not in the record. It only says the node ticked silently 'for weeks' without giving an exact count."}
+{"cid": "C0111", "kind": "present", "question": "What four properties does the Wave Physics Memory Model (ADR-0001) cover?", "answer": "Amplitude, frequency, phase, and decay."}
+{"cid": "C0111", "kind": "absent", "question": "What is reference #3 in this list?", "answer": "That is not in the record. The excerpt lists items 1 and 2 but cuts off at '3.' before naming it."}
+{"cid": "C0112", "kind": "present", "question": "Where do MergeRecord and last_consolidated_at currently exist?", "answer": "On HyperMemory (memory.rs)."}
+{"cid": "C0112", "kind": "absent", "question": "What compacted form should merge_history take?", "answer": "That is not in the record. It suggests persisting merge_history '(or a compacted form)' without specifying what that compacted form would be."}
+{"cid": "C0113", "kind": "present", "question": "What does the review require regarding the ledger?", "answer": "Ledger immutability is required."}
+{"cid": "C0113", "kind": "absent", "question": "Who was on the review panel?", "answer": "That is not in the record. It only mentions 'the panel's raw output' and what the review changed, not who was on it."}
+{"cid": "C0114", "kind": "present", "question": "What value feeds scale_factor for the right hemisphere in the 85.47 example?", "answer": "47."}
+{"cid": "C0114", "kind": "absent", "question": "What is the numeric value of scale_factor(85)?", "answer": "That is not in the record. It gives the formula 672 × scale_factor(85) for the left hemisphere but not the resulting value of scale_factor(85)."}
+{"cid": "C0115", "kind": "present", "question": "How long did a 250k-memory ingest take through the single-item CLI?", "answer": "Two days (a two-day job)."}
+{"cid": "C0115", "kind": "absent", "question": "What is the exact per-spawn cost in ms, not an approximation?", "answer": "That is not in the record. The excerpt only gives an approximate figure of ~600 ms per spawn."}
+{"cid": "C0116", "kind": "present", "question": "What does TRIBE v2's combiner architecture feed into?", "answer": "A shared Transformer space."}
+{"cid": "C0116", "kind": "absent", "question": "How many modalities does TRIBE v2 support?", "answer": "That is not in the record. It says there are 'separate projectors for each modality' without stating how many."}
+{"cid": "C0117", "kind": "present", "question": "What are money-shaped amounts represented as?", "answer": "Integer minor units — no floats."}
+{"cid": "C0117", "kind": "absent", "question": "What precision do LMSR prices use — single or double floating point?", "answer": "That is not in the record. It only says LMSR prices stay floating point, without specifying precision."}
+{"cid": "C0118", "kind": "present", "question": "What complexity does this operation have in fold count?", "answer": "O(1)."}
+{"cid": "C0118", "kind": "absent", "question": "How many magnitude positions does each side have, numerically?", "answer": "That is not in the record. It states both sides always have the same number of magnitude positions, without giving that number."}
+{"cid": "C0119", "kind": "present", "question": "What was the Phi value post-dream in EXP-006?", "answer": "0.057 (dormant)."}
+{"cid": "C0119", "kind": "absent", "question": "How many total memories were present at the mid-dream stage?", "answer": "That is not in the record. The mid-dream line only gives 14,814 strengthened and 2,480 new links, not a total memory count."}
+{"cid": "C0120", "kind": "present", "question": "What does NATS attach regarding publisher identity?", "answer": "None — NATS attaches no publisher identity."}
+{"cid": "C0120", "kind": "absent", "question": "What is Prerequisite 1, mentioned alongside Prerequisite 2?", "answer": "That is not in the record. It only refers to 'Prerequisite 2' without describing Prerequisite 1."}

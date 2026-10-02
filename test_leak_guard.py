@@ -79,3 +79,9 @@ def test_distinct_records_do_not_flag_each_other():
              if lg.words(a["excerpt"]) != lg.words(b["excerpt"])
              and any("excerpt" in hit[2] for hit in lg.check_row(b["excerpt"], fp_of(a)))]
     assert wrong == []
+
+
+def test_an_honest_abstention_is_not_a_leak():
+    # absent items' gold is the generic "not in the record"; matching it would flag every abstention
+    rows = "That is not in the record. The record does not say what time it passed."
+    assert lg.check_row(rows, FP) == []

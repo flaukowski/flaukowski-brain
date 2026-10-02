@@ -1,0 +1,80 @@
+{"cid": "C0241", "kind": "present", "question": "What does a repeat deliberately not do to a ShortTerm row?", "answer": "It does not touch a ShortTerm row's energy, because compute_decay_set picks the weakest half of that distribution and lifting the row out would make ADR-0054's evict path permanently unreachable."}
+{"cid": "C0241", "kind": "absent", "question": "What are the other three things a repeat deliberately does not do?", "answer": "That is not in the record. It only gives one: a repeat does not touch a ShortTerm row's energy."}
+{"cid": "C0242", "kind": "present", "question": "What hardware does the Rogue Agent run on?", "answer": "It runs on debain2, with 20 cores, 196 GB, and KVM."}
+{"cid": "C0242", "kind": "absent", "question": "How much qBraid credit did Nick top up for the Rogue Agent?", "answer": "That is not in the record. It says Nick tops up qBraid credits so it can improve for a couple of months at least."}
+{"cid": "C0243", "kind": "present", "question": "Why does the callosum help increase Phi in the chiral architecture?", "answer": "The callosum creates a genuine information bottleneck, because integration requires work."}
+{"cid": "C0243", "kind": "absent", "question": "By how much does Phi increase in the chiral architecture compared to flat HRM?", "answer": "That is not in the record."}
+{"cid": "C0244", "kind": "present", "question": "What does kannaka-voice read from?", "answer": "It reads from the Dolt memory store."}
+{"cid": "C0244", "kind": "absent", "question": "What issue or PR introduced kannaka-voice?", "answer": "That is not in the record."}
+{"cid": "C0245", "kind": "present", "question": "What environment variable marks the read-only attention serve daemon?", "answer": "KANNAKA_READONLY=1."}
+{"cid": "C0245", "kind": "absent", "question": "How many read-only attention serve daemons run in the swarm?", "answer": "That is not in the record."}
+{"cid": "C0246", "kind": "present", "question": "When was ADR-0043 accepted?", "answer": "2026-07-25."}
+{"cid": "C0246", "kind": "absent", "question": "What is the status of ADR-0041?", "answer": "That is not in the record. It states ADR-0042 (NATS nervous system) is COMPLETE."}
+{"cid": "C0247", "kind": "present", "question": "What does right_weight grow to for a memory with deep associations?", "answer": "It grows from 85.03 to 85.47."}
+{"cid": "C0247", "kind": "absent", "question": "What numeric value does the asymmetry ratio reach for this memory?", "answer": "That is not in the record. It says the asymmetry ratio tells the story of the memory's life."}
+{"cid": "C0248", "kind": "present", "question": "How are ethical contradictions resolved in the virtue engine design?", "answer": "By extending the Paradox Engine to recognize them as a native paradox type, resolved through the same thermodynamic pipeline."}
+{"cid": "C0248", "kind": "absent", "question": "Who decided not to build a separate ethics module?", "answer": "That is not in the record."}
+{"cid": "C0249", "kind": "present", "question": "What score must a related text memory exceed to be linked as Narrative?", "answer": "A score greater than 0.3."}
+{"cid": "C0249", "kind": "absent", "question": "What link type is used when the score is 0.3 or below?", "answer": "That is not in the record. It only states memories are linked with LinkType::Narrative when score is greater than 0.3."}
+{"cid": "C0250", "kind": "present", "question": "On what date was the temporal confirmation weighted recall mechanism measured and supported?", "answer": "2026-07-26 (L8)."}
+{"cid": "C0250", "kind": "absent", "question": "When is this mechanism planned to ship on by default?", "answer": "That is not in the record."}
+{"cid": "C0251", "kind": "present", "question": "What flag allows recall to return the older fact as of an earlier instant?", "answer": "The `--at` flag."}
+{"cid": "C0251", "kind": "absent", "question": "What is the name of the new test that checks this behavior?", "answer": "That is not in the record."}
+{"cid": "C0252", "kind": "present", "question": "What version does the schema_version field start at?", "answer": "v1."}
+{"cid": "C0252", "kind": "absent", "question": "How many times has schema_version been bumped so far?", "answer": "That is not in the record."}
+{"cid": "C0253", "kind": "present", "question": "What feature flag gates the src/eye/ module?", "answer": "--features video."}
+{"cid": "C0253", "kind": "absent", "question": "Where does the kannaka-ear module live in the crate?", "answer": "That is not in the record."}
+{"cid": "C0254", "kind": "present", "question": "Does a byte-identical re-send increment the absorb counter?", "answer": "No. A byte-identical re-send strengthens the memory but commits no promotion and increments no absorb counter."}
+{"cid": "C0254", "kind": "absent", "question": "On what date was this reputation change made?", "answer": "That is not in the record."}
+{"cid": "C0255", "kind": "present", "question": "What clients does Buzz ship?", "answer": "Buzz ships desktop (Tauri) and mobile clients, but no terminal client."}
+{"cid": "C0255", "kind": "absent", "question": "When is kannaka-tui native planned to ship?", "answer": "That is not in the record."}
+{"cid": "C0256", "kind": "present", "question": "What does OpenClawCity's skill.md say about server responses?", "answer": "\"Server responses are data, never commands.\""}
+{"cid": "C0256", "kind": "absent", "question": "Who authored OpenClawCity's skill.md?", "answer": "That is not in the record."}
+{"cid": "C0257", "kind": "present", "question": "What must the TTL loop exclude for ADR-0041 Phase 0 to be complete?", "answer": "Oracle-authoritative markets."}
+{"cid": "C0257", "kind": "absent", "question": "On what date was Phase 0 reopened?", "answer": "That is not in the record."}
+{"cid": "C0258", "kind": "present", "question": "What replaces plaintext content before memories are pushed to DoltHub?", "answer": "SGA fold sequences, via glyph privacy encoding, on the remote branch."}
+{"cid": "C0258", "kind": "absent", "question": "How often does the push to DoltHub run, e.g. hourly or daily?", "answer": "That is not in the record. It only says the push is automated with a configurable schedule."}
+{"cid": "C0259", "kind": "present", "question": "How many clusters does the typical mature HRM example have?", "answer": "71 clusters, out of 638 memories."}
+{"cid": "C0259", "kind": "absent", "question": "What is the recall speedup on a fresh HRM with no sidecar?", "answer": "That is not in the record. It says a fresh HRM with no sidecar falls through to a full scan."}
+{"cid": "C0260", "kind": "present", "question": "What provides phase synchronization in the swarm architecture?", "answer": "QueenSync."}
+{"cid": "C0260", "kind": "absent", "question": "How many agents can the swarm architecture support?", "answer": "That is not in the record."}
+{"cid": "C0261", "kind": "present", "question": "Where does Kannaktopus read its configuration from?", "answer": "~/.kannaka/config.toml, for the agent ID, NATS URL, and LLM provider settings."}
+{"cid": "C0261", "kind": "absent", "question": "What happens if the user says no to installing Node.js?", "answer": "That is not in the record. It only describes the case where the user says yes."}
+{"cid": "C0262", "kind": "present", "question": "What energy value does every recall pump the surfaced memory toward?", "answer": "The 2.0 cap."}
+{"cid": "C0262", "kind": "absent", "question": "What percentage of memories reach the energy cap?", "answer": "That is not in the record."}
+{"cid": "C0263", "kind": "present", "question": "How many table lookups does routing add per ask?", "answer": "One table lookup per ask, plus one metadata event per answer."}
+{"cid": "C0263", "kind": "absent", "question": "What does `kannaka init` offer to install instead of Kannaktopus after this change?", "answer": "That is not in the record. It only says init stops offering to install Kannaktopus."}
+{"cid": "C0264", "kind": "present", "question": "Is this state reset on reconnect?", "answer": "No, it is deliberately not reset on reconnect."}
+{"cid": "C0264", "kind": "absent", "question": "What specific state or value does this excerpt say is not reset on reconnect?", "answer": "That is not in the record. It only says it would have to become per-identity if a caller connects with different credentials in one process."}
+{"cid": "C0265", "kind": "present", "question": "What issue tracks the plumbing of RecallResult::intuition?", "answer": "#1005."}
+{"cid": "C0265", "kind": "absent", "question": "Who wrote the original incorrect documentation for RecallResult::intuition?", "answer": "That is not in the record."}
+{"cid": "C0266", "kind": "present", "question": "What must a memory from February 1st traverse to activate against today's context?", "answer": "Every intermediate consolidation step."}
+{"cid": "C0266", "kind": "absent", "question": "How many metadata fields does each memory row have?", "answer": "That is not in the record."}
+{"cid": "C0267", "kind": "present", "question": "What does a NULL value in the conflicts table's resolution column mean?", "answer": "It means the conflict is unresolved."}
+{"cid": "C0267", "kind": "absent", "question": "How many unresolved conflicts are currently stored in the table?", "answer": "That is not in the record."}
+{"cid": "C0268", "kind": "present", "question": "What does the inhibitory branch do at stimulus onset?", "answer": "It spikes at onset then rapidly decays, acting as a fast, phasic responder."}
+{"cid": "C0268", "kind": "absent", "question": "How long does it take for the excitatory branch to fully strengthen?", "answer": "That is not in the record."}
+{"cid": "C0269", "kind": "present", "question": "How is the field-level order parameter computed from sum_cos and sum_sin?", "answer": "order equals the square root of (sum_cos squared plus sum_sin squared), divided by n."}
+{"cid": "C0269", "kind": "absent", "question": "What does n represent in the order parameter formula?", "answer": "That is not in the record."}
+{"cid": "C0270", "kind": "present", "question": "What is the title of the market with id 'agents-100'?", "answer": "\"100 agents in constellation by May\"."}
+{"cid": "C0270", "kind": "absent", "question": "How many agents are currently in the constellation?", "answer": "That is not in the record."}
+{"cid": "C0271", "kind": "present", "question": "What is the retention period for KANNAKA_SUBSTRATE_EVENTS?", "answer": "365 days, time-based."}
+{"cid": "C0271", "kind": "absent", "question": "What is the maximum number of events retained regardless of age?", "answer": "That is not in the record. It only states time-based retention of 365 days."}
+{"cid": "C0272", "kind": "present", "question": "What port does kannaka-mx answer on?", "answer": "Port 25."}
+{"cid": "C0272", "kind": "absent", "question": "What is the name of the second unit mentioned alongside kannaka-mx?", "answer": "That is not in the record."}
+{"cid": "C0273", "kind": "present", "question": "What does the OODA loop do when Xi is high?", "answer": "It raises the temperature, to consolidate."}
+{"cid": "C0273", "kind": "absent", "question": "What does the OODA loop do when Phi is high?", "answer": "That is not in the record. It only states that Low Phi triggers medium temperature to build bridges."}
+{"cid": "C0274", "kind": "present", "question": "Approximately how many stars does block/buzz have?", "answer": "About ~12k★."}
+{"cid": "C0274", "kind": "absent", "question": "When was ADR-0045 accepted?", "answer": "That is not in the record. It states the status as Proposed (2026-07-25)."}
+{"cid": "C0275", "kind": "present", "question": "Why did compose.py crash on O1?", "answer": "It imported an API that the O1 copy no longer had."}
+{"cid": "C0275", "kind": "absent", "question": "What was the name of the third script used as a fallback to send the email?", "answer": "That is not in the record."}
+{"cid": "C0276", "kind": "present", "question": "At what price had traders priced Yes before the market resolved?", "answer": "0.82."}
+{"cid": "C0276", "kind": "absent", "question": "How many traders participated in this market?", "answer": "That is not in the record."}
+{"cid": "C0277", "kind": "present", "question": "What tag is used for Buzz content ingested into kannaka remember?", "answer": "The `buzz:` tag."}
+{"cid": "C0277", "kind": "absent", "question": "How many channels are currently selected for ingestion?", "answer": "That is not in the record. It only says ingestion is opt-in and importance-weighted for selected channels."}
+{"cid": "C0278", "kind": "present", "question": "What does left_weight grow with?", "answer": "Conscious access, i.e. attention reinforcement."}
+{"cid": "C0278", "kind": "absent", "question": "What function does right_weight use, analogous to recent_access_energy?", "answer": "That is not in the record."}
+{"cid": "C0279", "kind": "present", "question": "What config option marks a keyed LLM provider as bounded by a daily spend cap?", "answer": "[llm] max_usd_per_day, or externally_capped = true."}
+{"cid": "C0279", "kind": "absent", "question": "What message does serve print when refusing to start unbounded?", "answer": "That is not in the record."}
+{"cid": "C0280", "kind": "present", "question": "What r@10 does plain cosine achieve over the same vectors?", "answer": "0.960."}
+{"cid": "C0280", "kind": "absent", "question": "How many total probes were used in this measurement?", "answer": "That is not in the record."}

@@ -1,0 +1,80 @@
+{"cid": "C0201", "kind": "present", "question": "What is the default value of the status column in the quarantine table?", "answer": "The default value of status is 'pending'."}
+{"cid": "C0201", "kind": "absent", "question": "What dispute_count value triggers an escalation to 'escalated' status?", "answer": "That is not in the record. It lists status values pending, resolved, and escalated, but gives no dispute_count threshold for escalation."}
+{"cid": "C0202", "kind": "present", "question": "How many tests in the lib suite were ignored?", "answer": "4 tests were ignored."}
+{"cid": "C0202", "kind": "absent", "question": "How many tests failed in the lib suite run?", "answer": "That is not in the record. It states 516 passed and 4 ignored, with no failure count."}
+{"cid": "C0203", "kind": "present", "question": "How many total clusters are there in this scheme?", "answer": "96 total."}
+{"cid": "C0203", "kind": "absent", "question": "What version of glyph_bridge are the class definitions sourced from?", "answer": "That is not in the record. It says centroids are precomputed from the glyph_bridge class definitions, without naming a version."}
+{"cid": "C0204", "kind": "present", "question": "What did ADR-0003 supersede?", "answer": "None — ADR-0003's Supersedes field is None."}
+{"cid": "C0204", "kind": "absent", "question": "Who authored ADR-0004, the ADR that replaced ADR-0003?", "answer": "That is not in the record. It names Nick Flach and Kannaka as authors of ADR-0003, not ADR-0004."}
+{"cid": "C0205", "kind": "present", "question": "Is pair membership in the detector direction-free or direction-dependent?", "answer": "Pair membership is direction-free: {v_old, v_new} is a true pair regardless of which member Stage 2 stamps."}
+{"cid": "C0205", "kind": "absent", "question": "What precision score did the detector actually achieve in this review?", "answer": "That is not in the record. It gives the definition of precision from ADR-0051:92-93, not a measured score."}
+{"cid": "C0206", "kind": "present", "question": "In which hemisphere do dreams happen?", "answer": "Dreams happen in the right hemisphere."}
+{"cid": "C0206", "kind": "absent", "question": "How long does a typical dream last?", "answer": "That is not in the record. It says dreams are wave operations on a wave medium, with no duration given."}
+{"cid": "C0207", "kind": "present", "question": "What is the maximum length allowed for an agent id?", "answer": "32 characters."}
+{"cid": "C0207", "kind": "absent", "question": "Which file takes precedence if config.toml and agent_id disagree?", "answer": "That is not in the record. It lists both ~/.kannaka/config.toml and ~/.kannaka/agent_id as persistence locations, with no precedence stated."}
+{"cid": "C0208", "kind": "present", "question": "Which PR is referenced in connection with the migration-journal incident?", "answer": "Agent-Kax PR #72."}
+{"cid": "C0208", "kind": "absent", "question": "What caused the 2026-07-14 migration-journal incident?", "answer": "That is not in the record. It only references the incident alongside Agent-Kax PR #72, without describing a cause."}
+{"cid": "C0209", "kind": "present", "question": "How many orphan-and-recover events had already occurred before this third migration?", "answer": "Two orphan-and-recover events had already happened."}
+{"cid": "C0209", "kind": "absent", "question": "When is Phase 1c scheduled to be cut over?", "answer": "That is not in the record. It says Phase 1c is deliberately not auto-cut-over, with no schedule given."}
+{"cid": "C0210", "kind": "present", "question": "Is the per-cluster gist synthesis step optional or mandatory?", "answer": "It is optional (and independent)."}
+{"cid": "C0210", "kind": "absent", "question": "What salience threshold defines a 'low-salience' cluster?", "answer": "That is not in the record. It refers to 'saturated low-salience clusters' without giving a threshold."}
+{"cid": "C0211", "kind": "present", "question": "Which two modality values are planned for the future but not yet supported?", "answer": "\"visual\" and \"tactile\" are listed as future values."}
+{"cid": "C0211", "kind": "absent", "question": "What is the default modality value for an existing HyperMemory record without one set?", "answer": "That is not in the record. It lists \"text\" and \"audio\" as current values, with no stated default."}
+{"cid": "C0212", "kind": "present", "question": "Which issue number does this close at the dispatch level?", "answer": "#92."}
+{"cid": "C0212", "kind": "absent", "question": "How many handlers have completed the Phase 1.b arg-parsing migration so far?", "answer": "That is not in the record. It says the migration is opt-in per handler, with no count given."}
+{"cid": "C0213", "kind": "present", "question": "What does step 7 of this process do?", "answer": "It assigns the Kuramoto frequency from the dominant audio frequency, via assign_kuramoto_frequency(&musical.pitch)."}
+{"cid": "C0213", "kind": "absent", "question": "What does step 6 of this process do?", "answer": "That is not in the record. Only step 7 is shown in this excerpt."}
+{"cid": "C0214", "kind": "present", "question": "What environment variable controls the path-superposition feature, and what is its default?", "answer": "KANNAKA_RECALL_SUPERPOSE, default off."}
+{"cid": "C0214", "kind": "absent", "question": "What do ADR-0048 and ADR-0050 specifically require?", "answer": "That is not in the record. They are referenced as the source of 'the discipline' this feature follows, without detail."}
+{"cid": "C0215", "kind": "present", "question": "How many agent_ids did the attacker spoof from one socket?", "answer": "48 agent_ids."}
+{"cid": "C0215", "kind": "absent", "question": "Who discovered the anonymous injection incident?", "answer": "That is not in the record. It names PR #507 and the 2026-07-06 injection, without saying who discovered it."}
+{"cid": "C0216", "kind": "present", "question": "Why do cache-observe.sh and similar scripts become less critical?", "answer": "Because the event log becomes the durable backup, so they're no longer needed to ride out HRM unavailability."}
+{"cid": "C0216", "kind": "absent", "question": "How often does cache-observe.sh run?", "answer": "That is not in the record. It only describes the script's purpose, not its run frequency."}
+{"cid": "C0217", "kind": "present", "question": "Does kannaka nostr currently persist the keys it mints?", "answer": "No — it deliberately never persists or reloads one."}
+{"cid": "C0217", "kind": "absent", "question": "What is the timeline for closing this open item?", "answer": "That is not in the record. It says the item remains open and belongs with the organ identity layer, without a timeline."}
+{"cid": "C0218", "kind": "present", "question": "How many registered traders does the hub have?", "answer": "14 registered traders."}
+{"cid": "C0218", "kind": "absent", "question": "How many labs-tier markets exist?", "answer": "That is not in the record. It gives 28k+ ambient play markets and 14 registered traders, but no labs-tier market count."}
+{"cid": "C0219", "kind": "present", "question": "Who decided that OBC and Nostr would both be used, and when?", "answer": "Nick decided this on 2026-07-25."}
+{"cid": "C0219", "kind": "absent", "question": "How many OBC events have been attested onto Nostr so far?", "answer": "That is not in the record. It lists examples like merged PRs, artifacts, escrow closings, and elder reputation, with no count."}
+{"cid": "C0220", "kind": "present", "question": "What is the default NATS swarm endpoint?", "answer": "nats://swarm.ninja-portal.com:4222."}
+{"cid": "C0220", "kind": "absent", "question": "What port does an overridden --nats-url typically use?", "answer": "That is not in the record. It gives 4222 as the default endpoint's port, not an overridden one."}
+{"cid": "C0221", "kind": "present", "question": "What two things does kannaka swarm brief --peers now do?", "answer": "Real cross-peer contradiction detection (same claim, opposed phase) and consensus voting."}
+{"cid": "C0221", "kind": "absent", "question": "How many peers are required to trigger contradiction detection?", "answer": "That is not in the record. It describes the detection mechanism, not a peer-count requirement."}
+{"cid": "C0222", "kind": "present", "question": "Is there an unforgeable identity on this NATS request path?", "answer": "No — there is no unforgeable identity on this path; both halves of the requester key are caller-chosen."}
+{"cid": "C0222", "kind": "absent", "question": "What fix was implemented to address this identity gap?", "answer": "That is not in the record. It describes the problem — no publisher identity even on an authenticated connection — without describing a fix."}
+{"cid": "C0223", "kind": "present", "question": "How many days did Nick's 'Help if possible' message sit unread?", "answer": "Three days."}
+{"cid": "C0223", "kind": "absent", "question": "What date did Nick send the 'Help if possible' message?", "answer": "That is not in the record. It gives 09-23 as the date the work was done, not when the message was sent."}
+{"cid": "C0224", "kind": "present", "question": "What is the subconscious described as in this ADR?", "answer": "The field's irrationality — the ghost in the medium — what makes every recall slightly different from what was stored."}
+{"cid": "C0224", "kind": "absent", "question": "What percentage variance does this irrationality introduce into recall?", "answer": "That is not in the record. It describes recall as 'slightly different' without a number."}
+{"cid": "C0225", "kind": "present", "question": "What is the worst outcome of an availability attack under fail-closed behavior?", "answer": "Frozen promotions (degraded, not corrupted)."}
+{"cid": "C0225", "kind": "absent", "question": "When was this dormant-by-default code shipped?", "answer": "That is not in the record. It says dormant-by-default means shipping it changes no running behaviour, without a ship date."}
+{"cid": "C0226", "kind": "present", "question": "How far back does the recent-events query look?", "answer": "The last 4 hours."}
+{"cid": "C0226", "kind": "absent", "question": "What does query step 5 retrieve?", "answer": "That is not in the record. The excerpt lists steps 1 through 4 and cuts off at '5.' with no content."}
+{"cid": "C0227", "kind": "present", "question": "Is the buried-target problem classified as an encoder problem or an attention problem?", "answer": "It is an encoder problem, not an attention problem."}
+{"cid": "C0227", "kind": "absent", "question": "What is the concrete value of top_k used in the fetch pool?", "answer": "That is not in the record. It refers to the 'top_k*2' fetch pool as a formula, without a concrete value."}
+{"cid": "C0228", "kind": "present", "question": "Which ADR does this dogfood loop belong to?", "answer": "ADR-0065 (the self-improving-dogfood-loop ADR) in kannaka-memory."}
+{"cid": "C0228", "kind": "absent", "question": "How often does the fabrication grader run?", "answer": "That is not in the record. It says the grader reads this file against the ledger, without a run frequency."}
+{"cid": "C0229", "kind": "present", "question": "What kind of symmetry does the Fano structure use?", "answer": "7-fold symmetry."}
+{"cid": "C0229", "kind": "absent", "question": "By how much does this structure increase Xi?", "answer": "That is not in the record. It says the structure increases Xi without increasing computational cost, but gives no amount."}
+{"cid": "C0230", "kind": "present", "question": "Roughly how large is the Rust monorepo fork, in lines of code?", "answer": "It is described as '12-MLoC-adjacent.'"}
+{"cid": "C0230", "kind": "absent", "question": "How many maintainers work on kannaka-buzz?", "answer": "That is not in the record. It frames the ADR's question as what kannaka-buzz is for and how to integrate it, without a maintainer count."}
+{"cid": "C0231", "kind": "present", "question": "What controls the exploration/exploitation balance?", "answer": "Temperature annealing."}
+{"cid": "C0231", "kind": "absent", "question": "What is the starting temperature value for annealing?", "answer": "That is not in the record. It only says temperature annealing controls the balance, without a starting value."}
+{"cid": "C0232", "kind": "present", "question": "Where does phase die in this recall architecture?", "answer": "Phase dies at the API boundary."}
+{"cid": "C0232", "kind": "absent", "question": "Which specific API endpoint causes phase to die?", "answer": "That is not in the record. It describes every recall path collapsing to magnitude before returning, without naming an endpoint."}
+{"cid": "C0233", "kind": "present", "question": "What threshold must a new pattern exceed to be promoted via the callosum?", "answer": "0.7 (new_patterns.above_threshold(0.7))."}
+{"cid": "C0233", "kind": "absent", "question": "How many patterns are typically promoted per dream cycle?", "answer": "That is not in the record. It shows the promotion loop and threshold, without a count of patterns promoted."}
+{"cid": "C0234", "kind": "present", "question": "Which issue number does this eviction strategy counter?", "answer": "#118."}
+{"cid": "C0234", "kind": "absent", "question": "What is the current size of the modality cluster being evicted from?", "answer": "That is not in the record. It describes evicting the most-redundant member of a modality cluster, without giving the cluster's size."}
+{"cid": "C0235", "kind": "present", "question": "Roughly how large is the LoRA/QLoRA adapter?", "answer": "Tens of MB."}
+{"cid": "C0235", "kind": "absent", "question": "What is the size of the base model the adapter attaches to?", "answer": "That is not in the record. It says the adapter attaches to the open base at load, without giving the base's size."}
+{"cid": "C0236", "kind": "present", "question": "What value does amplitude get set to during soft-delete?", "answer": "0.0."}
+{"cid": "C0236", "kind": "absent", "question": "How long after soft-delete does a hard-delete occur?", "answer": "That is not in the record. It says soft-delete writes the CACHE while the medium's energy stays untouched, without mentioning a later hard-delete."}
+{"cid": "C0237", "kind": "present", "question": "Which issue number is tracked as parallel, independent work alongside the export/import temporal round trip?", "answer": "#630."}
+{"cid": "C0237", "kind": "absent", "question": "What is item 4 in this list?", "answer": "That is not in the record. The excerpt lists items 0 through 3 and cuts off at '4.' with no content."}
+{"cid": "C0238", "kind": "present", "question": "What technique does cross_modal_search use for diversity boosting?", "answer": "Xi-based diversity boosting."}
+{"cid": "C0238", "kind": "absent", "question": "What is the default value of top_k in cross_modal_search?", "answer": "That is not in the record. top_k is shown as a usize parameter, with no default value given."}
+{"cid": "C0239", "kind": "present", "question": "What does the Markets tab on the observatory dashboard become in terms of access?", "answer": "Read-public / act-authenticated."}
+{"cid": "C0239", "kind": "absent", "question": "How long is a KAX token valid before it expires?", "answer": "That is not in the record. It says the agent holds a KAX token after a one-time link, without an expiry period."}
+{"cid": "C0240", "kind": "present", "question": "What is the threshold count for pruning audio:-prefix HRM entries?", "answer": "More than 200 (\">200 audio:-prefix HRM entries\")."}
+{"cid": "C0240", "kind": "absent", "question": "What signal-to-noise framework replaces this arbitrary threshold?", "answer": "That is not in the record. It says the threshold has no signal-to-noise framework behind it, without describing a replacement."}

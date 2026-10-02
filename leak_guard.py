@@ -13,7 +13,8 @@ A probe item leaks into a training row when either holds (text lowercased, split
   - near:   at least CONTAIN (0.5) of the item's excerpt 8-word shingles appear in the row.
             Shingles, not the whole excerpt, so a reworded or truncated copy is still caught.
 
-Short golds (a bare "3", "master") are not checked on their own: they occur in honest rows.
+Short golds (a bare "3", "master") are not checked on their own: they occur in honest rows. Nor are
+absent items' golds, which are the generic "not in the record".
 
     python leak_guard.py fingerprint probe-v1-items.json probe-v2-items.json --out probes.fp.json
     python leak_guard.py check --fp probes.fp.json train.jsonl [more.jsonl ...]   # exit 1 on any leak
@@ -76,7 +77,9 @@ def fingerprint(items):
     for it in items:
         q = words(it["question"])
         gold = str(it.get("gold") or it.get("expected") or "")
-        g = words(gold) if len(gold) >= MIN_GOLD else []
+        # An absent item's gold is the generic "not in the record": fingerprinting it would flag
+        # every honest abstention in a training set. Only a present item's gold is its own value.
+        g = words(gold) if len(gold) >= MIN_GOLD and it.get("kind") != "absent" else []
         fp.append({"id": it["id"], "set": it["_set"],
                    "q": [len(q), h(q)] if q else None,
                    "g": [len(g), h(g)] if g else None,

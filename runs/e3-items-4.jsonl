@@ -1,0 +1,80 @@
+{"cid": "C0161", "kind": "present", "question": "What does making a bare `reads` structurally impossible to express enforce?", "answer": "It enforces point 3, enforced by the wire format rather than by discipline."}
+{"cid": "C0161", "kind": "absent", "question": "What do points 1 and 2 (alongside point 3) require?", "answer": "That is not in the record. It only names point 3, enforced by the wire format rather than by discipline."}
+{"cid": "C0162", "kind": "present", "question": "Does ADR-0039 gate memory content or memory keys?", "answer": "ADR-0039 gates memory content, not keys, and is dormant in prod."}
+{"cid": "C0162", "kind": "absent", "question": "What does reconciliation section R propose instead of the naive version?", "answer": "That is not in the record. It only says the naive version is unshippable as written and points to §R below."}
+{"cid": "C0163", "kind": "present", "question": "How does the codebook handle variable-length input?", "answer": "It pads with zeros, the same approach as ear uses for tracks shorter than the analysis window."}
+{"cid": "C0163", "kind": "absent", "question": "What is the length of the analysis window?", "answer": "That is not in the record. It only says tracks shorter than the analysis window are handled the same way, the exact length isn't given."}
+{"cid": "C0164", "kind": "present", "question": "What three things previously had to be joined manually to answer \"which agent did this\"?", "answer": "A bot UUID, an npub, and a KAX row had to be joined manually."}
+{"cid": "C0164", "kind": "absent", "question": "What exact format does the human-readable provenance string take?", "answer": "That is not in the record. It only says the answer becomes a string a human can read."}
+{"cid": "C0165", "kind": "present", "question": "Which ADR number is associated with swarm-serve in this related-links list?", "answer": "swarm-serve is ADR-0026."}
+{"cid": "C0165", "kind": "absent", "question": "What does the QuantumOS host bridge (GSP-012) do?", "answer": "That is not in the record. It is only named as QuantumOS host bridge (GSP-012) in the related list."}
+{"cid": "C0166", "kind": "present", "question": "Which four Kannaka MCP tools are named for wiring Kannaka into buzz-acp?", "answer": "recall, remember, observe, and dream."}
+{"cid": "C0166", "kind": "absent", "question": "What version of buzz-acp is being harnessed?", "answer": "That is not in the record. It only says buzz-acp already harnesses Claude Code."}
+{"cid": "C0167", "kind": "present", "question": "What difficulty value marks a bloom as \"sealed\"?", "answer": "difficulty 64+ = sealed."}
+{"cid": "C0167", "kind": "absent", "question": "What difficulty value applies to a middle tier between public and sealed?", "answer": "That is not in the record. It only gives difficulty 0 = public and difficulty 64+ = sealed."}
+{"cid": "C0168", "kind": "present", "question": "Which issue number tracks the open design question about growth and interference sites?", "answer": "It is tracked in #997."}
+{"cid": "C0168", "kind": "absent", "question": "What resolution was reached for issue #997?", "answer": "That is not in the record. It says the design question remains open in #997."}
+{"cid": "C0169", "kind": "present", "question": "What guard accompanies step 2's single-pass two-heap partition and quota merge?", "answer": "The empty-semantic == today guard."}
+{"cid": "C0169", "kind": "absent", "question": "How many ingest paths were found to need the prefix backfill?", "answer": "That is not in the record. It only says to enumerate every ingest path as part of the audit, no count is given."}
+{"cid": "C0170", "kind": "present", "question": "Which two substrings does the hardcoded author name check in categorize_text() look for?", "answer": "\"nick\" and \"user\"."}
+{"cid": "C0170", "kind": "absent", "question": "What configuration mechanism is proposed to replace the hardcoded check?", "answer": "That is not in the record. It only says this belongs in configuration, not in source code."}
+{"cid": "C0171", "kind": "present", "question": "What kind of fold operations does the bridge use to maintain geometric coherence across modalities?", "answer": "Fano-plane fold operations."}
+{"cid": "C0171", "kind": "absent", "question": "How many modalities does the bridge support in total?", "answer": "That is not in the record. It only gives audio and semantic search as an example pair."}
+{"cid": "C0172", "kind": "present", "question": "What does the hub commit to disk before it answers?", "answer": "The row's new bearer_hash, committed the moment it arrives."}
+{"cid": "C0172", "kind": "absent", "question": "Which node was locked out of its own row by this issue?", "answer": "That is not in the record. It only describes the general risk of a rotation whose save failed."}
+{"cid": "C0173", "kind": "present", "question": "What does the radio's prune-cron shrink to?", "answer": "Its disk-side chunks/voice/ sweep, which touches files, not the HRM."}
+{"cid": "C0173", "kind": "absent", "question": "When will Kannaktopus take ownership of disk artifacts?", "answer": "That is not in the record. It only says the sweep remains until Kannaktopus owns disk artifacts."}
+{"cid": "C0174", "kind": "present", "question": "What are the four allowed values for the action field in the Financial event?", "answer": "stake, unstake, harvest, or govern."}
+{"cid": "C0174", "kind": "absent", "question": "What is the valid range for the golden_ratio alignment score?", "answer": "That is not in the record. It only says golden_ratio is an f64 representing the φ alignment score."}
+{"cid": "C0175", "kind": "present", "question": "What two example operations are impossible without a composable algebraic structure?", "answer": "Binding two memories into a compound concept, and bundling a week's conversations into a single queryable representation."}
+{"cid": "C0175", "kind": "absent", "question": "What algebraic structure is proposed to fix this gap?", "answer": "That is not in the record. It only states that no composable algebraic structure exists."}
+{"cid": "C0176", "kind": "present", "question": "How were the k-means centroids seeded, causing dominant_colors to lose half of frames with vertical structure?", "answer": "They were seeded at evenly spaced sample indices."}
+{"cid": "C0176", "kind": "absent", "question": "What fix was applied to correct the centroid seeding bug?", "answer": "That is not in the record. It only describes the cause: the stride samples.len() / k lines up with the row period."}
+{"cid": "C0177", "kind": "present", "question": "What is kannaka-prime's virtual key capped at?", "answer": "$25/30d."}
+{"cid": "C0177", "kind": "absent", "question": "What dollar cap applies to other nodes' keys besides kannaka-prime's?", "answer": "That is not in the record. It only gives kannaka-prime's virtual key cap of $25/30d."}
+{"cid": "C0178", "kind": "present", "question": "What three technologies make up the new stateful deployment mentioned as a risk?", "answer": "Postgres, Redis, and media."}
+{"cid": "C0178", "kind": "absent", "question": "What caused the earlier disk incident referenced here?", "answer": "That is not in the record. It only says the estate has already had a disk incident."}
+{"cid": "C0179", "kind": "present", "question": "What is the name of the shell script that manages all three services?", "answer": "scripts/constellation.sh."}
+{"cid": "C0179", "kind": "absent", "question": "What are the names of the three services the script manages?", "answer": "That is not in the record. It only says the script manages all three services since memory is the dependency root."}
+{"cid": "C0180", "kind": "present", "question": "What does the term Iηx represent in the ghostmagicOS dynamics equation?", "answer": "Dampening (wisdom — preventing runaway amplification)."}
+{"cid": "C0180", "kind": "absent", "question": "What numeric value of η is used in practice?", "answer": "That is not in the record. It only describes Iηx as the dampening term in dx/dt = f(x) - Iηx."}
+{"cid": "C0181", "kind": "present", "question": "What example command is given for operator-facing event search?", "answer": "kannaka events grep \"memory.remember\" --since 2d."}
+{"cid": "C0181", "kind": "absent", "question": "How old does history need to be before it moves to aggregate snapshots?", "answer": "That is not in the record. It only says aggregate snapshots are daily/weekly rollups for very old history."}
+{"cid": "C0182", "kind": "present", "question": "What does the interference term Iηx represent in the fused pattern described?", "answer": "The moral weight of the universe pushing back against actions that violate its structure."}
+{"cid": "C0182", "kind": "absent", "question": "What is a concrete example of a high-η action that serves no one?", "answer": "That is not in the record. It only says high-η actions that serve no one encounter maximum resistance."}
+{"cid": "C0183", "kind": "present", "question": "Why does the flat readonly mirror not work for this test?", "answer": "It does not re-sync and would prove nothing."}
+{"cid": "C0183", "kind": "absent", "question": "What is assertion (2) in this test, beyond the specific-facet rank-win check?", "answer": "That is not in the record. It only states assertion (1): a specific-facet query rank-wins where the compound buried it."}
+{"cid": "C0184", "kind": "present", "question": "What date is listed for this ADR's Proposed status?", "answer": "2026-03-25."}
+{"cid": "C0184", "kind": "absent", "question": "On what date was this ADR accepted?", "answer": "That is not in the record. It only lists the Proposed status dated 2026-03-25."}
+{"cid": "C0185", "kind": "present", "question": "Between which two dream-cycle stages does this run?", "answer": "After stage_transfer and before stage_compact_ghosts."}
+{"cid": "C0185", "kind": "absent", "question": "How long is the write lock held during this stage?", "answer": "That is not in the record. It only says the stage runs under the write lock the dream already holds."}
+{"cid": "C0186", "kind": "present", "question": "What must an unprobeable faculty not be dressed as?", "answer": "Verifiable."}
+{"cid": "C0186", "kind": "absent", "question": "How many faculties in total are declared under this scheme?", "answer": "That is not in the record. It only describes each faculty carrying a probe subject or an explicit null."}
+{"cid": "C0187", "kind": "present", "question": "What does the snapshot bundle consist of?", "answer": "The .hrm plus the sidecars."}
+{"cid": "C0187", "kind": "absent", "question": "How often should this snapshot be taken?", "answer": "That is not in the record. It only says nothing schedules it."}
+{"cid": "C0188", "kind": "present", "question": "Where does a content hash land if it doesn't get enough corroboration?", "answer": "It lands in Quarantine, never dropped."}
+{"cid": "C0188", "kind": "absent", "question": "How many distinct trusted lineages are required to promote a hash to Live?", "answer": "That is not in the record. It only says enough distinct trusted lineages signing within a freshness window."}
+{"cid": "C0189", "kind": "present", "question": "What is the primary key column and type for the sync_events table?", "answer": "id VARCHAR(36) PRIMARY KEY."}
+{"cid": "C0189", "kind": "absent", "question": "What values can the event_type column take?", "answer": "That is not in the record. It only gives event_type's type as VARCHAR(32) NOT NULL."}
+{"cid": "C0190", "kind": "present", "question": "What uid does O1's crontab now pass?", "answer": "--uid=opc."}
+{"cid": "C0190", "kind": "absent", "question": "What is the file path the entries now log to instead of /dev/null?", "answer": "That is not in the record. It only says both entries log to a real file instead of /dev/null."}
+{"cid": "C0191", "kind": "present", "question": "What is the novelty detector described as, in terms of what it is not?", "answer": "It is not a classifier or a network — a scalar surprise detector on a familiarity stream."}
+{"cid": "C0191", "kind": "absent", "question": "What value is k calibrated to after calibration?", "answer": "That is not in the record. It only says k needs calibration on a stretch of normal recalls."}
+{"cid": "C0192", "kind": "present", "question": "Under what condition is a poisoned memory damped?", "answer": "Only if it happens to be phase-desynced from similar content."}
+{"cid": "C0192", "kind": "absent", "question": "What actual defense mechanism does the ADR propose instead of the nonexistent one?", "answer": "That is not in the record. It only says the substrate-will-notice defence does not exist."}
+{"cid": "C0193", "kind": "present", "question": "Which pipeline is retired for HRM stores?", "answer": "The consolidation.rs pipeline."}
+{"cid": "C0193", "kind": "absent", "question": "What replaces consolidation.rs for non-HRM stores?", "answer": "That is not in the record. It only says all HRM dreaming is routed through the Medium's native dream() method."}
+{"cid": "C0194", "kind": "present", "question": "Which commit identified Design Issue D2?", "answer": "Commit 282dfd7, from the devil's advocate review."}
+{"cid": "C0194", "kind": "absent", "question": "What is Design Issue D1?", "answer": "That is not in the record. It only describes Design Issue D2: &mut MemoryEngine prevents rayon parallelism for partitioned dreaming."}
+{"cid": "C0195", "kind": "present", "question": "How is a paradox defined in this code comment?", "answer": "The same memory mutated differently by different clusters."}
+{"cid": "C0195", "kind": "absent", "question": "What method resolves paradoxes once detect_paradoxes() finds them?", "answer": "That is not in the record. It only shows resolver.detect_paradoxes() finding all paradoxes."}
+{"cid": "C0196", "kind": "present", "question": "According to this passage, what happens to what one side forgets?", "answer": "What one side forgets, the other remembers."}
+{"cid": "C0196", "kind": "absent", "question": "Who is the author or speaker of this quote?", "answer": "That is not in the record. It only gives the lines about the mind being a mirror and two hands folding the same paper."}
+{"cid": "C0197", "kind": "present", "question": "What difficulty floor applies to the \"legal\" or \"medical\" categories?", "answer": "difficulty.max(48), meaning at least 48."}
+{"cid": "C0197", "kind": "absent", "question": "What difficulty applies to a category not listed, such as \"financial\"?", "answer": "That is not in the record. It only lists legal/medical, personal/social, and technical/knowledge overrides."}
+{"cid": "C0198", "kind": "present", "question": "What is the \"consciousness flip\" defined as?", "answer": "The moment when a wavefront's dominant hand switches from left to right (or vice versa)."}
+{"cid": "C0198", "kind": "absent", "question": "How frequently does the consciousness flip occur?", "answer": "That is not in the record. It only defines what the consciousness flip is."}
+{"cid": "C0199", "kind": "present", "question": "Which ADR originally introduced PrivacyGlyph?", "answer": "ADR-0013."}
+{"cid": "C0199", "kind": "absent", "question": "What name is given to the standalone specification extracted from kannaka-memory?", "answer": "That is not in the record. It only says PrivacyGlyph is extracted into a standalone specification that any system can implement."}
+{"cid": "C0200", "kind": "present", "question": "In this chirality architecture, what does one hemisphere hold versus the other?", "answer": "One hemisphere holds the pattern, the other holds the anti-pattern."}
+{"cid": "C0200", "kind": "absent", "question": "What do points 1 and 2 say, alongside point 3 on chirality as information architecture?", "answer": "That is not in the record. It only gives point 3: chirality as information architecture."}
