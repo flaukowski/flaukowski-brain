@@ -17,7 +17,7 @@ import random
 import time
 
 import torch
-from peft import PeftModel, prepare_model_for_kbit_training
+from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
 BASE = r"C:\Users\nflach\models\Qwen3-8B"
@@ -74,6 +74,17 @@ def build(rows, tok, seed, max_len):
     return out
 
 
+def answer_loss(model, ids, labels):
+    """Next-token loss on the answer tokens only, projecting just those positions through lm_head.
+    The full-sequence logits (~600 tokens x 152k vocab, upcast for the loss) were the peak-VRAM
+    spike; the answer is ~40 tokens. Same loss as model(labels=...): position t predicts t+1."""
+    inner = model.get_base_model()
+    hidden = inner.model(input_ids=ids[None]).last_hidden_state[0]   # [T, H]
+    pos = (labels[1:] != -100).nonzero(as_tuple=True)[0]             # positions whose NEXT token is answer
+    logits = inner.lm_head(hidden[pos]).float()                      # [n, V]
+    return torch.nn.functional.cross_entropy(logits, labels[1:][pos])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", required=True)
@@ -84,6 +95,7 @@ def main():
     ap.add_argument("--max-len", type=int, default=1024)
     ap.add_argument("--max-steps", type=int, default=0, help="stop after N optimizer steps (smoke test)")
     ap.add_argument("--seed", type=int, default=3)
+    ap.add_argument("--allow-spill", action="store_true", help="train even if VRAM spills to system RAM")
     a = ap.parse_args()
     torch.manual_seed(a.seed)
     rows = [json.loads(l) for l in open(a.data, encoding="utf-8")]
@@ -98,7 +110,13 @@ def main():
     t0 = time.time()
     model = AutoModelForCausalLM.from_pretrained(BASE, quantization_config=bnb, device_map={"": 0},
                                                  dtype=torch.bfloat16)
-    model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
+    # Not prepare_model_for_kbit_training: it upcasts every non-quantized weight to fp32, and on
+    # Qwen3-8B that is the 151k-row embedding and lm_head (~2.4 GB each in fp32). The first smoke
+    # run peaked at 10.26 GiB on this 8 GiB card that way, the driver silently paging into system
+    # RAM. Keep them bf16; just checkpoint and let gradients reach the adapter.
+    model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    model.enable_input_require_grads()
+    model.config.use_cache = False
     model = PeftModel.from_pretrained(model, ADAPTER, is_trainable=True)
     model.print_trainable_parameters()
     print(f"loaded in {time.time() - t0:.0f}s; VRAM {torch.cuda.memory_allocated() / 2**30:.2f} GiB", flush=True)
@@ -118,9 +136,9 @@ def main():
         random.Random(a.seed + step).shuffle(order)
         for i in order:
             ids, labels = data[i]
-            outp = model(input_ids=ids[None].cuda(), labels=labels[None].cuda())
-            (outp.loss / a.accum).backward()
-            run_loss += outp.loss.item()
+            loss = answer_loss(model, ids.cuda(), labels.cuda())
+            (loss / a.accum).backward()
+            run_loss += loss.item()
             micro += 1
             if micro % a.accum == 0:
                 torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1.0)
@@ -128,6 +146,9 @@ def main():
                 sched.step()
                 opt.zero_grad(set_to_none=True)
                 step += 1
+                if torch.cuda.max_memory_allocated() > 7.6 * 2**30 and not a.allow_spill:
+                    raise SystemExit(f"peak VRAM {torch.cuda.max_memory_allocated() / 2**30:.2f} GiB exceeds the "
+                                     "8 GiB card's usable memory; refusing to train on driver-paged memory")
                 print(f"step {step}/{total_steps} loss {run_loss / a.accum:.4f} lr {sched.get_last_lr()[0]:.2e} "
                       f"peak VRAM {torch.cuda.max_memory_allocated() / 2**30:.2f} GiB "
                       f"{(time.time() - t0) / step:.1f}s/step", flush=True)
