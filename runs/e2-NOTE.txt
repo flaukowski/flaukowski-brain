@@ -1,0 +1,8 @@
+e2-baseline-v1.jsonl (2026-10-01 03:19-03:23Z) is complete (120/120 asks, serve log e2-baseline.err.log) but ran
+on the LIVE ~/.kannaka store. Right after its last ask the serve logged "HRM changed on disk and settled -
+restarting to serve the fresh mind (#563)" and exited (no supervisor on Windows); the runner died and
+e2-baseline-v2 never started. Kept, not pooled with the e2s-* cells.
+e2s-* (from 2026-10-02 12:44Z) run against a frozen private copy ~/.kannaka-e2 via KANNAKA_DATA_DIR
+(kannaka.hrm sha256 ae566fd8249ce6f7773bf101c6c844705102ff3836be1b345401f64d48e61c6d); run_e2.ps1 throws if a
+serve restarts or exits mid-cell. Cells, arms, tags, probes and rule as pre-registered 10-01 03:19Z.
+Note: brain_probe meta "temps" lists the arm-A default for arm-B runs; the row "temp" field (--b-temp) is the one that applies.
