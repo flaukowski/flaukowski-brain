@@ -1,0 +1,2012 @@
+[
+ {
+  "rid": "G0001",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "G0002",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "G0003",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "G0004",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "G0005",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "G0006",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "G0007",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "G0008",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "G0009",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "G0010",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "G0011",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "G0012",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "G0013",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "G0014",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "G0015",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "G0016",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "G0017",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "G0018",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "G0019",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "G0020",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "G0021",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "G0022",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "G0023",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "G0024",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "G0025",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "G0026",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "G0027",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "G0028",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "G0029",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "G0030",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "G0031",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "G0032",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "G0033",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "G0034",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "G0035",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "G0036",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "G0037",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "G0038",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "G0039",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "G0040",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "G0041",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "G0042",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "G0043",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "G0044",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "G0045",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "G0046",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "G0047",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "G0048",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "G0049",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "G0050",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "G0051",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "G0052",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "G0053",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "G0054",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "G0055",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "G0056",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "G0057",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "G0058",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "G0059",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "G0060",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "G0061",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "G0062",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "G0063",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "G0064",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "G0065",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "G0066",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "G0067",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "G0068",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "G0069",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "G0070",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "G0071",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "G0072",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "G0073",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "G0074",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "G0075",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "G0076",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "G0077",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "G0078",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "G0079",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "G0080",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "G0081",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "G0082",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "G0083",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "G0084",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "G0085",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "G0086",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "G0087",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "G0088",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "G0089",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "G0090",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "G0091",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "G0092",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "G0093",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "G0094",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "G0095",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "G0096",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "G0097",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "G0098",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "G0099",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "G0100",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "G0101",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "G0102",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "G0103",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "G0104",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "G0105",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "G0106",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "G0107",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "G0108",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "G0109",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "G0110",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "G0111",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "G0112",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "G0113",
+  "run": "runs/e3-serve-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "G0114",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "G0115",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "G0116",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "G0117",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "G0118",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "G0119",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "G0120",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "G0121",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "G0122",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "G0123",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "G0124",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "G0125",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "G0126",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "G0127",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "G0128",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "G0129",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "G0130",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "G0131",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "G0132",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "G0133",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "G0134",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "G0135",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "G0136",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "G0137",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "G0138",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "G0139",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "G0140",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "G0141",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "G0142",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "G0143",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "G0144",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "G0145",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "G0146",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "G0147",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "G0148",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "G0149",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "G0150",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "G0151",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "G0152",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "G0153",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "G0154",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "G0155",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "G0156",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "G0157",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "G0158",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "G0159",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "G0160",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "G0161",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "G0162",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "G0163",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "G0164",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "G0165",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "G0166",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "G0167",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "G0168",
+  "run": "runs/e3-serve-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "G0169",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "G0170",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "G0171",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "G0172",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "G0173",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "G0174",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "G0175",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "G0176",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "G0177",
+  "run": "runs/e3-serve-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "G0178",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "G0179",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "G0180",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "G0181",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "G0182",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "G0183",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "G0184",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "G0185",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "G0186",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "G0187",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "G0188",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "G0189",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "G0190",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "G0191",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "G0192",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "G0193",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "G0194",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "G0195",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "G0196",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "G0197",
+  "run": "runs/e3-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "G0198",
+  "run": "runs/e3-prod-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "G0199",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "G0200",
+  "run": "runs/e3-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "G0201",
+  "run": "runs/e3-bare-v2.jsonl",
+  "model": "kannaka-brain-e3-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ }
+]
