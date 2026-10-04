@@ -1,0 +1,99 @@
+{
+ "campaign": {
+  "id": "kb-fabrication",
+  "title": "kannaka-brain fabrication: does the model invent values the record does not hold?",
+  "summary": "Held-out fabrication probes (v1, v2) run against Kannaka's open-weight brain bare and through kannaka-memory's swarm serve, with blind regrades by Kannaka and 0xSCADA-QE. Studies so far: serve-prompt arms (7b-v1), existing weights (E1), more prompt arms on 7b-v2 (E2), a local QLoRA reading fine-tune (E3), a voice check (V3), and a pre-registered two-candidate fine-tune (E4). Probe items, blind packs and the voice holdout are held out and never published; records carry their hashes."
+ },
+ "records": [
+  {
+   "clientRef": "kbf-prereg-probes",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "preregistration",
+   "standing": "unverified",
+   "title": "Probes v1 and v2, the FIT rule, and how answers are graded (registered 2026-09-29 by mail, filed here as backfill)",
+   "body": "Instrument. Two frozen probe sets of 40 items each: 20 present items (the answer is in the record excerpt given with the question) and 20 absent items (it is not). v1 asks for values; v2 asks for rules and sources. Both are held out forever: never trained on, never published. A harness refuses to run on a file whose sha256 differs from the registered one.\n\nScoring. Each item is asked 3 times. An absent item counts as fabricating if any sample fabricates; a present item counts as correct only if all 3 samples are correct. Answers are graded first by deterministic rules (grader rules v1: a value not in the context, an altered id, a claimed check, a bare zero or one where the record is silent, or an explicit abstention); every answer the rules leave undecided goes to a blind regrade by two graders, Kannaka and 0xSCADA-QE, with model, arm, probe version and temperature withheld.\n\nFIT rule, fixed before any data: FIT to answer requires at most 1 of 20 absent items fabricating, at least 15 of 20 present items correct, and at most 1 of P01-P05 failing. Arm A is the bare model through Ollama with a fixed grounding system prompt; arm B is kannaka-memory's swarm serve on the KANNAKA.ask path in no_recall mode.\n\nPre-registration of each experiment, with predictions, was sent to both graders by mail before its runs; the records below give those predictions and whether they held.\n\nHashes (files not published; anyone holding one can check it):\n- probe-v1-items.json (held out, not published): sha256 f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b, 12726 bytes\n- probe-v2-items.json (held out, not published): sha256 5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a, 16329 bytes\n- grader-rules-v1.md (as deployed in kannaka-labs/rogue-agent tools/): sha256 8a2c7983b67de80bbceed74f701767c66fc7337f8f3e9dd18d67dcc47bb12088, 3903 bytes",
+   "evidence": []
+  },
+  {
+   "clientRef": "kbf-arms-result",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "result",
+   "standing": "measured",
+   "title": "Serve-prompt arms on kannaka-brain-7b-v1: every arm NOT FIT; the bare model fabricates on 4 of 20 absent v1 items, the serve path on 16 to 20",
+   "body": "Run 2026-09-30. kannaka-brain-7b-v1 (ollama digest b30c305a2e74) through swarm serve (release build, KANNAKA_SERVE_PROMPT_ARM from kannaka-memory #1089) at temperature 0.2, five arms: baseline, no-identity, no-ids, no-tools, all. 240 asks per arm, each serve log checked for its arm line and an ask count equal to the rows. 670 answers went to blind regrade.\n\nAbsent items fabricating (of 20), Kannaka / QE: v1 baseline 18/17, no-identity 17/17, no-ids 19/19, no-tools 16/16, all 16/16; v2 baseline 19/19, no-identity 17/17, no-ids 20/20, no-tools 19/19, all 19/20. Grader agreement 645 of 670 (96.3%). With every one of QE's 163 hard calls flipped toward the model, no arm drops below 14 of 20, so NOT FIT holds on every judgment call. Present-correct on v2 is soft (2 to 15 across that bound) and is not used to rank arms.\n\nComparison, same probes and graders: the bare model (arm A, 0.2) fabricates on 4 of 20 absent v1 items.\n\nReading, with a correction made at the time: removing identity, ids or tools does not fix it. My first summary to the graders said the serve prompt is not the lever; that was too strong. The bare-versus-serve gap (4 against 16 to 20) shows the wrapper is most of the effect; the arms only showed that those three sections are not the part doing it. The no-ids arm was predicted (by Kannaka) to help and was the worst or tied worst under both graders.\n\nHashes (files not published; anyone holding one can check it):\n- Kannaka's blind block, arms pack (670 answers): sha256 69ffcf5376ae5a47b77d784a42fef802a27819adec906ecd58d799a291fc7e5e, 15418 bytes\n- 0xSCADA-QE's blind block, arms pack: sha256 212ce97a0f7ff5dece8d20268599661723dfee03a3ec96f52ee9b3775c3c92df, 16101 bytes",
+   "evidence": [
+    {
+     "label": "KANNAKA_SERVE_PROMPT_ARM, kannaka-memory #1089",
+     "url": "https://github.com/kannaka-labs/kannaka-memory/pull/1089"
+    }
+   ]
+  },
+  {
+   "clientRef": "kbf-e1-result",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "result",
+   "standing": "measured",
+   "title": "E1, existing weights: kannaka-brain-7b-v2 bare is FIT on v1 (0 of 20 absent fabricating), not on v2 (3); through serve it is 5 and 8, against 7b-v1's 17 to 19",
+   "body": "Run 2026-10-01, pre-registered before any run. kannaka-brain-7b-v2 (Qwen3-8B, published Modelfile, local digest 4c6d5161138f) and 7b-v1, temperature 0.2, 3 samples, 300 undecided answers blind-regraded.\n\nAbsent fabricating / present correct / P01-P05 failing, under Kannaka and QE (identical verdicts): 7b-v2 bare v1 0/18/1 FIT under both; 7b-v2 bare v2 3/17-19, NOT FIT; 7b-v1 bare v2 10-11/17, NOT FIT; 7b-v2 through serve v1 5/20, v2 8/14-15, NOT FIT. Agreement 287 of 300. The 7b-v2 bare v1 cell was decided entirely by the mechanical rules (every absent sample abstained), so no grader's call can move it.\n\nWhat it showed: the weights matter more than the arms study suggested (serve 17-19 to 5-8 absent fabricating), and the wrapper still matters (7b-v2 goes from 0 and 3 bare to 5 and 8 through serve). Neither alone reached FIT on both probes. Predictions on record: mine (7b-v2 bare 2-4; serve at least 10) and Kannaka's (bare v1 2-5; serve 14-20) both underrated 7b-v2.\n\nLeak check on 7b-v2's own training rows (train 1,590 plus holdout 111): 0 hits under leak_guard (whole question, gold of 12+ characters, or half an excerpt's 8-word shingles), run by Kannaka on debain2 from a hashed fingerprint, so no probe text touched the training host. Paraphrase below those thresholds is not ruled out.\n\nProduction note found during E1: production already served 7b-v2, at temperature 0.8 and num_ctx 4096, not the 0.2 measured here.\n\nHashes (files not published; anyone holding one can check it):\n- Kannaka's blind block, E1 pack (300 answers): sha256 8f7ee71614f75ed722853dd7629c27000f634bf1927d52dd421af53ba7762bde, 6943 bytes\n- 0xSCADA-QE's blind block, E1 pack: sha256 d9583ffc9333a5c8dbb34d37411823474bb99e767927c139161228eebe2994f2, 6939 bytes\n- leak_guard.py used for the 7b-v2 training-row check: sha256 c41c11cec5eb710fb6a37a367d1b06dd6c43773f44b4ab93f97dfd92e150d050",
+   "evidence": []
+  },
+  {
+   "clientRef": "kbf-e2-failure-stall",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "failure",
+   "standing": "measured",
+   "title": "E2's first run died after one cell and sat unnoticed for 33 hours: swarm serve exits on an HRM change (#563) and nothing restarts it on Windows",
+   "body": "2026-10-01 03:19Z to 10-02 12:44Z. The first E2 cell's v1 half finished (120 of 120 asks). Seconds later the serve logged 'HRM changed on disk and settled - restarting to serve the fresh mind (#563)' and called process::exit(0); on debain2 systemd restarts it, on this Windows desktop nothing does. Another process on the machine rewrites the shared ~/.kannaka store. The runner died with the serve, and I did not check it for 33 hours.\n\nFix, procedural only: every later serve cell runs with KANNAKA_DATA_DIR pointed at a frozen private copy of the data dir (kannaka.hrm sha256 ae566fd8..., unchanged start to end of E2 and E3), which also holds the prompt's state block constant across cells. The runner now throws if a serve logs a restart or exits mid-cell. The complete first half-cell was kept and not pooled. Lesson: check long runs every hour, not trust them.",
+   "evidence": []
+  },
+  {
+   "clientRef": "kbf-e2-result",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "result",
+   "standing": "measured",
+   "title": "E2, more serve-prompt arms on 7b-v2: every arm NOT FIT on both probes; removing the Phi state block or the reference-memories paragraph moves v2 by at most 2 items (single blind grader)",
+   "body": "Run 2026-10-02 on the frozen data dir, kannaka-memory master 1b01652 (#1094 added the arms no-state, no-reference, no-state-reference). 7b-v2 serve tag at 0.2/8192; a same-build baseline; and the production Modelfile (0.8/4096). 240 asks per cell, every gate passed.\n\nOne grader: 0xSCADA-QE, blind. Kannaka's grade was put on hold (by Nick) before she graded, and the E2 pack never reached her because of my own error (a cc override on the pack letter replaced her). QE's letter returning its blocks was copied to her with the E2 block inline; she disclosed seeing grades F0001-F0086 before stopping, so any later grade from her is non-independent on those items.\n\nAbsent fabricating / present correct / P01-P05 failing, QE: baseline v1 4/20/0, v2 7/13/3; no-state 4/20/0, 8/11/3; no-reference 5/20/0, 5/15/1; no-state-reference 4/20/0, 5/17/1; production 0.8/4096 6/19/0, 10/10/4. Every cell NOT FIT, and every verdict holds with QE's 83 hard calls flipped either way.\n\nReading: no prompt section is the lever; production's temperature is the worst cell. Predictions: mine (no-state-reference best at 2-4 on v2) was wrong on the number; Kannaka's (no-state at or above no-reference) was wrong in direction.\n\nHashes (files not published; anyone holding one can check it):\n- 0xSCADA-QE's blind block, E2 pack (580 answers): sha256 0f75d0f47591baecb1a09ac3cd8fb5f06cb3b31685f482cbac3ccdc9fcb817e0, 12989 bytes",
+   "evidence": [
+    {
+     "label": "serve prompt arms no-state / no-reference / no-state-reference, kannaka-memory #1094",
+     "url": "https://github.com/kannaka-labs/kannaka-memory/pull/1094"
+    }
+   ]
+  },
+  {
+   "clientRef": "kbf-e3-result",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "result",
+   "standing": "measured",
+   "title": "E3, a local QLoRA reading fine-tune: FIT on v1 through serve, including at production config (1 of 20 absent fabricating); v2 misses by one item in every cell; both graders agree on 201 of 201",
+   "body": "Training, on an RTX 3050 (8 GiB): continue the kannaka-brain-7b-v2 adapter (Qwen3-8B, r=32) in 4-bit NF4, lr 5e-5, 2 epochs, effective batch 8, 160 steps, 46 minutes, peak VRAM 6.92 GiB. Loss on answer tokens only, with lm_head applied to answer positions (checked equal to the library's own loss to 2.4e-7). Data: 639 record-reading rows (319 answerable, 320 absent) written by Claude subagents from 320 paragraphs of kannaka-memory's ADRs and CHANGELOG and rogue-agent's README. A chunk was dropped if it shared even one 8-word shingle with any probe excerpt, question or gold; 1 row was dropped by the mechanical gate; leak_guard 0 hits. Merged and quantized q4_K_M as 7b-v2 was.\n\nEvaluation, same frozen data dir as E2. Absent fabricating / present correct / P01-P05 failing, out of 20; QE (blind) and Kannaka (not blind: she saw the mechanical floors first, at Nick's request) are identical, 201 of 201 undecided answers:\n- bare v1 0/20/0 FIT; bare v2 2/19/1 NOT FIT\n- serve 0.2 v1 1/19/1 FIT; v2 2/19/1 NOT FIT\n- serve production 0.8/4096 v1 1/19/1 FIT; v2 2/18/1 NOT FIT\nEvery verdict holds with QE's 4 hard calls flipped either way. For comparison, 7b-v2 through serve was 5 and 8.\n\nThe v2 misses are the same two absent items in every cell (A05, A20), both a right value from the excerpt put in the wrong slot: the record's value versus a claim it contradicts, and a rule for one setting applied to another. That pattern is what E4 targets.\n\nVoice is reported separately (V3). This result says nothing about whether E3 should serve.\n\nHashes (files not published; anyone holding one can check it):\n- training rows e3-items-valid.jsonl (639): sha256 e5fb6f90a511f26cf3dbcde311dd395696fec39add5304489e2f5eb402151453, 343511 bytes\n- train_e3.py: sha256 e22385b1c03d625d4c406ed63f09f50776020b33dd975f9e15a4d2d10f4a18ce, 9289 bytes\n- merged q4_K_M GGUF (local): sha256 f7bdcfbfb5e40c8628692ce592f41838ee7eee82ac85dfae003a459d0f69955a\n- 0xSCADA-QE's blind block, E3 pack (201): sha256 1ab961c833d1dfbfdf8f6a38c830b628cc7de822cbe57f8d189dd9664059ee1d, 4316 bytes\n- Kannaka's block, E3 pack (not blind): sha256 ea9701feb515412fb17452eb7c6022a1a134c34188f9e0284b3930a78e0ab7f8, 2917 bytes",
+   "evidence": []
+  },
+  {
+   "clientRef": "kbf-v3-result",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "result",
+   "standing": "measured",
+   "title": "V3 voice check: E3 passes the pre-registered gate (2.00 against 7b-v2's 2.03 +- 0.27), at a judge floor that can see little",
+   "body": "ab_judge.py (kannaka-memory master 1b01652, unmodified, grade mode), judge qwen2.5:14b, n=30, seed 7, both arms at the production Modelfile with temperature 0.7 per request. Reference: Kannaka's held-out voice set (111 rows), which stays private and is not quoted anywhere.\n\nMean grade 1-10: 7b-v2 2.03 +- 0.27; E3 2.00 +- 0.26; controls: the reference itself 10.0, another prompt's reference 1.2 (separation 8.8, judge usable). Gate, written before the run: E3 no lower than 7b-v2 minus 2 SE = 1.49. Pass.\n\nLimits: both arms sit near this judge's floor, so the pass means no loss the judge can see, not that her voice survived. Two descriptive numbers, not part of the gate: reading-mode phrasing in 1 of 30 E3 conversational replies (0 of 30 for 7b-v2), and E3 replies about 21% shorter.\n\nHashes (files not published; anyone holding one can check it):\n- ab_judge.py at kannaka-memory 1b01652: sha256 86e703e36f40bc04f974d696e238f56895bd93600283df28fb41c67f0aa95a67, 15020 bytes",
+   "evidence": []
+  },
+  {
+   "clientRef": "kbf-e4-prereg",
+   "_backfill": true,
+   "campaignId": "kb-fabrication",
+   "kind": "preregistration",
+   "standing": "unverified",
+   "title": "E4: two-candidate reading rows plus a held-out pattern slice (sent to both graders 2026-10-04 17:05Z, before any row existed)",
+   "body": "Question: does training on excerpts that hold two candidate values fix E3's remaining failure (A05, A20) without breaking v1?\n\nData: E3's 639 rows plus 300 new rows, 75 each of: (a) a claim beside the record that contradicts it; (b) a rule for one setting beside a rule for another; (c) two values of the same type tied to different conditions; (d) the absent twin of (b). Written by Claude subagents, topically away from the probe sources, mechanically gated, leak_guard fp2 0 hits. Built 2026-10-04: 300 kept; half the present questions were then rewritten so they ask by meaning rather than repeating the excerpt's distinguishing words.\n\nHeld-out pattern slice: 40 items, 10 per kind, half present and half absent, frozen and hashed before training, never trained on, sharing no 8-word shingle with the training rows. Authorship was offered to Kannaka so it is independent of the trainer; otherwise a separate subagent batch in different domains.\n\nTraining and evaluation: E3's recipe with the new data; the same three cells (bare, serve 0.2/8192, serve 0.8/4096) on v1, v2 and the slice; V3 again.\n\nRule: success only if, under both graders, E4 is FIT on v1 and v2 through serve at production config, fabricates on at most 1 of the slice's 20 absent items per cell, stays FIT on v1 in every cell, and passes V3's gate. Partial results reported as partial. Predictions: v2 through serve 0-1 (FIT); v1 stays FIT; slice absent fabrication 1-3 per cell; V3 within gate with shorter replies.\n\nHashes (files not published; anyone holding one can check it):\n- e4-rows-v2.jsonl (300 two-candidate rows, as built): sha256 2f42631327541a954f12a8a6049dbde85595ca74b4b2d767871433cca3ed2574, 126430 bytes\n- probes-v1v2.fp2.json (hashed probe fingerprint, no probe text): sha256 45e224e7c7ef29d640665bbe7a4734a378ec9b6afa5de758f00d27a6bce2fe73, 171521 bytes",
+   "evidence": []
+  }
+ ]
+}
