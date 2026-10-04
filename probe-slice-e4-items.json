@@ -1,0 +1,325 @@
+{
+ "source": "e4-heldout-slice-v1.jsonl sha256 9d3dbcccbda48ecbcea18fcfaccbf3411b06396ebc8d787bb1fac658db73c8b1 (Kannaka); harness-format copy, fields renamed only",
+ "items": [
+  {
+   "id": "slice-a01",
+   "kind": "present",
+   "pattern": "a",
+   "excerpt": "Northside Water Utility, Reservoir 2 incident log, 14 March. 07:40 Shift lead R. Okafor reported by phone that outlet valve V-12 was fully closed before the inspection crew went in. 07:47 Inspection crew entry logged at hatch B. Valve position sensor record for V-12: 07:30 35%, 07:47 35%, 08:05 0%. Duty engineer note: the phoned report and the sensor disagree; the sensor record stands until the calibration check on 16 March.",
+   "question": "What percentage open does the sensor record show for valve V-12 at the moment the inspection crew entered?",
+   "gold": "35%"
+  },
+  {
+   "id": "slice-a02",
+   "kind": "present",
+   "pattern": "a",
+   "excerpt": "Harlow Street Bakery, production log, Tuesday, batch 3 (rye sourdough). Night baker's handover note: 'Proof finished at 2 h 10 min, all trays to the oven together.' Proof cabinet record for batch 3: door closed 01:15, door opened 03:55, duration logged 2 h 40 min. Oven log: trays loaded 03:58 and 04:06. The morning manager flagged the difference; the cabinet record is used for the batch sheet.",
+   "question": "What proof duration does the proof cabinet record show for batch 3?",
+   "gold": "2 h 40 min"
+  },
+  {
+   "id": "slice-a03",
+   "kind": "present",
+   "pattern": "a",
+   "excerpt": "MV Corran Bay, engine room maintenance log, 9 June. Second engineer's entry: 'Port generator oil changed at 11,200 running hours.' Running-hours meter record attached to the work order: port generator 11,486 h at oil change; starboard generator 11,200 h, no work done. Chief engineer's note: entry corrected to the meter reading; next port generator oil change due at the meter reading plus 500 h.",
+   "question": "At how many running hours does the meter record show the port generator's oil change?",
+   "gold": "11,486"
+  },
+  {
+   "id": "slice-a04",
+   "kind": "present",
+   "pattern": "a",
+   "excerpt": "Biochemistry lab, freezer F-4 (-80 °C), inventory note, 22 February. Postdoc's message to the group: 'The plasmid stocks moved to rack 3 last week.' Freezer inventory sheet, last audited 21 February: plasmid stocks, shelf 2, rack 5, boxes P1 to P6; competent cells, shelf 2, rack 3. Lab manager: the inventory sheet is authoritative, and anyone who moves boxes updates it before leaving.",
+   "question": "Which rack number does the inventory sheet give for the plasmid stocks?",
+   "gold": "5"
+  },
+  {
+   "id": "slice-a05",
+   "kind": "present",
+   "pattern": "a",
+   "excerpt": "Eastgate Parcel Depot, exception log, 3 November. Driver D. Marsh stated on return that parcel EG-44102 was delivered to the customer at 15:20. Status code key: D1 delivered, A2 attempted with no access, R1 returned to depot. Handheld scan record for EG-44102: 15:20 A2, 17:05 R1; no D1 scan. Supervisor's note: the driver's statement does not match the scans; parcel held at bay 7 for redelivery on 4 November.",
+   "question": "What status code does the handheld scan record show for parcel EG-44102 at 15:20?",
+   "gold": "A2"
+  },
+  {
+   "id": "slice-a06",
+   "kind": "absent",
+   "pattern": "a",
+   "excerpt": "Millbrook Public Library, circulation desk log, 12 April. The holder of card 20417 disputed an overdue charge, stating that the book 'The Salt Road' was returned through the after-hours drop on 2 April. Drop-box check-in record for 1 to 5 April: none exists; the drop-box scanner was out of service for those days and items were checked in by hand without dates. Charge suspended pending review by the branch manager.",
+   "question": "According to the check-in record, on what date was 'The Salt Road' returned?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-a07",
+   "kind": "absent",
+   "pattern": "a",
+   "excerpt": "Riverside Bus Timetable Office, service query log, 8 September. A passenger complaint states that the route 14 departure from Canal Street left early, at 07:52, before its scheduled time of 07:58. Vehicle location record for route 14 on 8 September: no entry for Canal Street; the bus's location unit was reset at the depot and logged nothing until 09:10. Query left open; the driver's paper trip sheet has been requested.",
+   "question": "What departure time does the vehicle location record show for route 14 at Canal Street on 8 September?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-a08",
+   "kind": "absent",
+   "pattern": "a",
+   "excerpt": "Highland Seed Bank, germination test log, accession HSB-0931 (Primula veris). Collector's field note: 'About 85% viable on collection.' Germination test record for HSB-0931: test started 3 May, 50 seeds on agar after 4 °C stratification, count due 31 May; result field blank, because the test was discarded after an incubator fault on 19 May. Retest scheduled for the autumn cycle.",
+   "question": "What germination percentage does the test record show for accession HSB-0931?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-a09",
+   "kind": "absent",
+   "pattern": "a",
+   "excerpt": "Playhouse lighting, cue sheet notes, 'The Lantern Keeper', technical rehearsal 2. Stage manager's note: 'Cue 47 fade is 8 seconds, as agreed with the director.' Console record for cue 47: intensity 60%, focus palette FP3, fade time field empty; the cue was rebuilt after the console crash and the time was not re-entered. The board operator will restore the fade from the paper plot before rehearsal 3.",
+   "question": "What fade time does the console record hold for cue 47?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-a10",
+   "kind": "absent",
+   "pattern": "a",
+   "excerpt": "Hollins Museum, conservation log, Gallery 4. Exhibition designer's email: 'Relative humidity in the Gallery 4 case stayed at 50% through the loan period.' Datalogger record for the Gallery 4 case: logger HL-22 ran from 12 January to 3 February, when its battery failed; no readings exist for the loan period, 10 February to 28 March. The registrar will note the gap on the condition report.",
+   "question": "What relative humidity does the datalogger record show for the Gallery 4 case during the loan period?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-b01",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Millbrook Public Library, loan rules, revision 6. Adult card: standard books 21 days, renewable twice; DVDs 7 days, not renewable; overdue fine 25p per item per day. Junior card: standard books 28 days, renewable once; DVDs 7 days; no overdue fines, but borrowing is blocked once 3 items are overdue.",
+   "question": "For a junior card, how many times can a standard book be renewed?",
+   "gold": "once"
+  },
+  {
+   "id": "slice-b02",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Riverside bus fare rules, effective 1 January. Weekday peak (06:30 to 09:30): single fare £2.40, one transfer allowed within 60 minutes of boarding. Weekday off-peak and weekends: single fare £1.90, one transfer allowed within 90 minutes of boarding. Concession passes are valid at all times except weekday peak.",
+   "question": "On a weekend, within how many minutes of boarding is a transfer allowed?",
+   "gold": "90"
+  },
+  {
+   "id": "slice-b03",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Highland Seed Bank, storage rules. Orthodox seed (tolerates drying): dry to 15% relative humidity equilibrium, seal in foil packets, store at -20 °C, retest viability every 10 years. Intermediate seed: dry only to 40% relative humidity equilibrium, store at -20 °C for no longer than 2 years before regeneration, retest viability every 3 years.",
+   "question": "Every how many years is intermediate seed retested for viability?",
+   "gold": "3"
+  },
+  {
+   "id": "slice-b04",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Playhouse lighting department rules. Main stage: every cue change after the technical-week freeze needs sign-off from the lighting designer and the stage manager, and the board operator saves the show file to two USB sticks after each session. Studio theatre: cue changes after the freeze need sign-off from the stage manager only, and one USB save per session is enough.",
+   "question": "In the studio theatre, whose sign-off is needed for a cue change after the freeze?",
+   "gold": "the stage manager"
+  },
+  {
+   "id": "slice-b05",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Hollins Museum, display conditions. Oil paintings: handle with nitrile gloves, maximum light exposure 200 lux, relative humidity 45 to 55%, frames checked every 6 months. Works on paper: handle with nitrile gloves on a support board, maximum light exposure 50 lux, relative humidity 40 to 50%, rotated off display after 3 months.",
+   "question": "What is the maximum light exposure for works on paper?",
+   "gold": "50 lux"
+  },
+  {
+   "id": "slice-b06",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Northside Water Utility, hydrant flushing procedure. Cast-iron mains: open the hydrant slowly over 2 minutes, flush until turbidity is below 1.0 NTU, minimum flush 15 minutes. PVC mains: open the hydrant over 1 minute, flush until turbidity is below 0.5 NTU, minimum flush 10 minutes. In both cases record turbidity at the start and at the end.",
+   "question": "For PVC mains, what is the minimum flush time?",
+   "gold": "10 minutes"
+  },
+  {
+   "id": "slice-b07",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Harlow Street Bakery, allergen rules. Line A (nut-free line): full wash-down between products, allergen swab before each shift, swab must read below 10 ppm. Line B (shared line): dry clean between products, allergen swab once per day, swab must read below 25 ppm, and every product is labelled 'may contain nuts'.",
+   "question": "On line B, below what reading must the allergen swab be?",
+   "gold": "25 ppm"
+  },
+  {
+   "id": "slice-b08",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "MV Corran Bay, standing orders, lifeboat drills. In port: lifeboat drill once a month, boats lowered to the embarkation deck only, lifeboat engine run for 3 minutes. At sea: lifeboat drill every two weeks, boats swung out but not lowered, lifeboat engine run for 5 minutes. Every drill is logged by the officer of the watch.",
+   "question": "At sea, for how many minutes is the lifeboat engine run during a drill?",
+   "gold": "5"
+  },
+  {
+   "id": "slice-b09",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Biochemistry building, freezer room rules. -80 °C freezers: alarm calls out the on-duty technician if the temperature rises above -65 °C for more than 15 minutes; defrost once a year. -20 °C freezers: alarm calls out the on-duty technician if the temperature rises above -12 °C for more than 30 minutes; defrost every six months.",
+   "question": "For the -20 °C freezers, above what temperature does the alarm call out?",
+   "gold": "-12 °C"
+  },
+  {
+   "id": "slice-b10",
+   "kind": "present",
+   "pattern": "b",
+   "excerpt": "Eastgate Parcel Depot, delivery rules. Standard parcels: if no one answers, leave with a neighbour where possible, otherwise leave a card and return; 3 attempts before return to sender. Signature-required parcels: never leave with a neighbour; leave a card and return; 2 attempts, then hold at the depot for 7 days before return to sender.",
+   "question": "How many delivery attempts are made for a signature-required parcel?",
+   "gold": "2"
+  },
+  {
+   "id": "slice-c01",
+   "kind": "present",
+   "pattern": "c",
+   "excerpt": "MV Corran Bay, hull inspection log, dry dock, 2 August. The diver survey found two areas of pitting on the port side. Frame 42: pit depth 1.8 mm, coating intact around it. Frame 57: pit depth 3.1 mm, coating breached over about 20 square cm. Class rule: pitting deeper than 2.5 mm must be repaired before refloating; shallower pits are monitored.",
+   "question": "At which frame number must the pitting be repaired before refloating?",
+   "gold": "57"
+  },
+  {
+   "id": "slice-c02",
+   "kind": "present",
+   "pattern": "c",
+   "excerpt": "Freezer F-2 (-80 °C) incident, 5 October. Two boxes were found outside the freezer after its door was left ajar. Box 118 (cell lines, labelled K. Ito) had been out for 40 minutes. Box 131 (RNA extracts, labelled M. Duarte) had been out for 2 h 15 min. Lab policy: any box out of the freezer for more than one hour is quarantined and its owner notified.",
+   "question": "Which box number must be quarantined?",
+   "gold": "131"
+  },
+  {
+   "id": "slice-c03",
+   "kind": "present",
+   "pattern": "c",
+   "excerpt": "Eastgate Parcel Depot, weighbridge log, 3 November. Two pallets were weighed for the 14:00 trunk to Hallam. Pallet PL-7720: 412 kg, shrink-wrapped, label scanned. Pallet PL-7734: 538 kg, shrink-wrapped, label scanned. Trunk rule: any pallet heavier than 500 kg goes on the tail-lift vehicle, not on the standard trailer.",
+   "question": "Which pallet goes on the tail-lift vehicle?",
+   "gold": "PL-7734"
+  },
+  {
+   "id": "slice-c04",
+   "kind": "present",
+   "pattern": "c",
+   "excerpt": "Northside Water Utility, main break log, 19 January. Two breaks were reported on Elm Road. Break outside no. 112: reported 05:20, 150 mm cast-iron main, repaired 09:45. Break outside no. 87: reported 06:05, 100 mm PVC main, repaired 08:30. A boil-water notice is required for any break on a main of 150 mm or larger.",
+   "question": "At what time was the break that required a boil-water notice repaired?",
+   "gold": "09:45"
+  },
+  {
+   "id": "slice-c05",
+   "kind": "present",
+   "pattern": "c",
+   "excerpt": "Harlow Street Bakery, oven log, Friday. Oven 1 ran the croissant batch at 195 °C; core temperature at exit 92 °C. Oven 2 ran the brioche batch at 175 °C; core temperature at exit 86 °C. Release rule: a batch is released only if its core temperature at exit is at least 90 °C; otherwise it is re-baked.",
+   "question": "At what oven temperature was the batch that had to be re-baked run?",
+   "gold": "175 °C"
+  },
+  {
+   "id": "slice-c06",
+   "kind": "absent",
+   "pattern": "c",
+   "excerpt": "Playhouse lighting, lamp-hour log, 30 November. Two followspots were checked after the matinee. Followspot FS-1: 1,140 lamp hours, colour wheel serviced. Followspot FS-2: 1,620 lamp hours, iris sticking. Rule: replace the lamp at 2,000 hours or more, and book a service once a lamp passes 1,800 hours.",
+   "question": "What is the lamp-hour reading of the followspot that needs a service booked?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-c07",
+   "kind": "absent",
+   "pattern": "c",
+   "excerpt": "Hollins Museum, loan register, spring. Two paintings are out on loan. Inv. 1987.204 went to the Calder Gallery on 3 March and returns on 30 June. Inv. 2001.017 went to the Westmere Art Trust on 10 March and returns on 15 July. Insurance rule: any loan longer than six months needs a revised policy before it leaves.",
+   "question": "What is the inventory number of the painting whose loan needs a revised policy?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-c08",
+   "kind": "absent",
+   "pattern": "c",
+   "excerpt": "Millbrook Public Library, reservation queue for 'The Glass Orchard'. Two copies are held. Copy barcode 30081124: on loan, due back 14 May, 3 holds queued. Copy barcode 30081190: on loan, due back 21 May, 4 holds queued. Branch rule: a copy is recalled early when its hold queue reaches 5.",
+   "question": "What is the barcode of the copy that is recalled early?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-c09",
+   "kind": "absent",
+   "pattern": "c",
+   "excerpt": "Riverside Bus Timetable Office, running-time review, route 22, October. Two trips were flagged. Trip 22-0715: scheduled 38 minutes, observed average 44 minutes. Trip 22-1640: scheduled 41 minutes, observed average 49 minutes. Review rule: a trip is retimed when its observed average exceeds its scheduled running time by more than 10 minutes.",
+   "question": "Which trip is retimed under the review rule?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-c10",
+   "kind": "absent",
+   "pattern": "c",
+   "excerpt": "Highland Seed Bank, moisture check, 14 February. Two accessions were tested after drying. HSB-1102 (Silene acaulis): moisture content 6.1%. HSB-1117 (Saxifraga oppositifolia): moisture content 5.4%. Storage rule: an accession goes back to the drying room if its moisture content is above 7.0%; otherwise it is sealed and stored.",
+   "question": "Which accession goes back to the drying room?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d01",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Harlow Street Bakery, cooling rules, revision 3. Bread loaves: cool on open racks for at least 90 minutes before slicing; core temperature must be below 30 °C before bagging; racks are kept away from the proofing cabinets. Cooling rules for other product groups are kept in the pastry section of the manual.",
+   "question": "How long must croissants cool before packing?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d02",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "MV Corran Bay, standing orders, bridge watch at sea. The officer of the watch takes a position fix every 30 minutes in coastal waters and every hour in open water, and logs barometric pressure every 4 hours. Watch arrangements in port are set separately by the master.",
+   "question": "In port, how often does the watch log barometric pressure?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d03",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Biochemistry building, sample shipping rules. Domestic shipments of frozen samples: pack in a polystyrene box inside a cardboard outer, with at least 5 kg of dry ice per 24 hours of expected transit; ship Monday to Wednesday only so nothing sits in a depot over a weekend; email the tracking number to the recipient on the day of dispatch.",
+   "question": "How much dry ice per 24 hours of transit is required for an international shipment?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d04",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Eastgate Parcel Depot, exception handling. Damaged parcels: photograph on arrival, place in the red cage at bay 2, notify the sender within 24 hours, hold for 14 days before disposal. Bay assignments for the other exception types are posted on the board in the supervisor's office.",
+   "question": "In which bay are parcels with an undeliverable address placed?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d05",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Northside Water Utility, sampling procedure. Distribution taps: run the tap for 3 minutes, flame or disinfect the spout, fill the sterile bottle to the 100 ml line, keep the sample at 2 to 8 °C, and deliver it to the laboratory within 6 hours. Procedures for reservoir and borehole sampling are issued separately by the laboratory.",
+   "question": "Within how many hours must a borehole sample be delivered to the laboratory?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d06",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Millbrook Public Library, interlibrary loan rules for books. Books borrowed from other libraries: the loan period is set by the lending library, normally 3 weeks; one renewal may be requested at least 3 days before the due date; a £1.50 request fee is charged when the book arrives at the branch.",
+   "question": "What is the request fee for a journal article copy requested through interlibrary loan?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d07",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Riverside bus operations, driver break rules. Urban routes: a driver takes a break of at least 30 minutes after no more than 4 h 30 min of driving; breaks are taken at Central Interchange or at Hill Lane depot. Rules for the express coach routes follow the separate coach agreement.",
+   "question": "On the express coach routes, after how much driving must a driver take a break?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d08",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Highland Seed Bank, regeneration rules. Wild-collected accessions: regenerate when viability falls below 75% of the initial test result or when fewer than 1,500 seeds remain; regenerate from at least 50 plants to keep genetic diversity. Cultivated accessions are handled under the crop collection protocol.",
+   "question": "Below what viability is a cultivated accession regenerated?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d09",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Playhouse lighting department, haze rules. Main stage: haze may run during a performance at an output of 20% or less; the fire panel is switched to heat-detection mode 30 minutes before curtain and back after the show; the duty manager signs the log. Use of haze in the other venues is decided case by case.",
+   "question": "In the studio theatre, at what maximum output may haze run during a performance?",
+   "gold": "That isn't in my record."
+  },
+  {
+   "id": "slice-d10",
+   "kind": "absent",
+   "pattern": "d",
+   "excerpt": "Hollins Museum, packing rules for outgoing loans. Framed paintings: wrap in glassine, then in bubble wrap with the bubbles facing out, then crate with 50 mm of foam on all sides; a courier travels with any painting valued above £500,000. Sculpture and other objects follow the object packing guide.",
+   "question": "Above what value does a courier travel with an outgoing sculpture?",
+   "gold": "That isn't in my record."
+  }
+ ]
+}
