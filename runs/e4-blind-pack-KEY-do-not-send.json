@@ -1,0 +1,4202 @@
+[
+ {
+  "rid": "H0001",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 0
+ },
+ {
+  "rid": "H0002",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 2
+ },
+ {
+  "rid": "H0003",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 2
+ },
+ {
+  "rid": "H0004",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "H0005",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "H0006",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "H0007",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 2
+ },
+ {
+  "rid": "H0008",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 2
+ },
+ {
+  "rid": "H0009",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 2
+ },
+ {
+  "rid": "H0010",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 2
+ },
+ {
+  "rid": "H0011",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 1
+ },
+ {
+  "rid": "H0012",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "H0013",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 2
+ },
+ {
+  "rid": "H0014",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "H0015",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "H0016",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 0
+ },
+ {
+  "rid": "H0017",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "H0018",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 1
+ },
+ {
+  "rid": "H0019",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "H0020",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 2
+ },
+ {
+  "rid": "H0021",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "H0022",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "H0023",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "H0024",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 0
+ },
+ {
+  "rid": "H0025",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 1
+ },
+ {
+  "rid": "H0026",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 0
+ },
+ {
+  "rid": "H0027",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "H0028",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 1
+ },
+ {
+  "rid": "H0029",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "H0030",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 1
+ },
+ {
+  "rid": "H0031",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "H0032",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 0
+ },
+ {
+  "rid": "H0033",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "H0034",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 0
+ },
+ {
+  "rid": "H0035",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 2
+ },
+ {
+  "rid": "H0036",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "H0037",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 2
+ },
+ {
+  "rid": "H0038",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "H0039",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 2
+ },
+ {
+  "rid": "H0040",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 1
+ },
+ {
+  "rid": "H0041",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "H0042",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "H0043",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "H0044",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "H0045",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "H0046",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 1
+ },
+ {
+  "rid": "H0047",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 2
+ },
+ {
+  "rid": "H0048",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "H0049",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 2
+ },
+ {
+  "rid": "H0050",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "H0051",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "H0052",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "H0053",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "H0054",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "H0055",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 2
+ },
+ {
+  "rid": "H0056",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 1
+ },
+ {
+  "rid": "H0057",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "H0058",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 1
+ },
+ {
+  "rid": "H0059",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "H0060",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "H0061",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 1
+ },
+ {
+  "rid": "H0062",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 2
+ },
+ {
+  "rid": "H0063",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 1
+ },
+ {
+  "rid": "H0064",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 0
+ },
+ {
+  "rid": "H0065",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 2
+ },
+ {
+  "rid": "H0066",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "H0067",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "H0068",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "H0069",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "H0070",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 2
+ },
+ {
+  "rid": "H0071",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 1
+ },
+ {
+  "rid": "H0072",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "H0073",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 0
+ },
+ {
+  "rid": "H0074",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 2
+ },
+ {
+  "rid": "H0075",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 2
+ },
+ {
+  "rid": "H0076",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "H0077",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "H0078",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 1
+ },
+ {
+  "rid": "H0079",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 2
+ },
+ {
+  "rid": "H0080",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "H0081",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c09",
+  "sample": 1
+ },
+ {
+  "rid": "H0082",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 1
+ },
+ {
+  "rid": "H0083",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "H0084",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "H0085",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "H0086",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 0
+ },
+ {
+  "rid": "H0087",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "H0088",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "H0089",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "H0090",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "H0091",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 0
+ },
+ {
+  "rid": "H0092",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "H0093",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c07",
+  "sample": 2
+ },
+ {
+  "rid": "H0094",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 1
+ },
+ {
+  "rid": "H0095",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "H0096",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c07",
+  "sample": 1
+ },
+ {
+  "rid": "H0097",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "H0098",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "H0099",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 1
+ },
+ {
+  "rid": "H0100",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 0
+ },
+ {
+  "rid": "H0101",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "H0102",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 0
+ },
+ {
+  "rid": "H0103",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "H0104",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "H0105",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 0
+ },
+ {
+  "rid": "H0106",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "H0107",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 2
+ },
+ {
+  "rid": "H0108",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 1
+ },
+ {
+  "rid": "H0109",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 1
+ },
+ {
+  "rid": "H0110",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 1
+ },
+ {
+  "rid": "H0111",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "H0112",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "H0113",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 1
+ },
+ {
+  "rid": "H0114",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "H0115",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "H0116",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "H0117",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "H0118",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "H0119",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 2
+ },
+ {
+  "rid": "H0120",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 1
+ },
+ {
+  "rid": "H0121",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "H0122",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "H0123",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 1
+ },
+ {
+  "rid": "H0124",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "H0125",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 1
+ },
+ {
+  "rid": "H0126",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 2
+ },
+ {
+  "rid": "H0127",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 0
+ },
+ {
+  "rid": "H0128",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 1
+ },
+ {
+  "rid": "H0129",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 1
+ },
+ {
+  "rid": "H0130",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "H0131",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "H0132",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "H0133",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 2
+ },
+ {
+  "rid": "H0134",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 2
+ },
+ {
+  "rid": "H0135",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "H0136",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "H0137",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "H0138",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 2
+ },
+ {
+  "rid": "H0139",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 2
+ },
+ {
+  "rid": "H0140",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "H0141",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 2
+ },
+ {
+  "rid": "H0142",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 0
+ },
+ {
+  "rid": "H0143",
+  "run": "runs/e4-serve-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "H0144",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 0
+ },
+ {
+  "rid": "H0145",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "H0146",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 0
+ },
+ {
+  "rid": "H0147",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 0
+ },
+ {
+  "rid": "H0148",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 1
+ },
+ {
+  "rid": "H0149",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "H0150",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 2
+ },
+ {
+  "rid": "H0151",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "H0152",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c09",
+  "sample": 0
+ },
+ {
+  "rid": "H0153",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 2
+ },
+ {
+  "rid": "H0154",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 0
+ },
+ {
+  "rid": "H0155",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "H0156",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 2
+ },
+ {
+  "rid": "H0157",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 0
+ },
+ {
+  "rid": "H0158",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 1
+ },
+ {
+  "rid": "H0159",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 2
+ },
+ {
+  "rid": "H0160",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 0
+ },
+ {
+  "rid": "H0161",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "H0162",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "H0163",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "H0164",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "H0165",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "H0166",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "H0167",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "H0168",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "H0169",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "H0170",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 2
+ },
+ {
+  "rid": "H0171",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "H0172",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 2
+ },
+ {
+  "rid": "H0173",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a10",
+  "sample": 2
+ },
+ {
+  "rid": "H0174",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 0
+ },
+ {
+  "rid": "H0175",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 0
+ },
+ {
+  "rid": "H0176",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 1
+ },
+ {
+  "rid": "H0177",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 2
+ },
+ {
+  "rid": "H0178",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 2
+ },
+ {
+  "rid": "H0179",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "H0180",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "H0181",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 1
+ },
+ {
+  "rid": "H0182",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 0
+ },
+ {
+  "rid": "H0183",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 0
+ },
+ {
+  "rid": "H0184",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "H0185",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 0
+ },
+ {
+  "rid": "H0186",
+  "run": "runs/e4-bare-v1.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "H0187",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 0
+ },
+ {
+  "rid": "H0188",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "H0189",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 0
+ },
+ {
+  "rid": "H0190",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 0
+ },
+ {
+  "rid": "H0191",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 1
+ },
+ {
+  "rid": "H0192",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 1
+ },
+ {
+  "rid": "H0193",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "H0194",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 0
+ },
+ {
+  "rid": "H0195",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "H0196",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "H0197",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 2
+ },
+ {
+  "rid": "H0198",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 0
+ },
+ {
+  "rid": "H0199",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "H0200",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 2
+ },
+ {
+  "rid": "H0201",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "H0202",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 2
+ },
+ {
+  "rid": "H0203",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 2
+ },
+ {
+  "rid": "H0204",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 1
+ },
+ {
+  "rid": "H0205",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 0
+ },
+ {
+  "rid": "H0206",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 2
+ },
+ {
+  "rid": "H0207",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "H0208",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "H0209",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 2
+ },
+ {
+  "rid": "H0210",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "H0211",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 1
+ },
+ {
+  "rid": "H0212",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 0
+ },
+ {
+  "rid": "H0213",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "H0214",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 2
+ },
+ {
+  "rid": "H0215",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 0
+ },
+ {
+  "rid": "H0216",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "H0217",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 0
+ },
+ {
+  "rid": "H0218",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 1
+ },
+ {
+  "rid": "H0219",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 1
+ },
+ {
+  "rid": "H0220",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "H0221",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 0
+ },
+ {
+  "rid": "H0222",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 2
+ },
+ {
+  "rid": "H0223",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 0
+ },
+ {
+  "rid": "H0224",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 0
+ },
+ {
+  "rid": "H0225",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 2
+ },
+ {
+  "rid": "H0226",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "H0227",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "H0228",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "H0229",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 1
+ },
+ {
+  "rid": "H0230",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "H0231",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 1
+ },
+ {
+  "rid": "H0232",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 2
+ },
+ {
+  "rid": "H0233",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a10",
+  "sample": 0
+ },
+ {
+  "rid": "H0234",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 0
+ },
+ {
+  "rid": "H0235",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 1
+ },
+ {
+  "rid": "H0236",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 1
+ },
+ {
+  "rid": "H0237",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "H0238",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 0
+ },
+ {
+  "rid": "H0239",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c07",
+  "sample": 0
+ },
+ {
+  "rid": "H0240",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "H0241",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "H0242",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a10",
+  "sample": 2
+ },
+ {
+  "rid": "H0243",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "H0244",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "H0245",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 2
+ },
+ {
+  "rid": "H0246",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 1
+ },
+ {
+  "rid": "H0247",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 0
+ },
+ {
+  "rid": "H0248",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "H0249",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "H0250",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 2
+ },
+ {
+  "rid": "H0251",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 1
+ },
+ {
+  "rid": "H0252",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 2
+ },
+ {
+  "rid": "H0253",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "H0254",
+  "run": "runs/e4-serve-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "H0255",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 2
+ },
+ {
+  "rid": "H0256",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 2
+ },
+ {
+  "rid": "H0257",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 2
+ },
+ {
+  "rid": "H0258",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 0
+ },
+ {
+  "rid": "H0259",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P10",
+  "sample": 1
+ },
+ {
+  "rid": "H0260",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c07",
+  "sample": 0
+ },
+ {
+  "rid": "H0261",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 1
+ },
+ {
+  "rid": "H0262",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 0
+ },
+ {
+  "rid": "H0263",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 0
+ },
+ {
+  "rid": "H0264",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 0
+ },
+ {
+  "rid": "H0265",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 2
+ },
+ {
+  "rid": "H0266",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 0
+ },
+ {
+  "rid": "H0267",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 0
+ },
+ {
+  "rid": "H0268",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 0
+ },
+ {
+  "rid": "H0269",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 0
+ },
+ {
+  "rid": "H0270",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 2
+ },
+ {
+  "rid": "H0271",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "H0272",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 2
+ },
+ {
+  "rid": "H0273",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A20",
+  "sample": 2
+ },
+ {
+  "rid": "H0274",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "H0275",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c07",
+  "sample": 1
+ },
+ {
+  "rid": "H0276",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 0
+ },
+ {
+  "rid": "H0277",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 1
+ },
+ {
+  "rid": "H0278",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 1
+ },
+ {
+  "rid": "H0279",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 1
+ },
+ {
+  "rid": "H0280",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 2
+ },
+ {
+  "rid": "H0281",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 0
+ },
+ {
+  "rid": "H0282",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "H0283",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 2
+ },
+ {
+  "rid": "H0284",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "H0285",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 2
+ },
+ {
+  "rid": "H0286",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 1
+ },
+ {
+  "rid": "H0287",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "H0288",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "H0289",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 0
+ },
+ {
+  "rid": "H0290",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 0
+ },
+ {
+  "rid": "H0291",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "H0292",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 1
+ },
+ {
+  "rid": "H0293",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 1
+ },
+ {
+  "rid": "H0294",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 1
+ },
+ {
+  "rid": "H0295",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 1
+ },
+ {
+  "rid": "H0296",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "H0297",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 0
+ },
+ {
+  "rid": "H0298",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 1
+ },
+ {
+  "rid": "H0299",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 0
+ },
+ {
+  "rid": "H0300",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 2
+ },
+ {
+  "rid": "H0301",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "H0302",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 2
+ },
+ {
+  "rid": "H0303",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a05",
+  "sample": 0
+ },
+ {
+  "rid": "H0304",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "A16",
+  "sample": 1
+ },
+ {
+  "rid": "H0305",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 1
+ },
+ {
+  "rid": "H0306",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "H0307",
+  "run": "runs/e4-prod-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "H0308",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 2
+ },
+ {
+  "rid": "H0309",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 1
+ },
+ {
+  "rid": "H0310",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 0
+ },
+ {
+  "rid": "H0311",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 2
+ },
+ {
+  "rid": "H0312",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a03",
+  "sample": 1
+ },
+ {
+  "rid": "H0313",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 0
+ },
+ {
+  "rid": "H0314",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "H0315",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 0
+ },
+ {
+  "rid": "H0316",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 1
+ },
+ {
+  "rid": "H0317",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c07",
+  "sample": 2
+ },
+ {
+  "rid": "H0318",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c10",
+  "sample": 0
+ },
+ {
+  "rid": "H0319",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 1
+ },
+ {
+  "rid": "H0320",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 2
+ },
+ {
+  "rid": "H0321",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 0
+ },
+ {
+  "rid": "H0322",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 2
+ },
+ {
+  "rid": "H0323",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 2
+ },
+ {
+  "rid": "H0324",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 2
+ },
+ {
+  "rid": "H0325",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 1
+ },
+ {
+  "rid": "H0326",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P13",
+  "sample": 1
+ },
+ {
+  "rid": "H0327",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 2
+ },
+ {
+  "rid": "H0328",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P07",
+  "sample": 1
+ },
+ {
+  "rid": "H0329",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "H0330",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "H0331",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 0
+ },
+ {
+  "rid": "H0332",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 0
+ },
+ {
+  "rid": "H0333",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 2
+ },
+ {
+  "rid": "H0334",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "H0335",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 1
+ },
+ {
+  "rid": "H0336",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 2
+ },
+ {
+  "rid": "H0337",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 0
+ },
+ {
+  "rid": "H0338",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 2
+ },
+ {
+  "rid": "H0339",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P15",
+  "sample": 1
+ },
+ {
+  "rid": "H0340",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 0
+ },
+ {
+  "rid": "H0341",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c01",
+  "sample": 0
+ },
+ {
+  "rid": "H0342",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 1
+ },
+ {
+  "rid": "H0343",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 0
+ },
+ {
+  "rid": "H0344",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 0
+ },
+ {
+  "rid": "H0345",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 0
+ },
+ {
+  "rid": "H0346",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 2
+ },
+ {
+  "rid": "H0347",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 2
+ },
+ {
+  "rid": "H0348",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "H0349",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "H0350",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 0
+ },
+ {
+  "rid": "H0351",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 0
+ },
+ {
+  "rid": "H0352",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 1
+ },
+ {
+  "rid": "H0353",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P03",
+  "sample": 1
+ },
+ {
+  "rid": "H0354",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b02",
+  "sample": 0
+ },
+ {
+  "rid": "H0355",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 0
+ },
+ {
+  "rid": "H0356",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 2
+ },
+ {
+  "rid": "H0357",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P02",
+  "sample": 2
+ },
+ {
+  "rid": "H0358",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 0
+ },
+ {
+  "rid": "H0359",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 2
+ },
+ {
+  "rid": "H0360",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a06",
+  "sample": 1
+ },
+ {
+  "rid": "H0361",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 0
+ },
+ {
+  "rid": "H0362",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 1
+ },
+ {
+  "rid": "H0363",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 0
+ },
+ {
+  "rid": "H0364",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 2
+ },
+ {
+  "rid": "H0365",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b10",
+  "sample": 1
+ },
+ {
+  "rid": "H0366",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 1
+ },
+ {
+  "rid": "H0367",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 0
+ },
+ {
+  "rid": "H0368",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 1
+ },
+ {
+  "rid": "H0369",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 1
+ },
+ {
+  "rid": "H0370",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P16",
+  "sample": 1
+ },
+ {
+  "rid": "H0371",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "H0372",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 0
+ },
+ {
+  "rid": "H0373",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 0
+ },
+ {
+  "rid": "H0374",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 1
+ },
+ {
+  "rid": "H0375",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 1
+ },
+ {
+  "rid": "H0376",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 1
+ },
+ {
+  "rid": "H0377",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 0
+ },
+ {
+  "rid": "H0378",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P18",
+  "sample": 2
+ },
+ {
+  "rid": "H0379",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c09",
+  "sample": 2
+ },
+ {
+  "rid": "H0380",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 1
+ },
+ {
+  "rid": "H0381",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b03",
+  "sample": 1
+ },
+ {
+  "rid": "H0382",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 0
+ },
+ {
+  "rid": "H0383",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c09",
+  "sample": 2
+ },
+ {
+  "rid": "H0384",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b06",
+  "sample": 2
+ },
+ {
+  "rid": "H0385",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c05",
+  "sample": 1
+ },
+ {
+  "rid": "H0386",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P01",
+  "sample": 2
+ },
+ {
+  "rid": "H0387",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c02",
+  "sample": 1
+ },
+ {
+  "rid": "H0388",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P05",
+  "sample": 0
+ },
+ {
+  "rid": "H0389",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 2
+ },
+ {
+  "rid": "H0390",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b07",
+  "sample": 2
+ },
+ {
+  "rid": "H0391",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 1
+ },
+ {
+  "rid": "H0392",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 1
+ },
+ {
+  "rid": "H0393",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 1
+ },
+ {
+  "rid": "H0394",
+  "run": "runs/e4-serve-v1.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v1",
+  "item": "P04",
+  "sample": 0
+ },
+ {
+  "rid": "H0395",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P04",
+  "sample": 1
+ },
+ {
+  "rid": "H0396",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 2
+ },
+ {
+  "rid": "H0397",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P11",
+  "sample": 1
+ },
+ {
+  "rid": "H0398",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b09",
+  "sample": 1
+ },
+ {
+  "rid": "H0399",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P17",
+  "sample": 1
+ },
+ {
+  "rid": "H0400",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 0
+ },
+ {
+  "rid": "H0401",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 2
+ },
+ {
+  "rid": "H0402",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P06",
+  "sample": 0
+ },
+ {
+  "rid": "H0403",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a02",
+  "sample": 1
+ },
+ {
+  "rid": "H0404",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-a01",
+  "sample": 0
+ },
+ {
+  "rid": "H0405",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P12",
+  "sample": 2
+ },
+ {
+  "rid": "H0406",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b04",
+  "sample": 0
+ },
+ {
+  "rid": "H0407",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b08",
+  "sample": 2
+ },
+ {
+  "rid": "H0408",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-b05",
+  "sample": 0
+ },
+ {
+  "rid": "H0409",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-a04",
+  "sample": 2
+ },
+ {
+  "rid": "H0410",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P09",
+  "sample": 0
+ },
+ {
+  "rid": "H0411",
+  "run": "runs/e4-bare-v2.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P20",
+  "sample": 2
+ },
+ {
+  "rid": "H0412",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-c04",
+  "sample": 2
+ },
+ {
+  "rid": "H0413",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P19",
+  "sample": 1
+ },
+ {
+  "rid": "H0414",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "H0415",
+  "run": "runs/e4-prod-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "slice",
+  "item": "slice-b01",
+  "sample": 0
+ },
+ {
+  "rid": "H0416",
+  "run": "runs/e4-prod-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "v2",
+  "item": "A05",
+  "sample": 2
+ },
+ {
+  "rid": "H0417",
+  "run": "runs/e4-serve-slice-r2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c06",
+  "sample": 1
+ },
+ {
+  "rid": "H0418",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P14",
+  "sample": 2
+ },
+ {
+  "rid": "H0419",
+  "run": "runs/e4-serve-v2.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "v2",
+  "item": "P08",
+  "sample": 0
+ },
+ {
+  "rid": "H0420",
+  "run": "runs/e4-bare-slice.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "slice",
+  "item": "slice-c03",
+  "sample": 1
+ }
+]
