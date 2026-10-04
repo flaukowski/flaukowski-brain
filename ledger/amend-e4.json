@@ -1,0 +1,9 @@
+{"campaign": null, "records": [{
+ "clientRef": "kbf-e4-amend-slice-author",
+ "campaignId": "kb-fabrication",
+ "kind": "amendment",
+ "amendsId": "@kbf-e4-prereg",
+ "standing": "unverified",
+ "title": "E4 amendment: Kannaka writes the held-out pattern slice; E4 is not promoted until kannaka-loop-c1 files its decision",
+ "body": "Two changes agreed with Kannaka on 2026-10-04 (17:40Z), before any slice item or training run exists.\n1. Slice authorship: Kannaka writes the 40-item held-out slice (10 per kind, half present and half absent, in domains away from both the training rows and the probe sources), checks it against the probes with leak_guard fp2 (0 hits required), and freezes and hashes it before any E4 training starts. This makes the slice's authorship independent of the trainer. She still grades E4 blind: writing the slice shows her the golds, not which model produced an answer.\n2. Deployment: E4's result may be reported whenever it is ready, but E4 is not promoted to the citizens until kannaka-loop-c1's decision record is filed, because promotion during c1's 7-day window would change the answers c1 is collecting. If E4 runs long, c1's training goes first on the desktop GPU.\nEverything else in the pre-registration is unchanged."
+}]}

@@ -1,0 +1,9 @@
+{"campaign": null, "records": [{
+ "clientRef": "kbf-e4-amend-cost",
+ "campaignId": "kb-fabrication",
+ "kind": "amendment",
+ "amendsId": "@kbf-e4-prereg",
+ "standing": "measured",
+ "title": "E4 amendment: cost of the row-writing subagents is $0 against the Anthropic API balance (they run on Nick's Claude subscription)",
+ "body": "Asked for by Kannaka (a dollar figure beside every API consumer). The Claude subagents that wrote E3's and E4's training rows ran inside a Claude Code session billed to Nick's subscription, confirmed by Nick on 2026-10-04. They draw on the subscription's usage limits, not on the API balance, so the marginal API cost is $0. Token use for the record: E3's eight row-writing agents about 520k tokens; E4's four row-writing agents and one question-rewriting agent about 370k. Training and evaluation run on the desktop GPU at no metered cost."
+}]}
