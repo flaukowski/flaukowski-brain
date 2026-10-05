@@ -1,0 +1,2182 @@
+[
+ {
+  "rid": "F0001",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0002",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0003",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0004",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0005",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0006",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0007",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0008",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0009",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0010",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0011",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0012",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0013",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0014",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0015",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0016",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0017",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0018",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0019",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0020",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0021",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0022",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0023",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0024",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0025",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0026",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0027",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0028",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0029",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0030",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0031",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0032",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0033",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0034",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0035",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0036",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0037",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0038",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0039",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0040",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0041",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0042",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0043",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0044",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0045",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0046",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0047",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0048",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0049",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0050",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0051",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0052",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0053",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0054",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0055",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0056",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A16-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0057",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0058",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0059",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0060",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0061",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0062",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0063",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c10-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0064",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0065",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0066",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0067",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0068",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0069",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0070",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0071",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0072",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c10-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0073",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0074",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0075",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0076",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0077",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0078",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0079",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0080",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0081",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0082",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0083",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0084",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0085",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0086",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0087",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0088",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0089",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0090",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0091",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0092",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0093",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0094",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0095",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0096",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0097",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0098",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0099",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0100",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0101",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0102",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0103",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0104",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0105",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0106",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0107",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0108",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0109",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0110",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A20-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0111",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0112",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0113",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0114",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0115",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0116",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0117",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0118",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0119",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0120",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0121",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0122",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0123",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0124",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0125",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0126",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0127",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0128",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0129",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0130",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0131",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0132",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0133",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0134",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0135",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0136",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0137",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0138",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0139",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0140",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0141",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0142",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A16-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0143",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A16-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0144",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0145",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0146",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0147",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0148",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0149",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0150",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0151",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0152",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0153",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0154",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0155",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0156",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0157",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0158",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0159",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0160",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0161",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0162",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0163",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0164",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0165",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0166",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0167",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0168",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0169",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c07-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0170",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0171",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0172",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0173",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0174",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0175",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0176",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0177",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0178",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0179",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0180",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0181",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0182",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0183",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0184",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0185",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0186",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0187",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A20-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0188",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0189",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A16-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0190",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c10-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0191",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0192",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0193",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0194",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0195",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0196",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A16-W",
+  "sample": 1
+ },
+ {
+  "rid": "F0197",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0198",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0199",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0200",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0201",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-N",
+  "sample": 0
+ },
+ {
+  "rid": "F0202",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a10-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0203",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0204",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0205",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c07-R",
+  "sample": 2
+ },
+ {
+  "rid": "F0206",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-A05-W",
+  "sample": 0
+ },
+ {
+  "rid": "F0207",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0208",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A20-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0209",
+  "run": "runs/e5-e4-bare.jsonl",
+  "model": "kannaka-brain-e4-serve",
+  "arm": "A",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0210",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 0
+ },
+ {
+  "rid": "F0211",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-W",
+  "sample": 2
+ },
+ {
+  "rid": "F0212",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-a06-O",
+  "sample": 1
+ },
+ {
+  "rid": "F0213",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-slice-c06-N",
+  "sample": 1
+ },
+ {
+  "rid": "F0214",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A16-O",
+  "sample": 2
+ },
+ {
+  "rid": "F0215",
+  "run": "runs/e5-7bv2-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-O",
+  "sample": 0
+ },
+ {
+  "rid": "F0216",
+  "run": "runs/e5-e4-prod.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.8,
+  "probe": "e5",
+  "item": "e5-A05-N",
+  "sample": 2
+ },
+ {
+  "rid": "F0217",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-c09-R",
+  "sample": 1
+ },
+ {
+  "rid": "F0218",
+  "run": "runs/e5-e4-serve.jsonl",
+  "model": null,
+  "arm": "B",
+  "temp": 0.2,
+  "probe": "e5",
+  "item": "e5-slice-a06-N",
+  "sample": 1
+ }
+]

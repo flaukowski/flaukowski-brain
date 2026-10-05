@@ -61,6 +61,7 @@ def main(argv=None):
     ap.add_argument("--name", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--seed", type=int, default=20261001)
+    ap.add_argument("--note", default="", help="appended to the instructions (a grading rule agreed for this pack)")
     a = ap.parse_args(argv)
     pending = []
     for path in a.runs:
@@ -82,7 +83,7 @@ def main(argv=None):
         pack.append({"rid": rid, **ans})
         key.append({"rid": rid, **k})
     with open(a.out, "x", encoding="utf-8") as f:
-        json.dump({"name": a.name, "instructions": INSTRUCTIONS, "answers": pack}, f, ensure_ascii=False, indent=1)
+        json.dump({"name": a.name, "instructions": INSTRUCTIONS + (" " + a.note if a.note else ""), "answers": pack}, f, ensure_ascii=False, indent=1)
     with open(a.out.replace(".json", "-KEY-do-not-send.json"), "x", encoding="utf-8") as f:
         json.dump(key, f, indent=1)
     h = hashlib.sha256(open(a.out, "rb").read()).hexdigest()
