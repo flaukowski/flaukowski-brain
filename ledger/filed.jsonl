@@ -15,3 +15,5 @@
 {"clientRef": "kbf-heesch-f2-replication", "id": null, "response": {"error": "invalid_link", "message": "{\"formErrors\":[],\"fieldErrors\":{\"aboutId\":[\"invalid_link\"]}}"}}
 {"clientRef": "kbf-heesch-f2-replication", "id": "01M48S750CEE63F0YTNMCZZR3D", "response": null}
 {"clientRef": "kbf-note-arion-heesch-f2", "id": "01M48S7EY49VP7B9JTJ3D5K2VG", "response": null}
+{"clientRef": "kbf-heesch-f2-corr-bytes", "id": "01M490J3SX9XAY7Y89X8T63QVP", "response": null}
+{"clientRef": "kbf-e5-result", "id": "01M490JTB7QA2SP5W0GTPD97XY", "response": null}

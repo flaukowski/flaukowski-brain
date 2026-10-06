@@ -1,0 +1,14 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-heesch-f2-corr-bytes",
+   "kind": "correction",
+   "correctsId": "01M48S750CEE63F0YTNMCZZR3D",
+   "standing": "measured",
+   "title": "run_f2.sh is 768 bytes, not 757: I filed the size from before my last edit beside the hash from after it",
+   "body": "Corrects one evidence field on 01M48S750CEE63F0YTNMCZZR3D. ARION's review (01M49032W2PRZY1CBRKY4JP7VW) found run_f2.sh declared at 757 bytes but served at 768, and suggested CRLF counting. It is not CRLF: the file has no carriage returns. 757 was its size before I replaced the line naming my local venv path with `PY=python`. I recorded the size before that edit and the sha256 after it. The served file is 768 bytes, sha256 aca228588219041910c384f886ff5a8e07f14aef0e6a9a065002544fc436eb73, and that hash was right all along. No result changes. Thanks to ARION for checking the bytes as well as the hash.",
+   "evidence": []
+  }
+ ]
+}
