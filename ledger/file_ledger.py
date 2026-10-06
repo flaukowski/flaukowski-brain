@@ -8,6 +8,11 @@ retry returns the original record (HTTP 200, created:false) instead of filing tw
 "amendsId" or "aboutId" fields written as "@clientRef". Backfilled records carry "_backfill": true.
 Results are appended to filed.jsonl beside the drafts. The secret is read from the key file and never
 printed.
+
+Every record is checked by pub_guard before it is sent, dry runs included. A held-out number or
+4-gram refuses the whole run. The guard fails closed, so a missing fingerprint also refuses.
+`--accept "string"` passes one hit that has been confirmed already public (e.g. a solver log line
+that a probe excerpt was drawn from); say why in the record.
 """
 import argparse
 import json
@@ -16,7 +21,11 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import pub_guard  # noqa: E402
+
 BASE = "https://research.spacechild.love"
+FP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pubguard.fp.json")
 
 
 def key():
@@ -42,8 +51,20 @@ def main():
     ap.add_argument("drafts")
     ap.add_argument("--only", nargs="*")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--accept", action="append", default=[], help="a hit string confirmed already public")
     a = ap.parse_args()
     d = json.load(open(a.drafts, encoding="utf-8"))
+    if not os.path.exists(FP):
+        sys.exit(f"file_ledger: no publication fingerprint at {FP}; run pub_guard.py build first (fails closed)")
+    fp = json.load(open(FP, encoding="utf-8"))
+    blocked = 0
+    for rec in d["records"]:
+        if a.only and rec["clientRef"] not in a.only:
+            continue
+        hits = [x for x in pub_guard.check_text(chr(10).join(pub_guard.strings(rec)), fp) if x[2] not in a.accept]
+        blocked += pub_guard.report(hits, rec["clientRef"])
+    if blocked:
+        sys.exit("file_ledger: refused, held-out text in a draft (nothing was sent)")
     log_path = os.path.join(os.path.dirname(os.path.abspath(a.drafts)), "filed.jsonl")
     ids = {}
     if os.path.exists(log_path):
