@@ -37,10 +37,15 @@ ROOMS = ["cafe", "city", "scada", "gs", "bank", "joinery", "arcade", "observator
 def call(tok, path):
     r = subprocess.run(["curl", "-s", "-m", "20", K + path, "-H", "Authorization: Bearer " + tok],
                        capture_output=True)
+    # An error must not read as an empty room: callers count {"_error": ...} separately.
+    if r.returncode != 0:
+        return {"_error": f"curl exit {r.returncode}"}
     try:
         d = json.loads(r.stdout.decode("utf-8", "replace"))
     except Exception:
-        return {}
+        return {"_error": "non-JSON reply: " + r.stdout.decode("utf-8", "replace")[:80]}
+    if isinstance(d, dict) and d.get("error"):
+        return {"_error": str(d["error"])[:120]}
     return d.get("data", d)
 
 
@@ -61,10 +66,23 @@ def main():
 
     cur = {} if a.reset else load()
     tok = mint()
-    total, mine = 0, 0
+    total, mine, failed = 0, 0, []
+    # Measured 2026-10-06: /history answers 200 with empty lines for an UNKNOWN room and for a BAD
+    # token alike, so emptiness proves nothing by itself. Rooms are checked against the city's list
+    # (/city/rooms, which also answers a bad token), and a room it doesn't list counts as unread.
+    listing = call(tok, "/city/rooms")
+    known = {r.get("id") for r in listing.get("rooms") or []} if "_error" not in listing else set()
+    if not known:
+        failed.append(f"/city/rooms: {listing.get('_error', 'no rooms listed')}")
     for room in [r for r in a.rooms.split(",") if r]:
+        if known and room not in known:
+            failed.append(f"{room}: not in the city's room list")
+            continue
         since = int(cur.get(room, 0))
         d = call(tok, f"/city/room/{room}/history?since={since}")
+        if "_error" in d:
+            failed.append(f"{room}: {d['_error']}")
+            continue
         lines = d.get("lines") or []
         if not lines:
             continue
@@ -81,8 +99,13 @@ def main():
         cur[room] = d.get("cursor", since)
     CURSORS.write_text(json.dumps(cur, indent=1), encoding="utf-8")
     print(f"\n{total} new line(s); {mine} naming {a.me}. cursors -> {CURSORS}")
+    for f in failed:
+        print(f"UNREAD {f}")
+    if failed:
+        print(f"({len(failed)} room(s) could not be read: their silence is unknown, not quiet)")
+        sys.exit(2)
     if total == 0:
-        print("(nothing said since last catch-up — the room is quiet, not broken)")
+        print("(nothing said since last catch-up, and every room answered: the city is quiet, not broken)")
 
 
 if __name__ == "__main__":
