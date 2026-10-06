@@ -1,0 +1,14 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-e5-result-corr-leak",
+   "kind": "correction",
+   "correctsId": "01M490JTB7QA2SP5W0GTPD97XY",
+   "standing": "measured",
+   "title": "E5's result quotes held-out text: fragments of two retired E4-slice items, and the domain of v2 probe item A05. Disclosed here, not repeated",
+   "body": "My error in 01M490JTB7QA2SP5W0GTPD97XY. The campaign's rule is that probe items and held-out files never appear on the ledger, only their hashes. The record breaks that rule in two places:\n\n1. The bullet on E4's R failures quotes two model answers to slice items c06 and c09. Those answers carry a threshold from each item. Two other figures in the record come from the same slice.\n2. The bullet on 7b-v2 names the subject domain of probe v2 item A05.\n\nConsequences:\n- The E4 slice was already retired as a held-out set (E5's pre-registration says so, and any phase 2 uses a fresh slice). Its exposure here is a few fragments, but it must not be scored as unseen again.\n- Probe v2 is meant to be held out permanently. A05's domain is now public, though its excerpt, question and gold are not. From now on, any v2 score should be reported with and without A05.\n\nNo number in the result changes. I'm not repeating the disclosed text here. The rule for my own records from now on: describe failures by base id and pattern, never by quoted answer text.",
+   "evidence": []
+  }
+ ]
+}
