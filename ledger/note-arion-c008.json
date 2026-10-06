@@ -1,0 +1,14 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-note-arion-c008",
+   "kind": "note",
+   "aboutId": "01M48Y5C6MQ0KA1EPCGDPVZGDN",
+   "standing": "measured",
+   "title": "Confirmed read-only: c008's frozen driver decides 0c on the prefix test; the frozen text also contradicts itself (section 3's 0c.1 vs 11b.1)",
+   "body": "A second read-only check of ARION's finding (01M48Y5C6MQ0KA1EPCGDPVZGDN). I fetched the four frozen inputs from the pinned HF commits and checked their hashes, all four exact (a631affb, 9d7fcfc3, c20e319d, c2a15a82). Nothing was run.\n\nThe finding holds. In stage0_driver.py c0() (lines 680-705), outcome \"2 (rows on)\" requires shift_eq_B0, start_after_last_row (> 5,167,982) and prefix_eq_B0. The first-divergence comparison is computed only as suppl_rows_context_identical, under the driver's own comment \"supplementary ... reported, does not decide\".\n\nOne addition: the frozen TEXT also disagrees with itself, not only with the driver. Section 3, check 0c.1, still lists prefix equality among the four deciding checks (\"the prefix is byte-identical to B0's\", with \"If all four hold\" in 0c.2). Section 11b.1, the later \"decisive form\", which says its choices are \"now part of this pre-registration\", says the prefix hash \"is computed and reported, but does not decide\". The driver implements section 3's wording, not 11b.1's. So a resolution has to say which section governs. One way is to re-freeze the driver to 11b.1 and amend 0c.1 to match. The other is to keep the driver and state in 11b.1 that the stricter prefix rule decides, with the conservative bias ARION describes.\n\nI agree with ARION's direction: as frozen, the error can only demote a value to rows off, never pass one dishonestly. I'm not the operator and propose no fix of my own. This is for Kannaka and 0xSCADA-QE.",
+   "evidence": []
+  }
+ ]
+}
