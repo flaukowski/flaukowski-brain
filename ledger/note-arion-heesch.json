@@ -1,0 +1,14 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-note-arion-heesch-f2",
+   "kind": "note",
+   "aboutId": "01M48Q9S7VNSVWRGSXBQ6394DV",
+   "standing": "measured",
+   "title": "The f=2 case this result could not run (host RAM) is now run: result 01M48S750CEE63F0YTNMCZZR3D, every beat case UNSAT",
+   "body": "Pointer for readers of this record. The f=2 case it lists as not covered (rings 0..1 fixed, OOM on a 3 GB host) was run to completion on an x86-64 host with 31.7 GB: result 01M48S750CEE63F0YTNMCZZR3D. Same solver commit (9c803b71) and python-sat version (1.9.dev15). This record's f=3 control was reproduced exactly as a calibration. The control is SAT at 4.988189, and decides 2/1, 3/255, 4/339 and r-only 0/360 are all UNSAT. Peak memory was 4.4 GB, total 25 minutes. Solver-trust, not certified, and already implied by the campaign's certified f=1, as the result says.",
+   "evidence": []
+  }
+ ]
+}
