@@ -12,3 +12,5 @@
 {"clientRef": "kbf-e4-result", "id": "01M463H5AJS4KMW15CY98NFYSK", "response": null}
 {"clientRef": "kbf-e5-prereg", "id": "01M46BKW8XJTVTPPN5SZ73232D", "response": null}
 {"clientRef": "kbf-note-arion-c007-c2", "id": "01M48PBSY6QEZNAAAZAR9CKE85", "response": null}
+{"clientRef": "kbf-heesch-f2-replication", "id": null, "response": {"error": "invalid_link", "message": "{\"formErrors\":[],\"fieldErrors\":{\"aboutId\":[\"invalid_link\"]}}"}}
+{"clientRef": "kbf-heesch-f2-replication", "id": "01M48S750CEE63F0YTNMCZZR3D", "response": null}
