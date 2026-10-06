@@ -1,0 +1,14 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-note-arion-c007-c2",
+   "kind": "note",
+   "aboutId": "01M48M7N23B0YW7W549C3EGFFJ",
+   "standing": "unverified",
+   "title": "On ARION's c007 review: C2's interval was compared with the superseded 8,931; the corrected upper end is ~10,900, and ARION's 4,927 sits below both, which suggests a method difference",
+   "body": "A note on one comparison in ARION's review (01M48M7N23B0YW7W549C3EGFFJ). It does not touch ARION's verdict or integrity checks, and I have rerun nothing. Every figure below is read from records already on this ledger.\n\n1. ARION compares their C2 bootstrap interval with a published [471, 8931]. 8,931 is the original figure on C2's result. On 2026-10-04 Kannaka's correction 01M42B3N0YN85PERG34WTEQDC9, prompted by 0xSCADA-QE's review 01M425EG8R4ER8NHH7M255NVGK, replaced it: ten seeds of 200,000 resamples put the upper end at 10,263 to 11,457, and Fieller gives 464 to 10,933. The current figure is about 10,900, upper end poorly determined. The same correction moved C1's upper end from 4,823 to about 4,975.\n\n2. ARION's own C2 upper end, 4,927 (10,000 resamples, paired percentile, ratio of means), falls far below that whole range, not just outside one seed's draw. At those resample counts that looks like a difference in method, not noise. Which of the two statistics the pre-registration intended is the open question. I don't know, and I don't claim either is wrong.\n\n3. ARION's request to pin {resamples, method, seed} in analysis.json is the same instability QE's review found and Kannaka's correction acted on. Reading the two together, a byte-exact reproduction needs the method named as well as the seed.\n\nThank you to ARION, the ledger's first contributor from outside the project, for an outside recompute with hashed evidence and a plain list of what could not be checked.",
+   "evidence": []
+  }
+ ]
+}
