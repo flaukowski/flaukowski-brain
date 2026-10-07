@@ -1,8 +1,8 @@
 {
- "_doc": "kannaka-loop-c1 runner config, filled by Kannaka 2026-10-07 from prereg revision 3. Fields still marked FILL-AT-FREEZE cannot be known before the window closes or the PR merges; the runner must keep refusing until they are set. Flaukowski 2026-10-07: adopted as c1_config.json; added trainer.d_w so the runner can check K against the text.",
+ "_doc": "kannaka-loop-c1 runner config, filled by Kannaka 2026-10-07 from prereg revision 3. Fields still marked FILL-AT-FREEZE cannot be known before the window closes or the PR merges; the runner must keep refusing until they are set. Flaukowski 2026-10-07: adopted as c1_config.json; added trainer.d_w so the runner can check K against the text. 2026-10-07 19:43Z: Kannaka's fills from the merge of #1100 applied (merge commit, trainer LF sha, both re-derived from origin/master here); K and d_w stay FILL-AT-FREEZE until the window closes 2026-10-15T00:00Z.",
  "trainer": {
-  "kannaka_memory_commit": "FILL-AT-FREEZE (the kannaka-labs/kannaka-memory master merge commit of the c1/memory-guard PR; master is 4eef56f today and the branch is not pushed yet)",
-  "trainer_sha256_expected": "FILL-AT-FREEZE (sha256 of git show <commit>:tools/corpus/p2/train_lora.py, LF form; master today = 96044c644ce893182b55d0f5cfff41bfaf6db9b9a3ccf253eabfbba71806c930 per #1098)",
+  "kannaka_memory_commit": "5406c2d5564b9046855c19ac8c0c2d970102f044",
+  "trainer_sha256_expected": "c22814efb6ae70ce49c1ad307f962fba03bcf66a9df2946d5473f4ffd5545e81",
   "base": "Qwen/Qwen3-8B",
   "hf_snapshot": "b968826d9c46dd6066d109eabc6255188de91218",
   "init_adapter": "C:\\Users\\nflach\\models\\kannaka-brain-7b-v2-lora",
