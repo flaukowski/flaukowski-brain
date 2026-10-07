@@ -1,0 +1,1320 @@
+{
+ "_doc": "kannaka-loop-c1 probe cells, prereg revision 3 section 2.4/2.6. 60 cells x 20 absent items x 3 samples = 3,600 absent-item answers per grader. Written by Kannaka 2026-10-07 for Flaukowski's runner. No probe text in this file.",
+ "items": {
+  "v1": {
+   "file": "items-v1.json",
+   "sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "note": "sha256 of the canonical JSON (sorted keys, no whitespace, UTF-8), as registered in held-out-probes.md; 40 items, 20 present / 20 absent"
+  },
+  "v2": {
+   "file": "items-v2.json",
+   "sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "note": "same form; 40 items, 20 present / 20 absent"
+  }
+ },
+ "cells_defined": {
+  "bare": {
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve": false,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged"
+  },
+  "serve": {
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve": true,
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5"
+  },
+  "production": {
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve": true,
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096"
+  }
+ },
+ "production_modelfile": {
+  "num_ctx": 4096,
+  "num_thread": 10,
+  "temperature": 0.8,
+  "stop": [
+   "<|im_start|>",
+   "<|im_end|>"
+  ],
+  "template": "nothink.jinja baked into the merged tokenizer / GGUF"
+ },
+ "serve_gates_every_serve_cell": [
+  "a fresh frozen private data dir (KANNAKA_DATA_DIR), never the live ~/.kannaka; its snapshot hash recorded before and after and unchanged",
+  "the raised serve rate limit",
+  "an exact ask count: 120 per cell (40 items x 3 sampling seeds); 240 if both sets share one serve session",
+  "0 [error] answers, or the cell is re-run from scratch and the first attempt recorded",
+  "every answer row carries run, set, cell, item id, sampling seed, serve tag and the model digest"
+ ],
+ "serve_tag_rule": "one tag per trained model, kannaka-brain-c1-<run> with the run lower-cased and the prime written p (N'-s7 -> kannaka-brain-c1-np-s7), built from that run's q4_K_M with the production Modelfile verbatim (num_ctx 4096, num_thread 10, temperature 0.8, the two stop tokens). The serve cell passes 0.2/8192 as request options; the production cell passes none. P and REF use the tags E5 already used.",
+ "order": "all cells of one model before the next; models in the frozen run order with P and REF first: P, REF, L-s7, N-s7, S-s7, N'-s7, L-s11, N-s11, N'-s11, L-s13, N-s13, N'-s13",
+ "blinding": "answer packs interleave all arms and seeds in a seeded random order (seed 7) under opaque ids with model-identifying strings stripped (section 2.4); Kannaka grades before seeing any floor; QE grades blind",
+ "cells": [
+  {
+   "cell_id": "P/v1/bare",
+   "run": "P",
+   "model": "7b-v2, the start build (section 2.8)",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "P/v2/bare",
+   "run": "P",
+   "model": "7b-v2, the start build (section 2.8)",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "P/v1/serve",
+   "run": "P",
+   "model": "7b-v2, the start build (section 2.8)",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "the desktop's existing kannaka-brain-7b-v2 tag (the one E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "P/v2/serve",
+   "run": "P",
+   "model": "7b-v2, the start build (section 2.8)",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "the desktop's existing kannaka-brain-7b-v2 tag (the one E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "P/v1/production",
+   "run": "P",
+   "model": "7b-v2, the start build (section 2.8)",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "the desktop's existing kannaka-brain-7b-v2 tag (the one E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "P/v2/production",
+   "run": "P",
+   "model": "7b-v2, the start build (section 2.8)",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "the desktop's existing kannaka-brain-7b-v2 tag (the one E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "REF/v1/bare",
+   "run": "REF",
+   "model": "E3, the reference arm (section 3)",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "REF/v2/bare",
+   "run": "REF",
+   "model": "E3, the reference arm (section 3)",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "REF/v1/serve",
+   "run": "REF",
+   "model": "E3, the reference arm (section 3)",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "the desktop's existing E3 tag (gguf f7bdcfbf...; the one E3/E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "REF/v2/serve",
+   "run": "REF",
+   "model": "E3, the reference arm (section 3)",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "the desktop's existing E3 tag (gguf f7bdcfbf...; the one E3/E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "REF/v1/production",
+   "run": "REF",
+   "model": "E3, the reference arm (section 3)",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "the desktop's existing E3 tag (gguf f7bdcfbf...; the one E3/E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "REF/v2/production",
+   "run": "REF",
+   "model": "E3, the reference arm (section 3)",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "the desktop's existing E3 tag (gguf f7bdcfbf...; the one E3/E5 used; name it in the record)",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s7/v1/bare",
+   "run": "L-s7",
+   "model": "the merged q4_K_M of run L-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s7/v2/bare",
+   "run": "L-s7",
+   "model": "the merged q4_K_M of run L-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s7/v1/serve",
+   "run": "L-s7",
+   "model": "the merged q4_K_M of run L-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-l-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s7/v2/serve",
+   "run": "L-s7",
+   "model": "the merged q4_K_M of run L-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-l-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s7/v1/production",
+   "run": "L-s7",
+   "model": "the merged q4_K_M of run L-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-l-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s7/v2/production",
+   "run": "L-s7",
+   "model": "the merged q4_K_M of run L-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-l-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s7/v1/bare",
+   "run": "N-s7",
+   "model": "the merged q4_K_M of run N-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s7/v2/bare",
+   "run": "N-s7",
+   "model": "the merged q4_K_M of run N-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s7/v1/serve",
+   "run": "N-s7",
+   "model": "the merged q4_K_M of run N-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-n-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s7/v2/serve",
+   "run": "N-s7",
+   "model": "the merged q4_K_M of run N-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-n-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s7/v1/production",
+   "run": "N-s7",
+   "model": "the merged q4_K_M of run N-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-n-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s7/v2/production",
+   "run": "N-s7",
+   "model": "the merged q4_K_M of run N-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-n-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s7/v1/bare",
+   "run": "N'-s7",
+   "model": "the merged q4_K_M of run N'-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s7/v2/bare",
+   "run": "N'-s7",
+   "model": "the merged q4_K_M of run N'-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s7/v1/serve",
+   "run": "N'-s7",
+   "model": "the merged q4_K_M of run N'-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-np-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s7/v2/serve",
+   "run": "N'-s7",
+   "model": "the merged q4_K_M of run N'-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-np-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s7/v1/production",
+   "run": "N'-s7",
+   "model": "the merged q4_K_M of run N'-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-np-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s7/v2/production",
+   "run": "N'-s7",
+   "model": "the merged q4_K_M of run N'-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-np-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "S-s7/v1/bare",
+   "run": "S-s7",
+   "model": "the merged q4_K_M of run S-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "S-s7/v2/bare",
+   "run": "S-s7",
+   "model": "the merged q4_K_M of run S-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "S-s7/v1/serve",
+   "run": "S-s7",
+   "model": "the merged q4_K_M of run S-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-s-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "S-s7/v2/serve",
+   "run": "S-s7",
+   "model": "the merged q4_K_M of run S-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "serve",
+   "arm": "serve",
+   "temperature": 0.2,
+   "num_ctx": 8192,
+   "serve_tag": "kannaka-brain-c1-s-s7",
+   "prompt": "kannaka swarm serve, KANNAKA_SERVE_PROMPT_ARM=baseline; 0.2/8192 passed as request options as in E5",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "S-s7/v1/production",
+   "run": "S-s7",
+   "model": "the merged q4_K_M of run S-s7",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-s-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "S-s7/v2/production",
+   "run": "S-s7",
+   "model": "the merged q4_K_M of run S-s7",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-s-s7",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s11/v1/bare",
+   "run": "L-s11",
+   "model": "the merged q4_K_M of run L-s11",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s11/v2/bare",
+   "run": "L-s11",
+   "model": "the merged q4_K_M of run L-s11",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s11/v1/production",
+   "run": "L-s11",
+   "model": "the merged q4_K_M of run L-s11",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-l-s11",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s11/v2/production",
+   "run": "L-s11",
+   "model": "the merged q4_K_M of run L-s11",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-l-s11",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s11/v1/bare",
+   "run": "N-s11",
+   "model": "the merged q4_K_M of run N-s11",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s11/v2/bare",
+   "run": "N-s11",
+   "model": "the merged q4_K_M of run N-s11",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s11/v1/production",
+   "run": "N-s11",
+   "model": "the merged q4_K_M of run N-s11",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-n-s11",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s11/v2/production",
+   "run": "N-s11",
+   "model": "the merged q4_K_M of run N-s11",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-n-s11",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s11/v1/bare",
+   "run": "N'-s11",
+   "model": "the merged q4_K_M of run N'-s11",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s11/v2/bare",
+   "run": "N'-s11",
+   "model": "the merged q4_K_M of run N'-s11",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s11/v1/production",
+   "run": "N'-s11",
+   "model": "the merged q4_K_M of run N'-s11",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-np-s11",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s11/v2/production",
+   "run": "N'-s11",
+   "model": "the merged q4_K_M of run N'-s11",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-np-s11",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s13/v1/bare",
+   "run": "L-s13",
+   "model": "the merged q4_K_M of run L-s13",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s13/v2/bare",
+   "run": "L-s13",
+   "model": "the merged q4_K_M of run L-s13",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s13/v1/production",
+   "run": "L-s13",
+   "model": "the merged q4_K_M of run L-s13",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-l-s13",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "L-s13/v2/production",
+   "run": "L-s13",
+   "model": "the merged q4_K_M of run L-s13",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-l-s13",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s13/v1/bare",
+   "run": "N-s13",
+   "model": "the merged q4_K_M of run N-s13",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s13/v2/bare",
+   "run": "N-s13",
+   "model": "the merged q4_K_M of run N-s13",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s13/v1/production",
+   "run": "N-s13",
+   "model": "the merged q4_K_M of run N-s13",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-n-s13",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N-s13/v2/production",
+   "run": "N-s13",
+   "model": "the merged q4_K_M of run N-s13",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-n-s13",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s13/v1/bare",
+   "run": "N'-s13",
+   "model": "the merged q4_K_M of run N'-s13",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s13/v2/bare",
+   "run": "N'-s13",
+   "model": "the merged q4_K_M of run N'-s13",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "bare",
+   "arm": "bare",
+   "temperature": 0.2,
+   "num_ctx": null,
+   "serve_tag": null,
+   "prompt": "the neutral bare prompt of E3/E4/E5, unchanged",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s13/v1/production",
+   "run": "N'-s13",
+   "model": "the merged q4_K_M of run N'-s13",
+   "items": "items-v1.json",
+   "items_sha256": "f291f2d20001f4c9d84bdc4163e48c3eb34cb4bb363232ac31a40a66ddb8e07b",
+   "set": "v1",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-np-s13",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  },
+  {
+   "cell_id": "N'-s13/v2/production",
+   "run": "N'-s13",
+   "model": "the merged q4_K_M of run N'-s13",
+   "items": "items-v2.json",
+   "items_sha256": "5c7fcab3dc664e51c22c134ea77afff58185dfa9a3b3d50ac29e6dd338ac429a",
+   "set": "v2",
+   "cell": "production",
+   "arm": "serve",
+   "temperature": 0.8,
+   "num_ctx": 4096,
+   "serve_tag": "kannaka-brain-c1-np-s13",
+   "prompt": "kannaka swarm serve, baseline arm, NO request options: the production Modelfile's own 0.8/4096",
+   "samples_per_item": 3,
+   "sampling_seeds": [
+    7,
+    11,
+    13
+   ],
+   "asks": 120
+  }
+ ]
+}

@@ -1,5 +1,5 @@
 {
- "_doc": "kannaka-loop-c1 runner config, filled by Kannaka 2026-10-07 from prereg revision 3. Fields still marked FILL-AT-FREEZE cannot be known before the window closes or the PR merges; the runner must keep refusing until they are set. Flaukowski 2026-10-07: adopted as c1_config.json; added trainer.d_w so the runner can check K against the text.",
+ "_doc": "kannaka-loop-c1 runner config, filled by Kannaka 2026-10-07 from prereg revision 3. Fields still marked FILL-AT-FREEZE cannot be known before the window closes or the PR merges; the runner must keep refusing until they are set.",
  "trainer": {
   "kannaka_memory_commit": "FILL-AT-FREEZE (the kannaka-labs/kannaka-memory master merge commit of the c1/memory-guard PR; master is 4eef56f today and the branch is not pushed yet)",
   "trainer_sha256_expected": "FILL-AT-FREEZE (sha256 of git show <commit>:tools/corpus/p2/train_lora.py, LF form; master today = 96044c644ce893182b55d0f5cfff41bfaf6db9b9a3ccf253eabfbba71806c930 per #1098)",
@@ -16,7 +16,6 @@
   "batch": 1,
   "grad_accum": 8,
   "K": "FILL-AT-FREEZE: 2 * ceil((320 + |D_W|) / 8), the same for every arm, at most 160; |D_W| is known when the window closes (T0 + 7 d, or + 14 d after the one extension)",
-  "d_w": "FILL-AT-FREEZE: |D_W|, the count of persona rows in the window, known when it closes; the runner refuses unless K == 2 * ceil((320 + d_w) / 8) and K <= 160",
   "eval_every": 40,
   "max_holdout_rise": 0.1,
   "vram_guard_gib": 7.6,

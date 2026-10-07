@@ -148,12 +148,42 @@ def check_text(text, fp):
     return hits
 
 
+def accept(hits, accepted):
+    """A hit whose string the operator has accepted as public, with a reason, is reported as ACCEPT and does not
+    block. The acceptance is explicit per token and printed with the reason, so it is on the record; a token
+    that is not in the list still blocks, and an accepted string that never hits is reported as unused."""
+    out, used = [], set()
+    for sev, kind, s, uids in hits:
+        if s in accepted:
+            used.add(s)
+            out.append(("ACCEPT", kind, s, [accepted[s]]))
+        else:
+            out.append((sev, kind, s, uids))
+    for s in sorted(set(accepted) - used):
+        print(f"pub_guard: --accept {s!r} did not match any hit (stale acceptance?)")
+    return out
+
+
 def report(hits, label):
     for sev, kind, s, uids in sorted(hits):
-        print(f"{sev} held-out {kind}: {s!r} (from {', '.join(uids[:3])}{' ...' if len(uids) > 3 else ''})")
+        print(f"{sev} held-out {kind}: {s!r} ({'reason: ' if sev == 'ACCEPT' else 'from '}"
+              f"{', '.join(uids[:3])}{' ...' if len(uids) > 3 else ''})")
     blocks = sum(1 for x in hits if x[0] == "BLOCK")
-    print(f"pub_guard: {blocks} block(s), {len(hits) - blocks} warning(s) in {label}")
+    accepted = sum(1 for x in hits if x[0] == "ACCEPT")
+    print(f"pub_guard: {blocks} block(s), {len(hits) - blocks - accepted} warning(s), {accepted} accepted in {label}")
     return blocks
+
+
+def parse_accepts(items):
+    acc = {}
+    for it in items or []:
+        if "=" not in it:
+            raise SystemExit(f"pub_guard: --accept needs TOKEN=reason, got {it!r}")
+        tok, reason = it.split("=", 1)
+        if not reason.strip():
+            raise SystemExit(f"pub_guard: --accept {tok!r} needs a reason")
+        acc[tok] = reason.strip()
+    return acc
 
 
 def cmd_check(a):
@@ -163,7 +193,7 @@ def cmd_check(a):
         text = "\n".join(strings(json.loads(raw)))
     except ValueError:
         text = raw
-    return 1 if report(check_text(text, fp), a.file) else 0
+    return 1 if report(accept(check_text(text, fp), parse_accepts(a.accept)), a.file) else 0
 
 
 def cmd_audit(a):
@@ -183,6 +213,8 @@ def main(argv=None):
     sp = ap.add_subparsers(dest="cmd", required=True)
     b = sp.add_parser("build"); b.add_argument("--out", required=True)
     c = sp.add_parser("check"); c.add_argument("--fp", required=True); c.add_argument("file")
+    c.add_argument("--accept", action="append", metavar="TOKEN=reason",
+                   help="a held-out token confirmed to be the author's own public text; reported, never blocks")
     u = sp.add_parser("audit"); u.add_argument("--fp", required=True)
     a = ap.parse_args(argv)
     return {"build": cmd_build, "check": cmd_check, "audit": cmd_audit}[a.cmd](a)
