@@ -236,6 +236,13 @@ def cmd_train(a):
         if spent + slowest > cap:
             die(f"GPU-hours cap: {spent:.1f} h spent, the slowest run took {slowest:.1f} h, training cap "
                 f"{cap} h (of {c['gpu_hours_cap_total']} total). Stopping before {r['name']} in the frozen order.", 5)
+        # The probe stage shares this ledger (c1/runs/cells/*.json carry seconds too): training must also
+        # leave the total under gpu_hours_cap_total once cells have been spent.
+        cells_h = sum(json.loads(p.read_text(encoding="utf-8")).get("seconds", 0)
+                      for p in (RUNS / "cells").glob("*.json")) / 3600
+        if spent + cells_h + slowest > c["gpu_hours_cap_total"]:
+            die(f"GPU-hours total: {spent:.1f} h training + {cells_h:.1f} h cells, the slowest run took "
+                f"{slowest:.1f} h, total cap {c['gpu_hours_cap_total']} h. Stopping before {r['name']}.", 5)
         data = Path(r["data"])
         out = MODELS / safe(r["name"])
         log_p = HERE / f"{safe(r['name'])}.log"

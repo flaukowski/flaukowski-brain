@@ -103,8 +103,38 @@
   "L-s7",
   "N-s7"
  ],
- "probe_cells": "see c1_probe_cells.json (sha256 in the mail); 60 cells",
+ "probe_cells": {
+  "path": "c1_probe_cells.json",
+  "sha256": "f8c05cde01cbfa473cda0d2dd170dcc3ac2ec2989e9c0ab735f448a0841b1692",
+  "note": "Kannaka's 60 cells, 2026-10-07; the file is pinned, not restated"
+ },
  "gpu_hours_cap_total": 24,
  "gpu_hours_cap_training": 15,
- "gpu_hours_note": "Nick approved 24 GPU-hours for the campaign, training AND probe cells. Your measurement: 11.5 h worst case for 10 runs, about 9 h of cells. Until the probe stage shares the runner's hour ledger, the training cap is 15 so the cells still fit."
+ "gpu_hours_note": "Nick approved 24 GPU-hours for the campaign, training AND probe cells. Your measurement: 11.5 h worst case for 10 runs, about 9 h of cells. Until the probe stage shares the runner's hour ledger, the training cap is 15 so the cells still fit.",
+ "probe": {
+  "_doc": "probe-cell stage (c1/probe_cells.py). serve has no per-request options, so the 0.2/8192 serve cell runs on a -serve tag baked exactly as E5's kannaka-brain-e4-serve was; the production cell runs on the production tag.",
+  "items": {
+   "items-v1.json": "../probe-v1-items.json",
+   "items-v2.json": "../probe-v2-items.json"
+  },
+  "tags": {
+   "P": {
+    "production": "kannaka-brain-7b-v2",
+    "serve": "kannaka-brain-7b-v2-serve"
+   },
+   "REF": {
+    "production": "kannaka-brain-e3",
+    "serve": "kannaka-brain-e3-serve"
+   }
+  },
+  "modelfile_source_tag": "kannaka-brain-7b-v2",
+  "serve_bin": "C:\\Users\\nflach\\AppData\\Local\\Temp\\claude\\C--Windows-System32\\928d7661-9c22-4174-ad5c-1c935d87cee6\\scratchpad\\km\\kannaka-memory\\target\\release\\kannaka.exe",
+  "serve_bin_sha256": "7d1921d41e58a61e83588bfa0a45f8830e6ecf3ebc6a3ad0be964b5b82d37f71",
+  "serve_bin_note": "the build E5 served with: kannaka 0.16.14 at 1b01652 (serve prompt arms), so P, REF and c1 share one instrument",
+  "serve_data_dir": "C:\\Users\\nflach\\.kannaka-c1",
+  "ask_subject": "KANNAKA.ask.flaukowski",
+  "nats_url": "nats://swarm.ninja-portal.com:4222",
+  "asks_per_hour_total": 1000,
+  "broadcast_threshold": "2.0"
+ }
 }
