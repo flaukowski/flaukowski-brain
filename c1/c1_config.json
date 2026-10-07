@@ -1,0 +1,37 @@
+{
+ "_doc": "kannaka-loop-c1 runner config. Fields marked FILL are Kannaka's to set from the frozen text; the runner refuses while any FILL remains.",
+ "trainer": {
+  "kannaka_memory_commit": "FILL (master commit that contains the c1/memory-guard change once merged)",
+  "base": "Qwen/Qwen3-8B",
+  "hf_snapshot": "b968826d9c46dd6066d109eabc6255188de91218",
+  "init_adapter": "C:\\Users\\nflach\\models\\kannaka-brain-7b-v2-lora",
+  "init_adapter_sha256": "6cfd3c2a9d4bd89ea5b95f1eddcd39e8d7908385715c53ceb3f0ef851ebfef0f",
+  "lr": "FILL",
+  "r": 32,
+  "max_len": 626,
+  "batch": 1,
+  "grad_accum": 8,
+  "K": "FILL (2 x ceil((320 + |D_W|) / 8), the same for every arm)",
+  "eval_every": "FILL",
+  "max_holdout_rise": 0.10,
+  "vram_guard_gib": 7.6,
+  "extra_flags": ["--qlora", "--completion-only", "--no-kbit-upcast", "--answer-only-logits"],
+  "chat_template_kwargs": {"enable_thinking": false}
+ },
+ "leak_fingerprint": {"path": "C:\\Users\\nflach\\source\\flaukowski-brain\\probes-v1v2-e5.fp3.json",
+                      "sha256": "b8cdf1fa6fbfb2537debd0ccad094fb69be976253639fd6fa817d1c5e542c8de"},
+ "runs": [
+  {"name": "L-s7",  "arm": "L",  "seed": 7,  "data": "FILL (dir with train.jsonl + holdout.jsonl)"},
+  {"name": "N-s7",  "arm": "N",  "seed": 7,  "data": "FILL"},
+  {"name": "S-s7",  "arm": "S",  "seed": 7,  "data": "FILL"},
+  {"name": "N'-s7", "arm": "N'", "seed": 7,  "data": "FILL"},
+  {"name": "L-s11", "arm": "L",  "seed": 11, "data": "FILL"},
+  {"name": "N-s11", "arm": "N",  "seed": 11, "data": "FILL"},
+  {"name": "N'-s11","arm": "N'", "seed": 11, "data": "FILL"},
+  {"name": "L-s13", "arm": "L",  "seed": 13, "data": "FILL"},
+  {"name": "N-s13", "arm": "N",  "seed": 13, "data": "FILL"},
+  {"name": "N'-s13","arm": "N'", "seed": 13, "data": "FILL"}
+ ],
+ "probe_cells": "FILL (list of {run, items, items_sha256, arm A|B, temp, serve_tag?}; 60 cells per the text)",
+ "gpu_hours_cap": 24
+}
