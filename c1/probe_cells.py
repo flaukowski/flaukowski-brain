@@ -316,9 +316,10 @@ async def ask_serve(nc, subject: str, frm: str, text: str) -> str:
 class ServeSession:
     """One kannaka swarm serve on a frozen data dir, with E5's gates around it."""
 
-    def __init__(self, c: dict, tag: str, label: str, num_ctx: int):
+    def __init__(self, c: dict, tag: str, label: str, num_ctx: int, subject: str = None):
         self.c, self.tag, self.label, self.num_ctx = c, tag, label, num_ctx
         self.p = c["probe"]
+        self.subject = subject or self.p["ask_subject"]   # the subject this serve answers on; the log gate reads it
         self.data = Path(self.p["serve_data_dir"])
         self.bin = Path(self.p["serve_bin"])
         self.out = LOGS / f"c1-{safe(label)}.out.log"
@@ -376,7 +377,7 @@ class ServeSession:
             time.sleep(2)
             arm = arm or next(iter(self._grep("[swarm serve] prompt arm:")), None)
             limit = limit or next(iter(self._grep("rate limit:")), None)
-            sub = sub or next(iter(self._grep("subscribing to KANNAKA.ask.flaukowski")), None)
+            sub = sub or next(iter(self._grep(f"subscribing to {self.subject}")), None)
             if arm and limit and sub:
                 break
             if self.proc.poll() is not None:
@@ -390,7 +391,7 @@ class ServeSession:
         self.record.update({"arm_line": arm, "limit_line": limit, "started": now()})
 
     async def smoke(self, nc):
-        ans = await ask_serve(nc, self.p["ask_subject"], f"{safe(self.label)}-smoke", SMOKE_EXCERPT)
+        ans = await ask_serve(nc, self.subject, f"{safe(self.label)}-smoke", SMOKE_EXCERPT)
         if ans.startswith("[error]"):
             self.stop(); die(f"{self.label}: smoke ask failed: {ans}")
         try:
@@ -478,7 +479,7 @@ def cmd_operator_serve(a):
     dir, pass the log gates, answer the smoke ask, hold until --minutes elapse or the stop file appears, close,
     and write the operator record (plus a copy of the err log) that `attach` or `run --external` consumes."""
     c = load_cfg(require_filled=False)
-    session = ServeSession(c, a.tag, a.label or f"operator-{safe(a.tag)}", a.num_ctx)
+    session = ServeSession(c, a.tag, a.label or f"operator-{safe(a.tag)}", a.num_ctx, a.ask_subject)
     session.start()
     nc = _Loop().run(_connect(c))
     try:
@@ -590,7 +591,7 @@ def cmd_run(a):
         nc = None
         cell_ctx = 8192 if kind == "bare" else pending[0]["num_ctx"]
         if kind != "bare" and not external:
-            session = ServeSession(c, tag, label, cell_ctx)
+            session = ServeSession(c, tag, label, cell_ctx, subject)
             session.start()
         elif kind == "bare":
             unload_all()
@@ -661,8 +662,11 @@ def cmd_run(a):
             if srec:
                 gates.update(srec["gates"])
             pending_op = external and not a.operator_record
+            # The hour ledger (ledger_gate, run_c1's cap) sums `seconds` as GPU time on this desktop. An external
+            # cell burns none of this card, so it charges 0 and keeps its wall clock in wall_seconds_remote.
             rec = {"cell_id": cell["cell_id"], "run": run, "set": cell["set"], "cell": kind, "tag": tag,
-                   "model_digest": digest, "asks": asks, "error_answers": n_err, "seconds": secs,
+                   "model_digest": digest, "asks": asks, "error_answers": n_err,
+                   "seconds": 0 if external else secs, "wall_seconds_remote": secs if external else None,
                    "rows": str(rows), "rows_sha256": sha(rows),
                    "serve": "pending-operator-record" if pending_op else srec, "ollama_loaded_after": loaded,
                    "mode": "external-serve" if external else "local", "ask_subject": subject if kind != "bare" else None,
@@ -740,6 +744,7 @@ def main():
     o.add_argument("--tag", required=True); o.add_argument("--num-ctx", type=int, required=True)
     o.add_argument("--minutes", type=float, default=240); o.add_argument("--out", required=True)
     o.add_argument("--label"); o.add_argument("--operator", default="")
+    o.add_argument("--ask-subject", help="the subject this serve answers on (default: probe.ask_subject)")
     t = sp.add_parser("attach", help="join an operator record and log to asker records that wait on them")
     t.add_argument("--cells", nargs="+", required=True); t.add_argument("--operator-record", required=True)
     t.add_argument("--serve-log", required=True); t.add_argument("--smoke", action="store_true")
