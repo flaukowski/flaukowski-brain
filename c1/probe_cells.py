@@ -6,6 +6,18 @@ written by Kannaka 2026-10-07, run on this desktop against the merged q4_K_M of 
     python c1/probe_cells.py run [--only CELL_ID ...]   # the cells, in the frozen order; one record per cell
     python c1/probe_cells.py run --smoke                 # plumbing only: 1 item x 1 sample on P, into a scratch dir
 
+External-serve mode (KSHB T1 on a serve someone else operates; agreed with Kannaka 2026-10-08):
+    # the serve's operator, on the serving host: the session half with every E5 gate, then a record + log
+    python c1/probe_cells.py operator-serve --tag <tag> --num-ctx <8192|4096> --minutes 240 --out op.json
+    # the asker, anywhere with request/reply on the subject: the ask half; records wait on the operator
+    python c1/probe_cells.py run --external --only <cell ids> --ask-subject KANNAKA.ask.<subject> --model-digest <d>
+    # when the operator's record and err log arrive: join them, recompute the gates, finalize the records
+    python c1/probe_cells.py attach --cells <cell ids> --operator-record op.json --serve-log op.json.err.log
+  `operator-serve` stops when --minutes pass or `<out>.stop` appears. The same log_gates()/operator_record_gates()
+  judge local and external sessions, so the two modes cannot drift apart. The asker's NATS client (nats-py)
+  subscribes only to its own _INBOX reply subject, so the ask half carries none of kannaka-memory#1101's refused
+  wildcard retries. Every record names instrument_author.
+
 What a cell is (c1_probe_cells.json, cells_defined):
   bare        the neutral bare prompt of E3/E4/E5 (brain_probe.SYSTEM_A + prompt_text, unchanged), straight to
               Ollama, temperature 0.2, num_ctx 8192, one request per sample with that sample's sampling seed.
@@ -428,20 +440,133 @@ def plan(c: dict, cells: dict, only, smoke: bool) -> list:
     return seq
 
 
+INSTRUMENT_AUTHOR = "flaukowski"   # KSHB rev 1: every metric names who wrote the instrument that produced it
+
+
+def log_gates(log_text: str, expected_asks, limit: int) -> dict:
+    """The serve-log half of E5's gates, computed from the text of the serve's err log. Used on the local
+    session and on an operator-supplied log alike, so the two modes are judged by one function."""
+    lines = log_text.splitlines()
+    arm = next((l for l in lines if "[swarm serve] prompt arm:" in l), None)
+    lim = next((l for l in lines if "rate limit:" in l), None)
+    sub = any("subscribing to KANNAKA.ask." in l for l in lines)
+    directed = sum(1 for l in lines if "directed from probe-" in l)
+    restarted = any("restarting to serve the fresh mind" in l for l in lines)
+    return {"arm_line": arm, "limit_line": lim, "directed_asks": directed,
+            "gates": {"arm_baseline": arm == "[swarm serve] prompt arm: baseline",
+                      "limit_raised": bool(lim) and f"{limit}/hour total" in lim,
+                      "subscribed": sub,
+                      "asks_exact": (directed == expected_asks) if expected_asks is not None else None,
+                      "no_restart": not restarted}}
+
+
+def operator_record_gates(orec: dict) -> dict:
+    """The operator-half gates from an operator record (written by `operator-serve`, or by another driver that
+    emits the same fields): the frozen data dir unchanged, serve alive at close, the right tag loaded at the
+    right context after the smoke ask."""
+    hb, ha = orec.get("hrm_sha256_before"), orec.get("hrm_sha256_after")
+    loaded = orec.get("ollama_loaded_after_smoke") or []
+    tag, ctx = orec.get("tag"), orec.get("num_ctx")
+    return {"snapshot_unchanged": bool(hb) and hb == ha,
+            "alive_at_close": bool(orec.get("alive_at_end")),
+            "loaded_exactly_this_tag": len(loaded) == 1 and loaded[0].get("name") == f"{tag}:latest"
+                                       and loaded[0].get("context_length") == ctx}
+
+
+def cmd_operator_serve(a):
+    """The session half, for the operator of a serve the asker does not control: start the serve on a frozen data
+    dir, pass the log gates, answer the smoke ask, hold until --minutes elapse or the stop file appears, close,
+    and write the operator record (plus a copy of the err log) that `attach` or `run --external` consumes."""
+    c = load_cfg(require_filled=False)
+    session = ServeSession(c, a.tag, a.label or f"operator-{safe(a.tag)}", a.num_ctx)
+    session.start()
+    nc = _Loop().run(_connect(c))
+    try:
+        _Loop().run(session.smoke(nc))
+    finally:
+        _Loop().run(nc.close())
+    out = Path(a.out)
+    stop = Path(str(out) + ".stop")
+    print(f"probe_cells: operator-serve: {a.tag} up at ctx {a.num_ctx}; serving until {a.minutes} min pass or "
+          f"{stop} exists", flush=True)
+    t0 = time.time()
+    while time.time() - t0 < a.minutes * 60 and not stop.exists():
+        if not session.alive():
+            break
+        time.sleep(5)
+    rec = session.close(None)
+    rec.update({"tag": a.tag, "num_ctx": a.num_ctx, "operator": a.operator, "instrument_author": INSTRUMENT_AUTHOR,
+                "mode": "operator-serve", "err_log_copy": str(out) + ".err.log"})
+    shutil.copy2(session.err, rec["err_log_copy"])
+    out.write_text(json.dumps(rec, indent=1), encoding="utf-8")
+    print(f"probe_cells: operator record -> {out} (directed asks seen: {rec['directed_asks']}, alive at close: "
+          f"{rec['alive_at_end']}, snapshot unchanged: {rec['gates']['snapshot_unchanged']})", flush=True)
+
+
+def finalize(cell_ids: list, orec_path: Path, log_path: Path, limit: int):
+    """Join an operator record and its err log to asker records that are waiting on them, recompute the gates
+    and the exit, and rewrite each record. Refuses a record that is not waiting."""
+    orec = json.loads(Path(orec_path).read_text(encoding="utf-8"))
+    log_text = Path(log_path).read_text(encoding="utf-8", errors="replace")
+    done = cell_records()
+    expected = sum(done[safe(cid)]["asks"] for cid in cell_ids if safe(cid) in done)
+    lg = log_gates(log_text, expected, limit)
+    og = operator_record_gates(orec)
+    for cid in cell_ids:
+        rec = done.get(safe(cid))
+        if not rec:
+            die(f"{cid}: no asker record to attach to")
+        if rec.get("serve") not in (None, "pending-operator-record"):
+            die(f"{cid}: its record already carries a serve block; not overwriting")
+        if orec.get("tag") != rec["tag"]:
+            die(f"{cid}: operator record is for tag {orec.get('tag')}, the cell asked {rec['tag']}")
+        gates = dict(rec["gates"]); gates.update(lg["gates"]); gates.update(og)
+        rec.update({"serve": {**{k: v for k, v in orec.items() if k != "gates"}, "log_sha256": sha(Path(log_path)),
+                              "operator_record": str(orec_path), "arm_line": lg["arm_line"], "limit_line": lg["limit_line"],
+                              "directed_asks_in_log": lg["directed_asks"], "expected_asks_in_session": expected},
+                    "gates": gates, "exit": 0 if all(gates.values()) else 3,
+                    "outcome": "measured" if all(gates.values()) else
+                    "failed its gates: " + ", ".join(k for k, v in gates.items() if not v),
+                    "finalized_at": now()})
+        (CELLS / f"{safe(cid)}.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
+        print(f"probe_cells: {cid}: {rec['outcome']}", flush=True)
+    bad = [cid for cid in cell_ids if done.get(safe(cid), {}).get("exit") not in (0, None)]
+    return bad
+
+
+def cmd_attach(a):
+    global CELLS
+    if a.smoke:
+        CELLS = Path(os.environ.get("C1_SMOKE_DIR", str(CELLS / "smoke")))
+    c = load_cfg(require_filled=False)
+    bad = finalize(a.cells, Path(a.operator_record), Path(a.serve_log), c["probe"]["asks_per_hour_total"])
+    if bad:
+        die(f"{', '.join(bad)} failed their gates after attach; rows kept; re-run from scratch per section 2.6", 3)
+
+
 def cmd_run(a):
     c = load_cfg(require_filled=not a.smoke)
     cells = load_cells(c)
     items = load_items(c, cells)
-    have = ollama_tags()
+    have = ollama_tags() if not a.external else {}
+    external = bool(a.external)
+    subject = a.ask_subject or c["probe"]["ask_subject"]
     global CELLS
     if a.smoke:
         CELLS = Path(os.environ.get("C1_SMOKE_DIR", str(CELLS / "smoke")))
         CELLS.mkdir(parents=True, exist_ok=True)
         print(f"probe_cells: SMOKE: 1 item x 1 sample per cell kind on P, records in {CELLS}", flush=True)
+    if external:
+        if a.only is None:
+            die("--external runs one serve session's cells: name them with --only")
+        print(f"probe_cells: EXTERNAL serve: asking {subject} as {INSTRUMENT_AUTHOR}; the operator's record and log "
+              f"finalize the gates ({'now' if a.operator_record else 'later, via attach'})", flush=True)
     import nats
     for run, kind, group in plan(c, cells, a.only, a.smoke):
         tag = tags_for(c, run, {})["serve" if kind == "serve" else "production"]
-        if tag not in have:
+        if external and kind == "bare":
+            die("bare cells need the model's Ollama; run them on the serving host, not --external")
+        if not external and tag not in have:
             die(f"{run}/{kind}: ollama has no tag {tag} (build-tags first)")
         label = f"{run}-{kind}"
         done = cell_records()
@@ -464,15 +589,21 @@ def cmd_run(a):
         session = None
         nc = None
         cell_ctx = 8192 if kind == "bare" else pending[0]["num_ctx"]
-        if kind != "bare":
+        if kind != "bare" and not external:
             session = ServeSession(c, tag, label, cell_ctx)
             session.start()
-        else:
+        elif kind == "bare":
             unload_all()
+        digest = have.get(tag) if not external else (a.model_digest or "operator-record")
         try:
             if session:
                 nc = _Loop().run(_connect(c))
                 _Loop().run(session.smoke(nc))
+            elif external:
+                nc = _Loop().run(_connect(c))
+                smoke = _Loop().run(ask_serve(nc, subject, f"{safe(label)}-smoke", SMOKE_EXCERPT))
+                if smoke.startswith("[error]"):
+                    die(f"{label}: smoke ask on {subject} failed: {smoke}")
             t0 = time.time()
             expected_total = 0
             cell_results = []
@@ -480,14 +611,14 @@ def cmd_run(a):
                 its = items[cell["set"]]["items"][:n_items] if n_items else items[cell["set"]]["items"]
                 seeds = cell["sampling_seeds"][:n_samples] if n_samples else cell["sampling_seeds"]
                 rows = CELLS / f"{safe(cell['cell_id'])}.jsonl"
-                digest = have[tag]
                 meta = {"meta": True, "cell_id": cell["cell_id"], "run": run, "set": cell["set"], "cell": kind,
                         "arm": cell["arm"], "tag": tag, "model_digest": digest, "temperature": cell["temperature"],
                         "num_ctx": cell["num_ctx"] if kind != "bare" else 8192,
                         "items_sha256": items[cell["set"]]["raw_sha256"],
                         "items_canonical_sha256": items[cell["set"]]["canonical_sha256"],
                         "items_file": items[cell["set"]]["path"], "sampling_seeds": seeds, "started": now(),
-                        "prompt": cell["prompt"], "smoke": a.smoke}
+                        "prompt": cell["prompt"], "smoke": a.smoke, "ask_subject": subject if kind != "bare" else None,
+                        "mode": "external-serve" if external else "local", "instrument_author": INSTRUMENT_AUTHOR}
                 tc = time.time()
                 n_err = 0
                 with open(rows, "x", encoding="utf-8") as out:
@@ -499,7 +630,7 @@ def cmd_run(a):
                                 ans = ask_bare(tag, it, cell["temperature"], 8192, seed)
                                 seed_used = seed
                             else:
-                                ans = _Loop().run(ask_serve(nc, c["probe"]["ask_subject"], f"probe-{it['id']}",
+                                ans = _Loop().run(ask_serve(nc, subject, f"probe-{it['id']}",
                                                             brain_probe.prompt_text(it)))
                                 seed_used = None
                             n_err += ans.startswith("[error]")
@@ -519,7 +650,7 @@ def cmd_run(a):
             srec = session.close(expected_total) if session else None
             if nc:
                 _Loop().run(nc.close())
-        loaded = ollama_loaded()
+        loaded = ollama_loaded() if not external else None
         bare_loaded_ok = (kind != "bare") or (len(loaded) == 1 and loaded[0]["name"] == f"{tag}:latest"
                                               and loaded[0]["context_length"] == cell_ctx)
         for cell, rows, asks, n_err, secs in cell_results:
@@ -529,18 +660,27 @@ def cmd_run(a):
                 gates["loaded_exactly_this_tag"] = bare_loaded_ok
             if srec:
                 gates.update(srec["gates"])
+            pending_op = external and not a.operator_record
             rec = {"cell_id": cell["cell_id"], "run": run, "set": cell["set"], "cell": kind, "tag": tag,
-                   "model_digest": have[tag], "asks": asks, "error_answers": n_err, "seconds": secs,
-                   "rows": str(rows), "rows_sha256": sha(rows), "serve": srec, "ollama_loaded_after": loaded,
-                   "gates": gates,
-                   "exit": 0 if all(gates.values()) else 3, "outcome": "measured" if all(gates.values()) else
-                   "failed its gates: " + ", ".join(k for k, v in gates.items() if not v),
+                   "model_digest": digest, "asks": asks, "error_answers": n_err, "seconds": secs,
+                   "rows": str(rows), "rows_sha256": sha(rows),
+                   "serve": "pending-operator-record" if pending_op else srec, "ollama_loaded_after": loaded,
+                   "mode": "external-serve" if external else "local", "ask_subject": subject if kind != "bare" else None,
+                   "instrument_author": INSTRUMENT_AUTHOR, "gates": gates,
+                   "exit": None if pending_op else (0 if all(gates.values()) else 3),
+                   "outcome": "asked; gates wait on the operator record" if pending_op else
+                   ("measured" if all(gates.values()) else "failed its gates: " + ", ".join(k for k, v in gates.items() if not v)),
                    "hours_spent_before": spent, "smoke": a.smoke, "recorded_at": now()}
             (CELLS / f"{safe(cell['cell_id'])}.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
             print(f"probe_cells: {cell['cell_id']}: {rec['outcome']}", flush=True)
-            if rec["exit"] != 0:
+            if rec["exit"] == 3:
                 die(f"{cell['cell_id']} failed its gates; rows kept at {rows}; re-run from scratch per section 2.6 "
                     "and keep this first attempt on the record", 3)
+        if external and a.operator_record:
+            bad = finalize([cell["cell_id"] for cell, *_ in cell_results], Path(a.operator_record), Path(a.serve_log),
+                           c["probe"]["asks_per_hour_total"])
+            if bad:
+                die(f"{', '.join(bad)} failed their gates on the operator record; rows kept", 3)
 
 
 class _Loop:
@@ -590,8 +730,22 @@ def main():
     sp.add_parser("check")
     b = sp.add_parser("build-tags"); b.add_argument("--only", nargs="*")
     r = sp.add_parser("run"); r.add_argument("--only", nargs="*"); r.add_argument("--smoke", action="store_true")
+    r.add_argument("--external", action="store_true",
+                   help="ask a serve someone else operates: no session here; gates come from the operator record")
+    r.add_argument("--ask-subject", help="the serve's ask subject (default: probe.ask_subject in the config)")
+    r.add_argument("--model-digest", help="the tag's Ollama digest as the operator reports it (external only)")
+    r.add_argument("--operator-record", help="finalize now with this operator record (external only)")
+    r.add_argument("--serve-log", help="the operator's serve err log, with --operator-record")
+    o = sp.add_parser("operator-serve", help="the session half, run by the serve's operator")
+    o.add_argument("--tag", required=True); o.add_argument("--num-ctx", type=int, required=True)
+    o.add_argument("--minutes", type=float, default=240); o.add_argument("--out", required=True)
+    o.add_argument("--label"); o.add_argument("--operator", default="")
+    t = sp.add_parser("attach", help="join an operator record and log to asker records that wait on them")
+    t.add_argument("--cells", nargs="+", required=True); t.add_argument("--operator-record", required=True)
+    t.add_argument("--serve-log", required=True); t.add_argument("--smoke", action="store_true")
     a = ap.parse_args()
-    {"check": cmd_check, "build-tags": cmd_build_tags, "run": cmd_run}[a.cmd](a)
+    {"check": cmd_check, "build-tags": cmd_build_tags, "run": cmd_run, "operator-serve": cmd_operator_serve,
+     "attach": cmd_attach}[a.cmd](a)
 
 
 if __name__ == "__main__":
