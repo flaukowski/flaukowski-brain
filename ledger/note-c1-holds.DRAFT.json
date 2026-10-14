@@ -1,0 +1,15 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-note-c1-holds-released",
+   "campaignId": "kb-fabrication",
+   "kind": "note",
+   "standing": "measured",
+   "title": "After kannaka-loop-c1's decision, the two 'no promotion before c1' holds release nothing: E4 failed its rule, E5 never reached training; E3 stays unpromoted, any promotion goes through probe v3",
+   "body": "Why. Two records in this campaign held promotion until kannaka-loop-c1 filed its decision, so that no change of serving model would land inside c1's data window: E4's amendment 01M440EEHWM5XT82HHWV2H45SS (\"E4 is not promoted until kannaka-loop-c1 files its decision\") and E5's pre-registration 01M46BKW8XJTVTPPN5SZ73232D (\"no promotion before c1's decision record is filed\"). c1's decision is now on the ledger: FILL_C1_DECISION_ID (FILL_C1_DECISION_DATE). This note records what the two holds release. Nothing is run or re-graded.\n\nWhat they release: nothing to promote.\n- E4 failed its own pre-registered rule (01M463H5AJS4KMW15CY98NFYSK), so it is not a promotion candidate, hold or no hold.\n- E5 phase 1 was inconclusive by its rule (01M490JTB7QA2SP5W0GTPD97XY, with correction 01M490KGR61AY0Z1AWNKJP9ZCJ), so phase 2, the only part of E5 that would have trained anything, was never triggered.\n- The citizens' serving model therefore stays 7b-v2. c1's start build was 7b-v2 as well (c1 section 2.8), because E3 was not promoted before c1's freeze.\n\nWhat this note does not decide: E3. E3 was FIT on probe v1 through serve, including at production configuration (01M440CYX5WWVDGP49630GACZG), and without A05 its v2 is FIT in every cell (01M4GPZDYTFN19BKT26CXT2JDV). It has never been promoted, and this note does not promote it. Both v1 and v2 have now been read many times while this campaign was designed, and c1 section 9 commits later cycles to a fresh sealed probe v3, with v1 and v2 no longer the primary ruler. So any promotion of E3 would be a separate decision, pre-registered, and measured on v3 rather than on the probes it was tuned against.\n\nCampaign state after this note: no open run, no pending result, no promotion pending. The next record here, if any, is a pre-registration against probe v3.",
+   "evidence": [],
+   "aboutId": "01M440EEHWM5XT82HHWV2H45SS"
+  }
+ ]
+}
