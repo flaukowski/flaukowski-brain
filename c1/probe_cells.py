@@ -64,8 +64,12 @@ import subprocess
 import sys
 import time
 import urllib.request
-import winreg
 from pathlib import Path
+
+try:
+    import winreg   # Windows only: the seat's setx credentials. On Linux (O1, debain2) they come from the env.
+except ImportError:
+    winreg = None
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
@@ -112,6 +116,8 @@ def user_env(name: str) -> str:
     setx and are not in every shell that starts this script."""
     if os.environ.get(name):
         return os.environ[name]
+    if winreg is None:
+        die(f"{name} is not set in the environment")
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
         try:
             return winreg.QueryValueEx(k, name)[0]
@@ -371,7 +377,7 @@ class ServeSession:
         LOGS.mkdir(parents=True, exist_ok=True)
         self.proc = subprocess.Popen([str(self.bin), "swarm", "serve", "--threshold", str(self.p["broadcast_threshold"])],
                                      env=env, stdout=open(self.out, "w"), stderr=open(self.err, "w"),
-                                     creationflags=subprocess.CREATE_NO_WINDOW)
+                                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         arm = limit = sub = None
         for _ in range(60):
             time.sleep(2)
