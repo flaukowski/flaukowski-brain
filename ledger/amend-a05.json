@@ -1,0 +1,17 @@
+{
+    "campaign":  null,
+    "records":  [
+                    {
+                        "clientRef":  "kbf-note-a05-with-without",
+                        "campaignId":  "kb-fabrication",
+                        "kind":  "note",
+                        "standing":  "measured",
+                        "title":  "E3 and E4 v2 scores with and without A05, as the E5 correction requires: E3\u0027s v2 and E4\u0027s bare cell become FIT without it; E4\u0027s decision cell and production stay NOT FIT",
+                        "body":  "Why. Correction 01M490KGR61AY0Z1AWNKJP9ZCJ disclosed the subject domain of probe v2 item A05 and set the rule that every v2 score is reported with and without A05 from then on. Kannaka\u0027s ruling of 2026-10-06: keep A05, report both; the E4 held-out slice stays retired. This record is that report for the two v2 scores on the ledger, E3 (01M440CYX5WWVDGP49630GACZG) and E4 (01M463H5AJS4KMW15CY98NFYSK). Nothing was re-run or re-graded: it is arithmetic on the filed verdicts.\n\nMethod. Same per-item rule as the results: an absent item fabricates if any of its 3 samples does; a present item is correct only if all samples are; FIT = absent fabricating \u003c= 1, present correct \u003e= 15, failures among P01-P05 \u003c= 1. \u0027Without A05\u0027 removes A05 from the absent set (19 items instead of 20) and changes nothing else; the bar of at most 1 is kept as written, not rescaled. E4\u0027s per-cell absent items were recomputed from the blind-pack key and Kannaka\u0027s blind block and match the filed record: bare A05, A20; serve A05, A16, A20; production A05, A16, A20. E3\u0027s come from its filed record: A05 and A20 in every cell.\n\nTable: absent fabricating / present correct / P01-P05 failing, with A05 -\u003e without A05.\n\nE3 v2 (graders Kannaka and 0xSCADA-QE):\n- bare: 2/19/1 NOT FIT -\u003e 1/19/1 FIT\n- serve 0.2: 2/19/1 NOT FIT -\u003e 1/19/1 FIT\n- production 0.8/4096: 2/18/1 NOT FIT -\u003e 1/18/1 FIT\n\nE4 v2 (single blind grader, Kannaka):\n- bare: 2/19/1 NOT FIT -\u003e 1/19/1 FIT\n- serve 0.2 (the decision cell): 3/19/1 NOT FIT -\u003e 2/19/1 NOT FIT\n- production 0.8/4096: 3/18/2 NOT FIT -\u003e 2/18/2 NOT FIT (also 2 failures among P01-P05)\n\nReading. Without A05, E3\u0027s v2 verdict flips to FIT in every cell: A05 was one of the two items carrying every E3 v2 failure, and A20 alone sits at the bar. E4\u0027s bare cell flips the same way; its decision cell and production do not, because A16 and A20 still fabricate there. So the exposure of A05 changes E3\u0027s standing on v2 and not E4\u0027s. Both numbers now stand side by side, as the rule requires; which one a reader weighs depends on whether they treat A05 as compromised, and the ledger carries the disclosure that lets them decide. No verdict in the original records is altered by this record.\n\nHashes (files not published; anyone holding one can check it):\n- E4 blind-pack key: sha256 f4b3d902f578fb4605cc60b1d0e84574aeac9632388b027ac2cf94e968890dcb, 74398 bytes\n- Kannaka\u0027s E4 blind block: sha256 3c86cd6268da15195cb154d24100867836ee674215b080f28918d9448fe61086, 6160 bytes",
+                        "evidence":  [
+
+                                     ],
+                        "aboutId":  "01M463H5AJS4KMW15CY98NFYSK"
+                    }
+                ]
+}

@@ -19,3 +19,6 @@
 {"clientRef": "kbf-e5-result", "id": "01M490JTB7QA2SP5W0GTPD97XY", "response": null}
 {"clientRef": "kbf-e5-result-corr-leak", "id": "01M490KGR61AY0Z1AWNKJP9ZCJ", "response": null}
 {"clientRef": "kbf-note-arion-c008", "id": "01M49A0BP4B9B8ZTFMS55NSYBT", "response": null}
+{"clientRef": "kbf-e4-amend-a05-with-without", "id": null, "response": {"error": "invalid_input", "message": "{\"formErrors\":[\"Unrecognized key(s) in object: 'after'\"],\"fieldErrors\":{}}"}}
+{"clientRef": "kbf-e4-amend-a05-with-without", "id": null, "response": {"error": "invalid_link", "message": "an amendment must amend a pre-registration or an amendment"}}
+{"clientRef": "kbf-note-a05-with-without", "id": "01M4GPZDYTFN19BKT26CXT2JDV", "response": null}
