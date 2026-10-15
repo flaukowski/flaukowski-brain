@@ -1,0 +1,21 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "sux-amend-2",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "amendment",
+   "standing": "unverified",
+   "amendsId": "01M4ZZSAVA8RQ3QF642TZV6217",
+   "title": "Amendment 2, before any data: the host is the trial's WSL desktop (skywave has no CLI sign-in), with the trial's bridge and settings; the trial's runner pauses for the 24 runs",
+   "body": "Filed before any review in this study has run. The host changes from skywave to the WSL2 Ubuntu instance on Nick's Windows desktop, the instance the Sashiko trial's prospective arm runs on: skywave has neither the Rust toolchain nor a Claude Code CLI sign-in, and the sign-in needs the account holder, who has never logged into that host. Model access is the trial's isolated bridge to the signed-in Windows CLI with its isolation flags; the build is sashiko-kannaka 731bdf8 with cargo --release, binary sha256 in the run manifest; the target is a fresh clone of sashiko-dev/sashiko inside the WSL filesystem; the settings are one file for both arms, the trial's (claude-cli, sonnet, its token and interaction limits, concurrency 1, 3600 s timeout), file sha256 in the manifest. The trial's prospective runner shares the host and is paused for the 24 runs, so no reviews overlap; the pause is recorded in the manifest and as a note under the trial. Nothing else in the pre-registration or amendment 1 changes.",
+   "evidence": [
+    {
+     "label": "amendment 2, flaukowski-brain ebea09f",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ebea09f9cfea2d8816a8a205aad38fb58ac66f40/studies/sashiko-upstream/AMENDMENT-2.md",
+     "sha256": "e0f43a12997ca58e35193169ea8fcc418af9375147f2eed2d9c5fd22bf4455d3"
+    }
+   ]
+  }
+ ]
+}
