@@ -1,0 +1,24 @@
+{
+ "campaign": {
+  "id": "sashiko-upstream-xreview",
+  "title": "Sashiko Kannaka on upstream Sashiko: do Kannaka's review prompts find real bugs in someone else's code?",
+  "summary": "Both prompt sets (kannaka and upstream's own sashiko self-review) on one sashiko-kannaka build, reviewing upstream Sashiko commits that introduced later-fixed defects, plus seeded controls; blind A/B grading by a grader who did not choose the items."
+ },
+ "records": [
+  {
+   "clientRef": "sux-prereg",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "preregistration",
+   "standing": "unverified",
+   "title": "Pre-registration: 8 upstream Sashiko bugs and 4 controls, reviewed by --project kannaka and --project sashiko on one build, graded blind",
+   "body": "Filed before any review in this study runs. The full pre-registration is the evidence file (sha256 below); this record summarises it.\n\nQuestion. Sashiko Kannaka's kannaka project carries review prompts written for Kannaka Labs services. Upstream Sashiko's sashiko project carries the self-review prompts its maintainers wrote for Sashiko. On real bugs in upstream Sashiko's own Rust code, introduced and later fixed by its maintainers, how many does each prompt set find, and at what false-finding cost?\n\nInstrument. One build for both arms: kannaka-labs/sashiko-kannaka at 731bdf8 (upstream 0.5.1 plus the kannaka project). Arm K is --project kannaka, arm S is --project sashiko; local mode, nothing posted; claude-cli with sonnet through the isolated bridge, as in the Sashiko trial's stock baseline. One review per arm per commit, each at the introducing commit. Run by Kannaka on skywave.\n\nItems. Eight introducing commits, one known defect each, chosen by blaming upstream fix commits and then verified by hand: ec1258f, ff3ee61, 7ff827d, 9d6f5e9, 81f64ea, d67c8bd, 39bf2ac, 313bdbe. Eleven other candidates were read and rejected, with reasons, in the file. Four seeded controls believed clean: 5a5b667, 505a024, 0035364, 248f7cb.\n\nScoring. The trial's DETECTED rule (a final finding names the mechanism and the location); a report citing the fix or a later commit is void; control findings classed REAL, PLAUSIBLE or FALSE. Grading is blind: the two reports per commit are relabelled A and B by a fixed seed, and Kannaka grades without the key. Flaukowski chose the items and does not grade.\n\nPriors. Arm K detects 2 to 4 of 8; arm S 3 to 5 of 8; neither finds the settings or token-count items. With eight items the result is descriptive, per item. The claim that the Kannaka prompts carry over is made only if arm K detects at least 4 of 8 with at most one FALSE finding per control on average.\n\nContamination, disclosed now. Arm S is contaminated in the trial's sense: upstream's sashiko prompts were first added on 2026-09-16 and edited about 30 times since, by the maintainers who fixed these bugs, after most of the fixes. Arm K is near-clean: its prompts were written 2026-10-09 for other code and share only a few lines with upstream's. The model may have seen the public repository in training; that applies to both arms and is not tested.\n\nBudget. Capped at 40 million input tokens on the Claude subscription, no API spend; on reaching it the study stops and reports what ran.",
+   "evidence": [
+    {
+     "label": "pre-registration, flaukowski-brain 426d7be",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/426d7bef247c325a4143f768280ae2d0198e9884/studies/sashiko-upstream/PREREG.md",
+     "sha256": "0181c57af745c8062588e14d6f054349f3df503ddf9d1b670af2f0d7c5483bdf"
+    }
+   ]
+  }
+ ]
+}

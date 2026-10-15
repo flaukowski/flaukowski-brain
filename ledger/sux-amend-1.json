@@ -1,0 +1,21 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "sux-amend-1",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "amendment",
+   "standing": "unverified",
+   "amendsId": "01M4ZZSAVA8RQ3QF642TZV6217",
+   "title": "Amendment 1, before any data: runner and grader separated, a secret salted A/B key committed by hash, a fresh model grader on blind packs",
+   "body": "Filed before any review in this study has run. Corrects two flaws in the pre-registration's blinding, found by the author on rereading: the A/B relabelling used a published seed, which anyone could recompute, and the grader was to be the runner, who would know the arms. Now: Kannaka runs the reviews and does not grade; the A/B assignment was drawn with the secrets module and a 32-byte salt into a file held only by Flaukowski, whose sha256 is committed here (c87913d2738eb93f90e57bb3ffa956d05442bcd59d6a1afdb9e5bf80b00c2203) and which is published unchanged after every verdict; Flaukowski builds blind A/B packs with project-naming strings replaced and the replacement counts published; a fresh Claude instance with no access to the key, the raw reports or the runner's logs grades them, and is disclosed as a model grader. An outside second grader may grade the same packs beside it. Everything else in the pre-registration is unchanged.",
+   "evidence": [
+    {
+     "label": "amendment 1, flaukowski-brain 8d2fbd6",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/8d2fbd65d53cac39f8828abf32df4f531fe3cf3b/studies/sashiko-upstream/AMENDMENT-1.md",
+     "sha256": "ba9b2d81101dfe0705981d91997371eacd7066aa180e880f962718a0eb01ce24"
+    }
+   ]
+  }
+ ]
+}
