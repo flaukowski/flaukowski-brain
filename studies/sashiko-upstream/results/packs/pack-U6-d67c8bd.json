@@ -1,0 +1,996 @@
+{
+ "commit": "d67c8bd",
+ "label": "U6",
+ "A": {
+  "summary": "This commit adds sashiko-cli, a new command-line client for talking to a\nrunning Sashiko server over its HTTP API. It also derives Deserialize on the\nAPI and DB response structs (and Serialize on SubmitRequest) so the CLI can\nparse server responses and build submit requests. It adds the chrono\ndependency and enables clap's \"env\" feature.\n\nUser-visible effect: a new binary, sashiko-cli, with the subcommands submit,\nstatus, list and show. Global options are --server (also read from the\nSASHIKO_SERVER environment variable) and --format text|json.\n\nSubmit auto-detects the input kind. \"-\" or a regular file is sent as an\nmbox, an argument containing \"..\" is sent as a range, and anything else is\nsent as a single commit. With no input, it reads stdin if piped, otherwise\nit uses HEAD. The --type, --repo and --baseline options override the\ndefaults.\n\nBefore:\n  There was no dedicated client. Users had to call the REST endpoints\n  by hand, for example:\n  curl -X POST http://127.0.0.1:8080/api/submit \\\n       -H 'Content-Type: application/json' \\\n       -d '{\"type\":\"remote\",\"sha\":\"HEAD\",\"repo\":\"/path/to/repo\"}'\n  curl http://127.0.0.1:8080/api/stats\n\nAfter:\n  sashiko-cli submit HEAD~3..HEAD\n  Success: Submission accepted. ID: <id>\n\n  sashiko-cli status\n  Server Status:\n    Version:   <version>\n    Messages:  <n>\n    Patchsets: <n>\n  Queue Breakdown:\n    Pending         <n>\n    ...\n\n  sashiko-cli list --per-page 20 pending\n  ID     Status     Subject        Date\n  <id>   Pending    <subject>      <local time>\n\n  sashiko-cli show latest\n  Patchset Details:\n    ID, Subject, Author, Status, Date, per-patch status and apply\n    errors, plus the review verdict, model and summary if a review\n    exists.\n\nErrors are printed as \"Error: ...\" with a hint (for example, to check that\nthe server is running), and the process exits with status 1. Passing\n--format json prints the raw API data as pretty JSON instead.",
+  "inline_review": "- [MEDIUM] In src/bin/sashiko-cli.rs (handle_show), the review is fetched\n  from /api/review using the patchset id, but get_review in src/api.rs and\n  Database::get_review_details in src/db.rs key the lookup on reviews.id.\n  The ids come from different tables, so show prints another patchset's\n  review under this patchset's header, or none. Take the review id from the\n  reviews array in the /api/patch response instead.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit), the default input is\n  the literal string HEAD, sent as SubmitRequest::Remote sha. submit_patch\n  in src/api.rs uses it verbatim as the patchset id, and\n  create_fetching_patchset in src/db.rs returns the existing row unless it\n  is Failed or Fetching. src/fetcher.rs also never resolves the ref to a\n  SHA. Repeat submissions collide on one HEAD@sashiko.local id and are\n  silently attached to an old patchset or ignored, while the API still\n  answers accepted.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list), the subject is\n  truncated with a byte slice at offset 45 after a byte-length check. If\n  that offset falls inside a multi-byte UTF-8 character the CLI panics and\n  the rest of the page is lost. Subjects come from untrusted mail and are\n  often non-ASCII. Truncate on a char boundary. The byte-based width\n  padding also misaligns non-ASCII text.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list), the same subject slice\n  at byte 45 panics on multi-byte UTF-8 input, violating the error-handling\n  guideline on string slicing. This repeats the finding above, reported by\n  later review stages, and the same fix applies.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (main), the settings fallback\n  Settings::new().unwrap_or_else(|_| Settings::new().expect(...)) retries\n  the identical call and then panics. Running outside the server directory\n  or with a malformed Settings.toml panics even when --server is given. The\n  comment promises defaults that do not exist, and a malformed file should\n  fail with a clear error.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list and handle_show), the\n  list filter and the show id are spliced into URLs without encoding.\n  Characters such as &, #, +, % or message-id characters truncate or\n  corrupt the query, and a filter like a&per_page=100 injects parameters.\n  Use the reqwest query builder.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit), the help text says\n  the default is HEAD if in a git repo, but no repo check or local\n  resolution is done. The server resolves HEAD in its own repository from\n  settings.git.repository_path, so the user may get a review of the wrong\n  commit or an opaque failure with no warning.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit), mbox input is read\n  with read_to_string for both files and stdin. Any non-UTF-8 byte, such as\n  legacy 8-bit mailing-list encodings, fails with an error that does not\n  mention encoding. With no INPUT and non-terminal stdin (cron, CI) the CLI\n  also silently switches to stdin mode and may block or submit empty\n  content. Read bytes and convert lossily.\n\n- [MEDIUM] The new src/bin/sashiko-cli.rs has no tests. Submit-type\n  detection, stdin default, subject truncation, page arithmetic and\n  format_timestamp are inlined in async handlers and cannot be unit tested.\n  The Serialize and Deserialize derives on SubmitRequest in src/api.rs also\n  leave the CLI and server wire format unpinned. Add serde round-trip tests\n  for Inject, Remote and RemoteRange.\n\n- [LOW] In src/bin/sashiko-cli.rs (main), the NOT_FOUND and BAD_REQUEST\n  hints are dead code, because handlers turn non-success responses into\n  anyhow strings and never call error_for_status. Errors and hints are also\n  printed to stdout, so with --format json scripts receive non-JSON text on\n  stdout instead of stderr.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_submit), s.contains(..) is tested\n  before the file existence check, so a path like ../series.mbox is\n  submitted as a Range. With --type given and no input, the target becomes\n  HEAD for every type, so --type mbox reads a file named HEAD instead of\n  stdin.\n\n- [LOW] In src/bin/sashiko-cli.rs (print_colored), set_color, write! and\n  reset are unwrapped. A closed stdout pipe, for example list piped to\n  head, panics, and in the main error path this masks the original error.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_show), a failed /api/review\n  fetch has no else branch, so a 404 or 500 yields no review summary and no\n  warning, indistinguishable from a patchset without a review. A missing\n  status also becomes an empty string that skips the review fetch.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_list and handle_show), untrusted\n  subjects, authors, apply_error, summaries, logs and failed_reason are\n  printed raw in text mode. ANSI or OSC escape sequences can spoof the\n  status column, hide rows or write to the clipboard of the operator\n  terminal. Strip control characters before printing. JSON mode is safe.\n\n- [LOW] Commit message d67c8bd2 quotes sashiko-cli, file paths, chrono,\n  clap and Deserialize in backticks, which repository commit standards\n  forbid and cargo fmt and clippy do not check.",
+  "findings": [
+   {
+    "problem": "list panics slicing subject at non-char-boundary byte 45",
+    "severity": "Medium",
+    "type": "Panic / UX Regression",
+    "preexisting": false,
+    "explanation": "handle_list in src/bin/sashiko-cli.rs guards with subject.len() > 48 (bytes) and then slices &subject[..45]. If byte 45 falls inside a multi-byte UTF-8 character, str slicing panics. Patchset subjects come from untrusted mailing-list mail and are often non-ASCII, so one such patchset on the requested page aborts sashiko-cli list mid-table and the rest of the page is lost. The impact is limited to the CLI, not the daemon, so Medium. The {:<50} padding is also byte-width based and misaligns non-ASCII text. Truncate with chars().take() or floor_char_boundary.",
+    "locations": [
+     {
+      "code_snippet": "let subject_display = if subject.len() > 48 { format!('{}...', &subject[..45]) }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "Byte-indexed slice of untrusted text without a char-boundary check panics on multi-byte characters."
+     }
+    ]
+   },
+   {
+    "problem": "settings fallback retries same call then panics",
+    "severity": "Medium",
+    "type": "Error Handling / Misleading Fallback",
+    "preexisting": false,
+    "explanation": "main() runs Settings::new().unwrap_or_else(|_| Settings::new().expect(...)). The fallback re-invokes the identical call, so it fails exactly when it is needed and expect() panics. Settings::new() reads a required Settings.toml from the CWD and deserializes the full daemon Settings. Running the CLI outside the server directory, or with a malformed file, panics with a backtrace even when --server or SASHIKO_SERVER is given and settings are only needed for the default URL and repo path. The code comment promises a fallback to defaults that does not exist, and no test covers it. The settings guide expects a missing file to fall back to http://127.0.0.1:8080 and a malformed file to fail loudly with a clear error; this does neither.",
+    "locations": [
+     {
+      "code_snippet": "let settings = Settings::new().unwrap_or_else(|_| { Settings::new().expect('Failed to load default settings') });",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "The documented fallback is a no-op retry that panics."
+     }
+    ]
+   },
+   {
+    "problem": "list filter and show id spliced into URLs without encoding",
+    "severity": "Medium",
+    "type": "Input Handling / Request Injection",
+    "preexisting": false,
+    "explanation": "handle_list appends the filter with url.push_str(&format!('&q={}', q)), and handle_show builds /api/patch?id={} and /api/review?id={} from the raw id. Values containing &, #, +, %, spaces or message-id characters (<, >, @, +) truncate, split or corrupt the query. A filter like a&per_page=100 injects parameters, and a message-id passed to show is looked up wrongly. The result is a silently wrong or empty listing or a confusing URL error. Input comes from the invoking user, so exploitability is low. Use reqwest .query(&[...]).",
+    "locations": [
+     {
+      "code_snippet": "url.push_str(&format!('&q={}', q));",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "Raw filter is spliced into the query string."
+     },
+     {
+      "code_snippet": "let url = format!('{}/api/patch?id={}', base_url, id);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "None",
+      "why_this_location_matters": "User-supplied id, possibly a message-id, is not encoded."
+     }
+    ]
+   },
+   {
+    "problem": "HTTP status hints are dead code and errors go to stdout",
+    "severity": "Low",
+    "type": "Error Reporting / Dead Code",
+    "preexisting": false,
+    "explanation": "Every handler turns a non-success response into an anyhow error string and never calls error_for_status(). The downcast to reqwest::Error followed by req_err.status() branch in main() for NOT_FOUND and BAD_REQUEST therefore never fires; only the is_connect() hint is reachable. Errors and hints are printed to stdout, so with --format json a script gets non-JSON text on stdout instead of stderr. The result is poor error reporting and polluted machine-readable output, with no data impact.",
+    "locations": [
+     {
+      "code_snippet": "} else if let Some(status) = req_err.status() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "Unreachable given how handlers construct errors; output also goes to stdout."
+     }
+    ]
+   },
+   {
+    "problem": "submit default HEAD is not resolved against the user repo",
+    "severity": "Medium",
+    "type": "Misleading CLI Semantics",
+    "preexisting": false,
+    "explanation": "The help text says Defaults to HEAD if in a git repo, but handle_submit never checks for a git repo or resolves HEAD locally. With no input and a terminal stdin it sends Remote with sha HEAD and repo settings.git.repository_path to the server, which resolves HEAD in its own repository rather than the user checkout. The user gets a review of the wrong commit, or an opaque failure if the path is absent on the server, with no warning. The semantic is undocumented in the commit message.",
+    "locations": [
+     {
+      "code_snippet": "// Default to HEAD (SubmitType::Remote, 'HEAD'.to_string())",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Default path silently submits a symbolic ref evaluated on the server."
+     }
+    ]
+   },
+   {
+    "problem": "mbox submit uses read_to_string and rejects non-UTF-8 input",
+    "severity": "Medium",
+    "type": "Robustness",
+    "preexisting": false,
+    "explanation": "Both std::fs::read_to_string and Stdin::read_to_string return InvalidData on any non-UTF-8 byte. Real mailing-list mbox files often contain Latin-1 or other legacy 8-bit encodings, so such patches cannot be submitted, and the error message does not mention encoding. Also, with no INPUT and non-terminal stdin (cron, CI, wrappers) the CLI selects stdin mbox mode and blocks or submits empty content, so the HEAD default only holds interactively. Reading bytes and converting lossily would be more robust.",
+    "locations": [
+     {
+      "code_snippet": "std::fs::read_to_string(&target).with_context(|| format!('Failed to read file {:?}', target))?",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Strict UTF-8 decoding of all mbox input."
+     }
+    ]
+   },
+   {
+    "problem": "commit message uses backticks to quote code and paths",
+    "severity": "Low",
+    "type": "Commit Message Hygiene",
+    "preexisting": false,
+    "explanation": "The commit body quotes sashiko-cli, src/bin/sashiko-cli.rs, chrono, clap, Deserialize, src/api.rs and src/db.rs in backticks, which Sashiko commit standards forbid and which cargo fmt and clippy do not check. The Signed-off-by has a real name, so DCO is satisfied. The body states the CLI parses server responses, which gives enough rationale for the Deserialize derives, so only the formatting violation is flagged.",
+    "locations": [
+     {
+      "code_snippet": "Introduce `sashiko-cli`, a command-line interface for interacting with the Sashiko server.",
+      "file": "commit message",
+      "function_or_symbol": "d67c8bd2 body",
+      "line": "None",
+      "why_this_location_matters": "Backticks in a commit body violate repository formatting rules."
+     }
+    ]
+   },
+   {
+    "problem": "submit input auto-detection misclassifies paths and explicit types",
+    "severity": "Low",
+    "type": "Edge Case / Input Detection",
+    "preexisting": false,
+    "explanation": "In handle_submit, s.contains('..') is tested before PathBuf::exists, so a file path like ../series.mbox is submitted as a Range instead of an mbox. With --type given and no input, the target becomes HEAD for every type, so --type mbox reads a file literally named HEAD instead of stdin. Both cause a wrong request or a confusing error rather than data damage.",
+    "locations": [
+     {
+      "code_snippet": "} else if s.contains('..') { (SubmitType::Range, s) } else if PathBuf::from(&s).exists() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Range check precedes the file existence check."
+     }
+    ]
+   },
+   {
+    "problem": "print_colored unwraps stdout write errors",
+    "severity": "Low",
+    "type": "Panic Safety",
+    "preexisting": false,
+    "explanation": "print_colored calls .unwrap() on set_color, write! and reset. If stdout is a closed pipe, for example sashiko-cli list piped to head, the unwrap panics; in main() error path this also masks the original error message. Impact is limited to the CLI.",
+    "locations": [
+     {
+      "code_snippet": "stdout.set_color(ColorSpec::new().set_fg(Some(color))).unwrap(); write!(&mut stdout, '{}', text).unwrap(); stdout.reset().unwrap();",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "print_colored",
+      "line": "None",
+      "why_this_location_matters": "Runtime I/O errors on stdout are unwrapped."
+     }
+    ]
+   },
+   {
+    "problem": "show silently drops review when /api/review fetch fails",
+    "severity": "Low",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "In handle_show, the if review_resp.status().is_success() block has no else branch, so a 404 or 500 yields no Review Summary and no warning, indistinguishable from a patchset with no review. details status as_str().unwrap_or('') also turns a missing status into an empty string that skips the review fetch. This is a silent-empty result, but impact is limited to CLI display.",
+    "locations": [
+     {
+      "code_snippet": "if review_resp.status().is_success() { review_data = Some(review_resp.json::<Value>().await?); }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "None",
+      "why_this_location_matters": "Failed review fetch is ignored without any message."
+     }
+    ]
+   },
+   {
+    "problem": "untrusted text printed to terminal without stripping escapes",
+    "severity": "Low",
+    "type": "Terminal Escape Injection (untrusted output rendered to operator terminal)",
+    "preexisting": false,
+    "explanation": "handle_list and handle_show print subjects, authors, apply_error, summaries, logs and failed_reason, all derived from untrusted mail, commits and git output, directly via println in text mode. ANSI and OSC escape sequences in these strings are interpreted by the operator terminal and can spoof the status column, hide rows or write to the clipboard. Impact is display spoofing on the operator machine with no code execution. JSON mode is safe because serde_json escapes control characters.",
+    "locations": [
+     {
+      "code_snippet": "println!(' {:<50} {}', subject_display, date_display);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "Untrusted subject is written to the terminal unsanitized."
+     },
+     {
+      "code_snippet": "println!('{}', err.trim());",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "None",
+      "why_this_location_matters": "apply_error, summary and logs from the server payload are printed raw."
+     }
+    ]
+   },
+   {
+    "problem": "new binary and API serde contract have no tests",
+    "severity": "Medium",
+    "type": "Missing Test Coverage",
+    "preexisting": false,
+    "explanation": "The 526-line sashiko-cli adds no cfg(test) module or tests file. Its submit-type auto-detection, stdin-piped default, subject truncation, page arithmetic and format_timestamp are inlined in async handlers that touch the filesystem, stdin and stdout, so they cannot be unit tested as written. The commit also adds Serialize to the internally tagged SubmitRequest and Deserialize to response and row types, so the CLI and server wire format is now implicit and unpinned. A serde round-trip test for Inject, Remote and RemoteRange would guard it cheaply. Missing tests for new behavior is a Medium hygiene gap.",
+    "locations": [
+     {
+      "code_snippet": "} else if s.contains('..') { (SubmitType::Range, s) } else if PathBuf::from(&s).exists() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Filesystem-dependent routing logic that picks the request variant is untested."
+     },
+     {
+      "code_snippet": "#[derive(Serialize, Deserialize)] #[serde(tag = 'type', rename_all = 'lowercase')] pub enum SubmitRequest {",
+      "file": "src/api.rs",
+      "function_or_symbol": "SubmitRequest",
+      "line": "None",
+      "why_this_location_matters": "Wire format between CLI and /api/submit is not pinned by a test."
+     }
+    ]
+   },
+   {
+    "problem": "show passes patchset id to /api/review, which expects a review id",
+    "severity": "Medium",
+    "type": "Implementation vs Intent / Wrong ID",
+    "preexisting": false,
+    "explanation": "Medium: this is a contained functional bug in the new CLI that makes 'sashiko-cli show' display the wrong review, or none. It does not corrupt data or cross a security boundary. Verified in code: api.rs get_review (line 355) parses the id as i64 and logs 'Fetching details for review id', then calls state.db.get_review_details(id_val). In db.rs, get_review_details (line 2342) runs 'FROM reviews r ... WHERE r.id = ?', so the key is reviews.id. The same query also selects r.patch_id, which shows reviews is a separate table with its own id sequence and a foreign key to the patch. handle_show in sashiko-cli.rs (line 416) builds '{}/api/review?id={}' from the id used for /api/patch (the patchset id, or latest.id from /api/patchsets). The ids come from different tables, so they only coincide by accident. When they differ, the CLI either gets 404 (no review is shown) or gets another patchset's review. In the second case it prints that review's verdict, model and summary under this patchset's header. This is the common case once any patchset has been re-reviewed or has several reviews, or when some patchsets have no review row. It affects the 'Reviewed', 'Failed' and 'Failed To Apply' states. The bug is introduced by this patch, so it is not preexisting. The wrong-id premise is confirmed, not discarded: get_review_details keys by review id, not patchset id. A correct fix is to read the review id from the 'reviews' array in the /api/patch response and query /api/review with that id.",
+    "locations": [
+     {
+      "code_snippet": "let review_url = format!(\"{}/api/review?id={}\", base_url, id);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "416",
+      "why_this_location_matters": "Sends the patchset id (from the user argument or from /api/patchsets items[0].id) to an endpoint that interprets it as a review id."
+     },
+     {
+      "code_snippet": "match state.db.get_review_details(id_val).await {",
+      "file": "src/api.rs",
+      "function_or_symbol": "get_review",
+      "line": "361",
+      "why_this_location_matters": "The endpoint treats the id as a review id and has no patchset fallback."
+     },
+     {
+      "code_snippet": "WHERE r.id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_review_details",
+      "line": "2353",
+      "why_this_location_matters": "The lookup is keyed by reviews.id, not patchset id, so a patchset id returns an unrelated review or nothing."
+     }
+    ]
+   },
+   {
+    "problem": "submit defaults to literal HEAD, so every submission collides on one id",
+    "severity": "Medium",
+    "type": "Implementation vs Intent",
+    "preexisting": false,
+    "explanation": "Medium: this is a contained functional defect that misattributes or silently drops repeat submissions. It does not corrupt unrelated data or cross a security boundary. The mechanism, read in the code: (1) In src/bin/sashiko-cli.rs, handle_submit falls back to (SubmitType::Remote, \"HEAD\") when no input is given and stdin is a terminal, and sends that symbolic string in SubmitRequest::Remote { sha: \"HEAD\", repo }. (2) In src/api.rs, submit_patch does `let id = sha.clone();` and calls create_fetching_patchset(&id, ...) with no rev-parse resolution. (3) In src/db.rs, create_fetching_patchset builds root_msg_id = \"HEAD@sashiko.local\" and looks up an existing patchset by cover_letter_message_id. If one exists, it returns the old id. It resets to Fetching only when the status is Failed or Fetching. If the earlier HEAD patchset is Pending, Incomplete or Reviewed, nothing is created or updated, yet the API still answers status=accepted with id=HEAD. (4) src/fetcher.rs never resolves the ref. It runs `git fetch <remote> HEAD`, then extract_patch(\"HEAD\", \"HEAD\", 1, 1) with the literal string as article_id and message_id. src/main.rs groups these by article_id into the same root_msg_id. The consequence is that a user running the CLI at two different times, after the server repo HEAD or the remote HEAD has moved, gets the second submission attached to the first HEAD patchset, or ignored. The id also shows the wrong commit, and which commit gets reviewed depends on when the fetcher ticks (every 10s), not on when the user submitted. In the same state, concurrent HEAD submissions are deduplicated by the fetcher's HashSet. I did not read the PatchSubmitted ingestion path in main.rs to confirm how the second event with message_id \"HEAD\" is deduplicated or overwritten, so that part is unverified. This is why I cap it at Medium. The CLI default is new in this commit, so the finding is not preexisting. The server-side lack of resolution already existed, but the CLI now makes symbolic refs the default input.",
+    "locations": [
+     {
+      "code_snippet": "// Default to HEAD\n(SubmitType::Remote, \"HEAD\".to_string())",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "The CLI sends an unresolved symbolic ref as the sha, and does so by default when no input is given."
+     },
+     {
+      "code_snippet": "let id = sha.clone();\n...\n.create_fetching_patchset(&id, &format!(\"Fetching {} from {}...\", &sha, &repo))",
+      "file": "src/api.rs",
+      "function_or_symbol": "submit_patch",
+      "line": "214",
+      "why_this_location_matters": "The user-supplied string is used verbatim as the patchset identity and the response id, with no rev-parse resolution."
+     },
+     {
+      "code_snippet": "let root_msg_id = format!(\"{}@sashiko.local\", article_id);\n...\nif status == \"Failed\" || status == \"Fetching\" { ... UPDATE ... 'Fetching' ... }\nreturn Ok(id);",
+      "file": "src/db.rs",
+      "function_or_symbol": "create_fetching_patchset",
+      "line": "2495",
+      "why_this_location_matters": "A second HEAD submission finds the existing row and returns it unchanged unless it is Failed or Fetching, so a later submission of a different commit is not tracked separately."
+     },
+     {
+      "code_snippet": "self.extract_patch(&commit_or_range, &commit_or_range, 1, 1)",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "process_queue",
+      "line": "None",
+      "why_this_location_matters": "The fetcher uses the literal ref as the article_id and message_id and never resolves it to a SHA, so identity depends on what HEAD points to when the fetcher runs."
+     }
+    ]
+   },
+   {
+    "problem": "handle_list slices subject at byte 45, panics on multibyte UTF-8",
+    "severity": "Medium",
+    "type": "Arithmetic / Unbounded per_page",
+    "preexisting": false,
+    "explanation": "Reasoning: the CLI crashes with a panic, which hurts UX, but only the `list` subcommand is affected and the daemon is untouched, so this is a contained functional bug and not High. The candidate's arithmetic premise is wrong (see the dismissal), but the same function, handle_list, has a real panic. It does `if subject.len() > 48 { format!(\"{}...\", &subject[..45]) }`. `len()` counts bytes and the slice is by byte offset. If byte 45 falls inside a multi-byte UTF-8 character, the slice panics. Subjects come from patch emails and PR titles, which are untrusted and regularly contain non-ASCII text (accented names, CJK, emoji). A single such patchset on the requested page makes `sashiko-cli list` panic instead of printing the table. This violates patterns/error-handling.md section 1 (UTF-8 string slicing). The code is new in this patch, so it is not preexisting. I did not run the CLI; the conclusion follows from reading the slice expression, and `PatchsetRow.subject` is filled from ingested message subjects.",
+    "locations": [
+     {
+      "code_snippet": "let subject_display = if subject.len() > 48 {\n    format!(\"{}...\", &subject[..45])\n} else {\n    subject\n};",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "Byte-offset slice of an untrusted, possibly non-ASCII subject without a char-boundary check panics the CLI."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Adding Serialize to SubmitRequest and Deserialize to response and row types might break existing REST shapes or make client and server disagree.",
+    "reasoning": "The diff only adds derives to existing definitions and changes no field names, types or serde attributes, so server output is unchanged. The tag and rename_all attributes live on the single shared enum definition and apply in both directions, so the client emits what the server accepts.",
+    "locations": [
+     {
+      "code_snippet": "#[derive(Serialize, Deserialize)] #[serde(tag = 'type', rename_all = 'lowercase')] pub enum SubmitRequest {",
+      "file": "src/api.rs",
+      "function_or_symbol": "SubmitRequest",
+      "line": "None",
+      "why_this_location_matters": "Single shared wire-format definition."
+     }
+    ]
+   },
+   {
+    "description": "Cargo.toml changes (chrono, clap env feature) might require Settings fields or break deny_unknown_fields configs.",
+    "reasoning": "The change only adds a dependency and the clap env feature for --server and SASHIKO_SERVER. src/settings.rs is untouched, so no Settings field or example file changes are needed.",
+    "locations": [
+     {
+      "code_snippet": "clap = { version = '4.5.54', features = ['derive', 'env'] }",
+      "file": "Cargo.toml",
+      "function_or_symbol": "[dependencies]",
+      "line": "12",
+      "why_this_location_matters": "Dependency feature flag only."
+     }
+    ]
+   },
+   {
+    "description": "Database schema or migration changes without a transaction or user_version bump.",
+    "reasoning": "The only src/db.rs changes are the serde import and Deserialize derives on four structs. No SQL, migrate block, column, index, user_version change or src/migrations file is touched.",
+    "locations": [
+     {
+      "code_snippet": "#[derive(Debug, Serialize, Deserialize)] pub struct PatchsetRow {",
+      "file": "src/db.rs",
+      "function_or_symbol": "PatchsetRow",
+      "line": "35",
+      "why_this_location_matters": "A derive-only change cannot alter the on-disk schema."
+     }
+    ]
+   },
+   {
+    "description": "New CLI list and show commands and Deserialize impls enable unbounded list queries on patchsets and messages.",
+    "reasoning": "The CLI never touches the database; it calls HTTP endpoints whose handlers clamp per_page to 1..=100 before passing explicit limit and offset to the DB functions. No new SQL was added.",
+    "locations": [
+     {
+      "code_snippet": "let per_page = pagination.per_page.unwrap_or(50).clamp(1, 100);",
+      "file": "src/api.rs",
+      "function_or_symbol": "list_patchsets",
+      "line": "271",
+      "why_this_location_matters": "Server-side clamp bounds rows for any client."
+     }
+    ]
+   },
+   {
+    "description": "Change adds transaction usage that bypasses begin_transaction and tx_lock or holds a write transaction across I/O.",
+    "reasoning": "The diff adds no transaction, BEGIN or COMMIT calls. The src/db.rs changes are only an import and derives, and the new CLI binary talks HTTP and never opens the database.",
+    "locations": [
+     {
+      "code_snippet": "use serde::{Deserialize, Serialize};",
+      "file": "src/db.rs",
+      "function_or_symbol": "use serde import",
+      "line": "19",
+      "why_this_location_matters": "The only non-derive line changed in db.rs."
+     }
+    ]
+   },
+   {
+    "description": "Remote and RemoteRange share one server arm in submit_patch, so a range such as a..b may be fetched as a single invalid revision and range submission fails end to end; --baseline is silently ignored for non-mbox submissions.",
+    "reasoning": "1) The shared arm is intentional. submit_patch in src/api.rs forwards sha unchanged as FetchRequest.commit_hash for both variants, and the range handling lives in FetchAgent::process_queue in src/fetcher.rs. That function branches on commit_or_range.contains(\"..\"). For a range it runs git rev-list --count (rejecting 0 or more than 100 commits) and git rev-list --reverse, then calls extract_patch for each SHA with index and total set. A single commit goes through the else branch. Ranges are therefore handled correctly after the shared arm, and the CLI Range type (sha: target) reaches that branch. 2) The optimistic fetch_commits passes a..b to git fetch as an argument, which is likely to fail. process_queue then falls back to fetch_all, so the range is still fetched. That is only a performance inefficiency and was not the claimed failure. The range is not treated as a single invalid revision. 3) --baseline is documented as 'Baseline commit (for mbox injection only)' in the Submit clap args. Remote and range submissions derive base_commit from the commit parent in extract_patch (rev-parse commit^). Ignoring --baseline for those types is documented behavior, not a silent contract break. 4) This is a single commit, not a series, so no later patch needs to be checked. The candidate's range-failure claim is disproved by the fetcher code; the baseline claim is documented behavior.",
+    "locations": [
+     {
+      "code_snippet": "for commit_or_range in commit_list {\n                if commit_or_range.contains(\"..\") {\n                    // It's a range",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "FetchAgent::process_queue",
+      "line": "None",
+      "why_this_location_matters": "The fetcher splits ranges on '..' and expands them with git rev-list into per-commit patches, so the shared server arm works for ranges."
+     },
+     {
+      "code_snippet": "SubmitRequest::Remote { sha, repo } | SubmitRequest::RemoteRange { sha, repo } => {",
+      "file": "src/api.rs",
+      "function_or_symbol": "submit_patch",
+      "line": "213",
+      "why_this_location_matters": "The shared arm forwards the string unchanged as commit_hash; the range distinction is made downstream in the fetcher."
+     },
+     {
+      "code_snippet": "/// Baseline commit (for mbox injection only)\n        #[arg(long)]\n        baseline: Option<String>,",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "Commands::Submit",
+      "line": "None",
+      "why_this_location_matters": "The help text documents that --baseline applies to mbox injection only, so dropping it for Remote and Range is documented."
+     }
+    ]
+   },
+   {
+    "description": "sashiko-cli submit posts to /api/submit with no credential (no local token, no bearer JWT), so a default server may answer 403 under the Permission::Ingest model in the api-auth guide.",
+    "reasoning": "The candidate assumes submit_patch gates on is_authorized with Permission::Ingest. At this commit it does not. I read src/api.rs lines 150-280 at d67c8bd2: submit_patch checks state.read_only, then rejects any peer whose address is not loopback, and nothing else. A grep of src/ for is_authorized, presents_local_token and local_token found no definitions or uses, and src/auth.rs and src/access.rs do not exist (git_ls of src/ lists neither). The credential model the candidate cites is therefore not part of this tree, so the CLI cannot be missing a credential that the server never checks. The CLI builds its URL from settings.server.host and settings.server.port, or from --server / SASHIKO_SERVER, so a default local invocation connects from a loopback peer and passes the check. A git_log of d67c8bd2..HEAD returned no later commits, so no later patch changes this contract. A non-loopback --server would get a 403 from the server's own loopback-only policy, which is pre-existing server behaviour this commit does not touch. The remaining complaint, that the CLI prints an opaque 'Submission failed (403): ...', is a minor message-quality issue and is not the authorization defect the candidate claims.",
+    "locations": [
+     {
+      "code_snippet": "if !addr.ip().is_loopback() {\n        info!(\"Refused patch submission from non-localhost: {}\", addr);\n        return Err(StatusCode::FORBIDDEN);\n    }",
+      "file": "src/api.rs",
+      "function_or_symbol": "submit_patch",
+      "line": "179",
+      "why_this_location_matters": "Shows that the endpoint gates on loopback peer address at this commit, with no is_authorized or Permission::Ingest check and no token, so a loopback CLI request with no credential is accepted."
+     },
+     {
+      "code_snippet": "let resp = client.post(&url).json(&payload).send().await?;",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "The candidate's target. The request carries no Authorization header, but no credential exists in the server at this commit to require one."
+     }
+    ]
+   },
+   {
+    "description": "handle_list computes (data.total + data.per_page - 1) / data.per_page with a server-echoed per_page, so --per-page 0 would cause underflow or divide-by-zero, and the sum could overflow.",
+    "reasoning": "A grep for PatchsetsResponse at the target revision shows one construction site, `Ok(Json(PatchsetsResponse {` in list_patchsets at src/api.rs:290. The other matches are the struct definition and the two CLI deserialization sites. In list_patchsets, per_page is computed as `pagination.per_page.unwrap_or(50).clamp(1, 100)` (src/api.rs:271) and that same variable is placed in the response (src/api.rs:294). So a Sashiko server always echoes per_page in 1..=100. `--per-page 0` from the CLI is therefore clamped to 1 server-side. With per_page >= 1, `per_page - 1` cannot underflow, the divisor is nonzero, and the addition cannot realistically overflow because total is a row count. The remaining scenario needs a non-Sashiko or hostile server supplied by the user through --server or SASHIKO_SERVER. That is an endpoint the user chose, and it crosses no Sashiko security boundary, so it is not a defect in the patch. The `/api/patch` and `/api/review` paths are not involved in this arithmetic.",
+    "locations": [
+     {
+      "code_snippet": "let per_page = pagination.per_page.unwrap_or(50).clamp(1, 100);",
+      "file": "src/api.rs",
+      "function_or_symbol": "list_patchsets",
+      "line": "271",
+      "why_this_location_matters": "Guarantees the echoed per_page is at least 1 and at most 100 for the only producer of PatchsetsResponse."
+     },
+     {
+      "code_snippet": "(data.total + data.per_page - 1) / data.per_page",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "The division and subtraction are safe because the divisor is always at least 1."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change adds sashiko-cli, a new command-line client for the Sashiko\nserver, so users can submit patches, check server status, and browse\npatchsets without hand-writing HTTP requests. To let the client parse\nserver replies and build request bodies, it also derives Deserialize (and\nSerialize on SubmitRequest) for the API and database structs in\nsrc/api.rs and src/db.rs, and adds chrono plus clap's env feature to\nCargo.toml.\n\nThe client has four subcommands: submit, status, list, and show. Submit\nauto-detects its input type: \"-\" or a piped stdin means an mbox, anything\ncontaining \"..\" is a commit range, an existing file is an mbox, and\nanything else is treated as a single remote commit. The server URL comes\nfrom --server, the SASHIKO_SERVER environment variable, or the host and\nport in the settings. Output is colored text by default, or pretty JSON\nwith --format json.\n\nBefore:\n  There was no CLI. Submitting a patch or reading status meant sending\n  requests to the server's HTTP endpoints by hand, for example:\n    curl -X POST http://127.0.0.1:8080/api/submit -d '{\"type\":\"remote\",...}'\n\nAfter:\n  $ sashiko-cli submit HEAD~3..HEAD\n  Success: Submission accepted. ID: <id>\n\n  $ sashiko-cli status\n  Server Status:\n    Version:   ...\n    Messages:  ...\n    Patchsets: ...\n  Queue Breakdown:\n    Pending         ...\n\n  $ sashiko-cli list pending --per-page 10\n  prints a table of ID, Status, Subject and Date, then \"Page N of M\".\n\n  $ sashiko-cli show latest\n  prints patchset details, per-patch status and any review summary.\n\n  On failure, the error message is printed to stdout (not stderr), with\n  a hint for connection failures, and the process exits with code 1.",
+  "inline_review": "- [HIGH] In src/bin/sashiko-cli.rs (handle_show), the patchset id (or a\n  message-id) is sent to /api/review, but src/api.rs get_review parses a\n  numeric review id and src/db.rs get_review_details filters on reviews.id,\n  not the patchset id. show and show latest therefore display (or merge into\n  the JSON output) a review belonging to a different patchset, with no error.\n  For a message-id the server returns 400, which the CLI drops. The correct\n  review ids are already in the reviews array of the /api/patch response,\n  which the CLI never reads.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (main), the Settings::new() fallback in\n  unwrap_or_else repeats the identical failing call and panics via expect.\n  When Settings.toml is missing or not in the cwd (cron, systemd, installed\n  exe), the CLI dies with exit 101 and the original ConfigError is lost. The\n  load happens before --server or SASHIKO_SERVER is read, so they cannot\n  rescue status, list or show. The comment claims a fallback to defaults.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list), the subject is truncated\n  with a byte slice at offset 45 after a byte-length test. A non-ASCII\n  subject with a multi-byte character straddling byte 45 panics and aborts\n  the table. Subjects come from mailing-list mail, so this is routine input\n  and can be crafted deliberately. Truncate on chars instead.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (main, print_colored), the Error line\n  and hint lines are written to stdout, even with --format json. A script\n  piping sashiko-cli --format json list to a JSON parser gets non-JSON text\n  in its data stream. Every failure also exits 1, so callers cannot tell a\n  refused connection from a 403 or 404. Diagnostics belong on stderr.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list, handle_show), the list\n  filter and the show id are interpolated raw into URLs. A filter containing\n  &, #, + or % is truncated or split into extra parameters, and message-ids\n  with <, > or + are mangled, so the server filters on something other than\n  what was typed and the user sees a plausible empty list or a 404. Use the\n  reqwest query builder.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_show), a non-success response\n  from /api/review is silently dropped: there is no else branch. The text\n  output omits the Review Summary and the JSON output lacks the review key,\n  with no warning and exit 0, so a server error looks the same as no stored\n  review.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit), auto-detection tests\n  for '..' before checking that the path exists. An existing mbox such as\n  ../patches/0001.mbox or my..series.mbox is sent as a RemoteRange with the\n  path as the sha, and the file is never read. Also, --type mbox with no\n  input falls back to the target HEAD and reads a file named HEAD, and\n  --baseline is silently ignored for remote and range submissions.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (main), the reqwest Client is built with\n  Client::new(), which has no connect or total timeout. A server that accepts\n  the connection but never answers makes every subcommand hang forever, so\n  cron jobs and scripts stall with no error. Set connect_timeout and timeout.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_show), the Verdict block reads a\n  verdict key from the /api/review body, but src/db.rs get_review_details\n  builds a fixed JSON object (result, status, inline_review, summary, logs,\n  and so on) with no verdict, and src/api.rs get_review passes it through\n  unchanged. The Verdict line and its LGTM/Request Changes colouring never\n  print, so a review that requested changes looks the same as one that\n  passed. The CLI ignores the status and result keys that carry the outcome.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit) with src/api.rs\n  (submit_patch), submit with no input in a terminal, --type remote with no\n  input, or a range prints Success with ID HEAD or the range string. The\n  server keys the placeholder as <id>@sashiko.local, but show looks up the\n  bare id, so the returned ID cannot be used to track the submission. HEAD is\n  sent unresolved and evaluated by src/fetcher.rs in the server's repository,\n  not the user's checkout, despite the help text. The raw string also acts as\n  the dedupe key, so a later HEAD submission reuses the old row and can\n  overwrite the earlier patch diff.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_status) with src/api.rs\n  (get_stats), status presents zeros as authoritative. The CLI defaults\n  missing breakdown keys to 0, never checks the status field, and omits the\n  cancelled bucket the server emits, so the buckets do not sum to Patchsets.\n  Separately, get_stats converts DB errors into zero counts with HTTP 200 and\n  status ok; that server-side swallowing was not introduced by this change\n  (pre-existing), but this CLI is the first consumer to display it as fact.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list, handle_show,\n  handle_submit), server-sourced text (subjects, authors, apply errors,\n  review summaries, logs, and error bodies) is printed raw in text mode,\n  which is the default. Escape sequences in a mail-derived subject or author\n  can rewrite the terminal, forge coloured lines or emit OSC sequences when a\n  maintainer runs list, show or submit. Nothing in src strips control\n  characters. Replace control characters before printing.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit), the mbox is read with\n  read_to_string into a String-typed Inject.raw. A UTF-8 BOM before the first\n  'From ' line (common from PowerShell output) prevents the ingestor\n  is_mbox_separator from recognising the first separator, so the first\n  message may be misparsed or dropped after a Success message. Non-UTF-8\n  bytes (for example a Latin-1 diff) are refused at the CLI although the\n  server ingest path is byte-oriented. Strip a leading BOM and report the\n  encoding on failure.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_submit), the repo value is sent\n  unresolved from --repo or settings.git.repository_path, and the server\n  uses it as a git remote URL inside its own repo (src/fetcher.rs\n  ensure_remote). The default Settings.toml value third_party/linux is\n  relative, so it resolves to a nonexistent nested path, and tilde, relative\n  or Windows paths are not meaningful to the server. The CLI has already\n  printed Submission accepted, and the failure only appears later in server\n  logs or patchset status.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_list), the subject is sliced at\n  byte 45 after a byte-length check, so a multi-byte character straddling\n  that offset panics and hides the whole page. The default list command hits\n  this path whenever one row has such a subject. Overlaps the earlier\n  handle_list panic finding; truncate on chars and count chars.\n\n- [LOW] In src/bin/sashiko-cli.rs (main, handle_list, handle_show,\n  handle_status), the NOT_FOUND and BAD_REQUEST hints are dead code. The\n  handlers return plain anyhow string errors, so the downcast to\n  reqwest::Error never sees a status (nothing calls error_for_status). The\n  status, list and show handlers also discard the response body, so users\n  see only a bare status code.\n\n- [LOW] In src/bin/sashiko-cli.rs (print_colored), set_color, write! and\n  reset are unwrapped, and the handlers use println!, so a closed pipe such\n  as sashiko-cli list | head ends in a panic message instead of a quiet\n  exit.\n\n- [LOW] The commit adds the 526-line src/bin/sashiko-cli.rs and Deserialize\n  derives on server types in src/api.rs and src/db.rs with no tests or\n  fixtures. Input auto-detection (handle_submit), URL building, truncation,\n  pagination arithmetic, and the SubmitRequest wire tags are unpinned, so\n  the panic, the '..' ordering and the unencoded query would not fail any\n  test.\n\n- [LOW] In src/bin/sashiko-cli.rs (main), the base URL is built from\n  settings.server.host, but src/api.rs run_server always binds 0.0.0.0 and\n  ignores host. A wildcard host fails to connect on Windows, and a LAN IP\n  reaches the server as a non-loopback peer, so submit_patch returns an\n  empty 403 and the CLI shows no cause. A trailing slash on --server\n  probably yields // paths, which was not verified. Map wildcard hosts to\n  127.0.0.1, trim the slash, and explain 403.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_submit), submit with no INPUT reads\n  stdin whenever it is not a terminal, which overrides the documented HEAD\n  default in cron, systemd, CI and scheduled tasks. With stdin on /dev/null\n  the CLI posts an empty mbox and the server returns a bare 400 that does\n  not mention stdin. With an open stdin that never closes it hangs\n  indefinitely. Require an explicit '-' and refuse empty content.",
+  "findings": [
+   {
+    "problem": "settings fallback repeats the failing call and panics",
+    "severity": "Medium",
+    "type": "Misleading Fallback / Error Handling",
+    "preexisting": false,
+    "explanation": "Any run where Settings.toml is missing, incomplete or not in the cwd (cron, systemd, an installed .exe on Windows, a kernel checkout) panics with exit 101 and a generic message, and the original ConfigError is discarded. The load happens before cli.server is read, so --server and SASHIKO_SERVER cannot rescue status, list or show. The comment says it falls back to defaults, but the closure calls the same Settings::new(), which cannot succeed where the first call failed.",
+    "locations": [
+     {
+      "code_snippet": "Settings::new().unwrap_or_else(|_| { Settings::new().expect('Failed to load default settings') })",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "The fallback is the identical call, so a config error becomes a panic and the cause is hidden."
+     },
+     {
+      "code_snippet": ".add_source(File::with_name('Settings'))",
+      "file": "src/settings.rs",
+      "function_or_symbol": "Settings::new",
+      "line": "None",
+      "why_this_location_matters": "A required, cwd-relative source, so a missing file is an Err."
+     }
+    ]
+   },
+   {
+    "problem": "list slices subject at byte 45 and panics on UTF-8",
+    "severity": "Medium",
+    "type": "Panic on Non-ASCII Input",
+    "preexisting": false,
+    "explanation": "sashiko-cli list aborts mid-table with a panic whenever a subject longer than 48 bytes has a multi-byte character straddling byte 45. Subjects come from mailing-list mail and injected mbox files, so non-ASCII text is routine, and a sender can craft one deliberately. The guard subject.len() > 48 counts bytes and the slice uses a byte offset with no char-boundary check. Fix with char_indices or chars().take(45).",
+    "locations": [
+     {
+      "code_snippet": "if subject.len() > 48 { format!('{}...', &subject[..45]) }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "Byte-index slice of server-supplied, possibly non-ASCII text."
+     }
+    ]
+   },
+   {
+    "problem": "errors and hints go to stdout, even with --format json",
+    "severity": "Medium",
+    "type": "Stdout/Stderr Contract",
+    "preexisting": false,
+    "explanation": "On any failure main() writes 'Error: ...' and the hint lines to stdout through print_colored (StandardStream::stdout) and println!, then exits 1. A script running sashiko-cli --format json list | jq gets non-JSON text in the stream it parses and a parser error that hides the real failure. Every failure uses exit code 1, so callers cannot tell a refused connection from a 403 or 404 without scraping text. Diagnostics belong on stderr.",
+    "locations": [
+     {
+      "code_snippet": "print_colored(Color::Red, 'Error: '); println!('{}', e);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "Failure text goes to the result stream, including under --format json."
+     },
+     {
+      "code_snippet": "let mut stdout = StandardStream::stdout(ColorChoice::Auto);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "print_colored",
+      "line": "None",
+      "why_this_location_matters": "The helper can only write to stdout and is used for errors as well as results."
+     }
+    ]
+   },
+   {
+    "problem": "404/400 hints are dead code and error bodies are dropped",
+    "severity": "Low",
+    "type": "Dead Code / Wrong Error Classification",
+    "preexisting": false,
+    "explanation": "Every handler turns a non-success status into an anyhow string error. main() then downcasts to reqwest::Error and checks status(), which is Some only for errors built by error_for_status(), and nothing here calls it. The NOT_FOUND and BAD_REQUEST hints therefore never print and only the is_connect hint is reachable. The status, list and show handlers also drop the response body, so the user sees a bare status code.",
+    "locations": [
+     {
+      "code_snippet": "} else if let Some(status) = req_err.status() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "Unreachable branch, since handlers never return a reqwest status error."
+     },
+     {
+      "code_snippet": "return Err(anyhow::anyhow!('Failed to list patchsets: {}', resp.status()));",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "A plain string error that the downcast cannot match."
+     }
+    ]
+   },
+   {
+    "problem": "list filter and show id are put in URLs unencoded",
+    "severity": "Medium",
+    "type": "Request Construction",
+    "preexisting": false,
+    "explanation": "list FILTER is appended as &q={} and show ID goes into ?id={} (and the review URL) raw. A filter containing &, #, +, % or a space is truncated, split into extra parameters (a&per_page=100) or reinterpreted, so the server filters on something other than what was typed and the user sees a plausible No items found or a 404. Message-ids, which the server accepts as ids, contain <, >, @ and +. Use reqwest .query().",
+    "locations": [
+     {
+      "code_snippet": "url.push_str(&format!('&q={}', q));",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "User text goes into the query string unescaped."
+     },
+     {
+      "code_snippet": "let url = format!('{}/api/patch?id={}', base_url, id);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "None",
+      "why_this_location_matters": "The id may be a Message-ID with reserved characters."
+     }
+    ]
+   },
+   {
+    "problem": "show silently drops a failed review fetch and exits 0",
+    "severity": "Medium",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "For Reviewed, Failed and Failed To Apply patchsets handle_show requests /api/review and keeps the result only on success. There is no else branch, so a 400, 404 or 500 leaves review_data as None: text output omits the Review Summary and JSON output lacks the review key, with no warning and exit 0. A reader cannot tell no review stored from a server error, so a Reviewed patchset can appear to have no review.",
+    "locations": [
+     {
+      "code_snippet": "if review_resp.status().is_success() { review_data = Some(review_resp.json::<Value>().await?); }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "None",
+      "why_this_location_matters": "The non-success path is dropped with no message."
+     }
+    ]
+   },
+   {
+    "problem": "submit tests for '..' before file existence, misrouting mbox",
+    "severity": "Medium",
+    "type": "Logic Error",
+    "preexisting": false,
+    "explanation": "With no --type, detection tests s.contains('..') before PathBuf::from(&s).exists(). An existing mbox such as ../patches/0001.mbox or my..series.mbox is therefore sent as SubmitRequest::RemoteRange with the path as the sha, and the file is never read. The CLI has no way to notice, and the server-side effects (placeholder row keyed by the raw sha, asynchronous fetch failure) are listed in a separate item for verification. Checking file existence first fixes it. Also, --type mbox with no input falls to target HEAD and reads a file named HEAD, and --baseline is silently ignored for remote and range.",
+    "locations": [
+     {
+      "code_snippet": "} else if s.contains('..') { (SubmitType::Range, s) } else if PathBuf::from(&s).exists() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "The range heuristic runs before the file-exists check, so any existing path containing .. is misrouted."
+     }
+    ]
+   },
+   {
+    "problem": "print_colored unwraps writes, so a closed pipe panics",
+    "severity": "Low",
+    "type": "Crash on closed pipe / Terminal injection",
+    "preexisting": false,
+    "explanation": "print_colored unwraps set_color, write! and reset, and the handlers use println!, which also panics on a write error. sashiko-cli list | head closes the pipe early and the CLI dies with a panic message instead of exiting quietly. The consequence is a noisy exit on an output-only command.",
+    "locations": [
+     {
+      "code_snippet": "stdout.set_color(ColorSpec::new().set_fg(Some(color))).unwrap();",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "print_colored",
+      "line": "None",
+      "why_this_location_matters": "Every colored output path unwraps I/O results, including EPIPE."
+     }
+    ]
+   },
+   {
+    "problem": "HTTP client has no timeout, so every subcommand can hang",
+    "severity": "Medium",
+    "type": "Unbounded network wait",
+    "preexisting": false,
+    "explanation": "main() builds Client::new(), which has no total or read timeout, and uses it for submit, status, list and show (show latest makes two or three sequential requests). A server that accepts the connection but never answers makes the CLI wait forever, so a cron job or script hangs with no error. Use Client::builder().connect_timeout(..).timeout(..).",
+    "locations": [
+     {
+      "code_snippet": "let client = Client::new();",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "The single client used for all requests has no timeout."
+     }
+    ]
+   },
+   {
+    "problem": "526-line CLI and new wire derives ship with no tests",
+    "severity": "Low",
+    "type": "Evidence / Commit Quality",
+    "preexisting": false,
+    "explanation": "The commit adds src/bin/sashiko-cli.rs with input auto-detection, URL building, truncation, pagination arithmetic and untyped JSON access, and no cfg(test) module or fixture, so reverting any of that logic fails nothing. Trivial unit tests would have caught the byte-slice panic, the .. ordering and the unencoded query. Serialize/Deserialize derives were added on server types with no fixture of real server output and no assertion of the serialized SubmitRequest JSON. The commit message claims no verification, so nothing is overstated.",
+    "locations": [
+     {
+      "code_snippet": "} else if s.contains('..') { (SubmitType::Range, s) }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Input classification chooses the payload type and is unpinned."
+     },
+     {
+      "code_snippet": "#[serde(tag = 'type', rename_all = 'lowercase')] pub enum SubmitRequest {",
+      "file": "src/api.rs",
+      "function_or_symbol": "SubmitRequest",
+      "line": "88",
+      "why_this_location_matters": "The CLI and server wire tags are not asserted by any test."
+     }
+    ]
+   },
+   {
+    "problem": "show passes patchset id to /api/review, which keys on reviews.id",
+    "severity": "High",
+    "type": "Contract Mismatch",
+    "preexisting": false,
+    "explanation": "Consequence: `sashiko-cli show <id>` (and `show latest`) displays, or in JSON mode merges into `details.review`, the review whose reviews.id equals the patchset id. That review can belong to a different patchset, so the CLI reports a false verdict, summary and logs with no error. It is reachable on every `show` of a patchset whose status is Reviewed, Failed or Failed To Apply, which is the primary use of the command. Proof: `src/api.rs` get_review parses `query.id` as i64 and calls `state.db.get_review_details(id_val)`, otherwise it returns BAD_REQUEST. `src/db.rs` get_review_details runs `FROM reviews r ... WHERE r.id = ?`, so the key is the review row id. `handle_show` in `src/bin/sashiko-cli.rs` builds `format!(\"{}/api/review?id={}\", base_url, id)` with `id` being the patchset id, either user-supplied or taken from `/api/patchsets` items for `latest`. The id spaces diverge: reviews has its own INTEGER PRIMARY KEY, and `reviews.patchset_id` links it to a patchset. A patchset can have zero, one or many reviews, because the review pipeline creates one per patch or retry. The right id is already in the `/api/patch` response: `get_patchset_details` returns a `reviews` array whose entries carry `id` (selected as `r.id`), ordered by created_at ASC, and the CLI never reads it. Secondary effects on the same path: (1) when `id` is a message-id, `/api/patch` resolves it via get_patchset_details_by_msgid, but `/api/review` returns 400 for the non-numeric id; the CLI only checks `is_success()` and silently drops the review, so the Review Summary is missing with no warning. (2) A 404 for a nonexistent review id is also swallowed silently. (3) The Logs section is gated on the patchset status, but the logs come from the wrong review. The preconditions are normal ones: any deployment with more than one patchset, where ids rarely coincide. Not preexisting, because `sashiko-cli.rs` is new in this commit. The commit message claims the tool supports 'viewing patchset details' and the diff includes no test or evidence of an end-to-end check. Fix: take the review id from `details[\"reviews\"]` (for example the latest entry, or the one matching a patch) and call `/api/review` with that, or print the `reviews` array directly. Treat a non-success response as an error or warn on stderr rather than dropping it.",
+    "locations": [
+     {
+      "code_snippet": "let review_url = format!(\"{}/api/review?id={}\", base_url, id);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "416",
+      "why_this_location_matters": "Sends the patchset id (or a message-id) to an endpoint keyed by reviews.id, and ignores non-success responses."
+     },
+     {
+      "code_snippet": "WHERE r.id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_review_details",
+      "line": "2353",
+      "why_this_location_matters": "Proves the lookup key is the review row id, not the patchset id."
+     },
+     {
+      "code_snippet": "if let Ok(id_val) = query.id.parse::<i64>() { ... state.db.get_review_details(id_val).await ... } else { Err(StatusCode::BAD_REQUEST) }",
+      "file": "src/api.rs",
+      "function_or_symbol": "get_review",
+      "line": "355",
+      "why_this_location_matters": "The route accepts only a numeric review id and returns 400 for a message-id, which the CLI silently ignores."
+     },
+     {
+      "code_snippet": "r.patch_id, r.id, ai.tokens_cached FROM reviews r ... WHERE r.patchset_id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_patchset_details",
+      "line": "2224",
+      "why_this_location_matters": "The /api/patch response already exposes the correct review ids under reviews[].id, which the CLI does not use."
+     }
+    ]
+   },
+   {
+    "problem": "show reads a verdict key that /api/review never emits",
+    "severity": "Medium",
+    "type": "Contract Mismatch",
+    "preexisting": false,
+    "explanation": "Consequence: `sashiko-cli show <id>` for a reviewed patchset never prints the Verdict line or its LGTM (green) / Request Changes (red) colouring, and the text output gives no indication that the review outcome was dropped. The reader sees a Review Summary with only Model and the summary text, so a review that requested changes looks the same as one that passed. Reachability: every `sashiko-cli show` (including the default `latest`) on a patchset whose status is Reviewed, Failed or Failed To Apply, in text format. Proof: `handle_show` fetches `/api/review?id=...` and does `review.get(\"verdict\").and_then(|v| v.as_str())`. The route `/api/review` is `get_review`, which returns `Json(details)` from `Database::get_review_details` unchanged. That function builds the JSON from a fixed `serde_json::json!` object with keys id, model, summary, created_at, input, output, baseline, provider, prompts_hash, result, status, inline_review, logs, tokens_in, tokens_out, patch_id and tokens_cached. There is no verdict key. A tree-wide grep for `verdict` at this commit matches only src/bin/sashiko-cli.rs (lines 472, 473, 479), so no other producer exists. The `if let Some` therefore always falls through silently. The keys that carry the review outcome are `status` and `result` (from reviews.result_description), plus `inline_review`, and the CLI ignores all of them. The `match verdict` arms (\"LGTM\", \"Request Changes\") also encode strings no producer in this tree emits. This is a one-sided contract: the consumer was written against a shape the server does not produce. The commit message presents the CLI as supporting patchset details and gives no evidence it was run against a server with a reviewed patchset. Severity is Medium: a contained functional defect in a read-only CLI display that silently omits information, with no money, credential or store impact. It is not higher because the Failed and Failed To Apply states are still shown through the patchset status and failure reason. If the verdict is meant to be derived (for example from `result` or `status`), the CLI should read that key; otherwise the server should emit it.",
+    "locations": [
+     {
+      "code_snippet": "if let Some(verdict) = review.get(\"verdict\").and_then(|v| v.as_str()) {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "472",
+      "why_this_location_matters": "Consumer reads a key that no code in src produces, so the Verdict block is dead and the review outcome is never shown."
+     },
+     {
+      "code_snippet": "\"status\": r.get::<Option<String>>(12).ok(),\n                \"inline_review\": r.get::<Option<String>>(13).ok(),",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_review_details",
+      "line": "2342",
+      "why_this_location_matters": "Producer of the /api/review body; its fixed key set (result, status, inline_review, ...) contains no verdict."
+     },
+     {
+      "code_snippet": "Ok(Some(details)) => Ok(Json(details)),",
+      "file": "src/api.rs",
+      "function_or_symbol": "get_review",
+      "line": "361",
+      "why_this_location_matters": "The route passes the db JSON through unchanged, so nothing adds a verdict key between producer and the CLI."
+     }
+    ]
+   },
+   {
+    "problem": "submit HEAD/range id untrackable, resolves server HEAD",
+    "severity": "Medium",
+    "type": "Wire Contract (submit semantics)",
+    "preexisting": false,
+    "explanation": "Consequence and reach: `sashiko-cli submit` with no input in a terminal, or `--type remote` with no input, or a range such as `a..b`, prints 'Success: Submission accepted. ID: HEAD' (or the range string). That ID cannot be used to track the submission, and for HEAD it names a different commit than the user expects. Nothing in the code cannot be shown to reach this: `handle_submit` is the only CLI submit path, and the server route is the only consumer.\n\n1) The returned ID does not locate the placeholder. `submit_patch` sets `let id = sha.clone()` and returns it as `SubmitResponse.id`. `create_fetching_patchset` stores the placeholder under `cover_letter_message_id = '<id>@sashiko.local'`. `sashiko-cli show <id>` calls `/api/patch?id=HEAD`. `get_patchset` finds that `HEAD` does not parse as i64 and calls `get_patchset_details_by_msgid('HEAD')`. That queries `cover_letter_message_id = 'HEAD'` (no suffix), then `patches.message_id = 'HEAD'`. Both miss, so the result is 404. The same happens for range strings. A 40-hex single SHA only becomes findable after ingestion, via the patches.message_id fallback, because the fetcher sets `message_id = sha`. A failure is recorded under `HEAD@sashiko.local` by `update_patchset_error`, but the user cannot reach it with the ID they were given. The CLI has already printed Success before any fetch happens.\n\n2) HEAD is not the user's HEAD. The help text says it 'Defaults to HEAD if in a git repo', but the CLI never inspects the cwd or resolves the ref. It sends the literal `HEAD` with `repo = settings.git.repository_path` (or `--repo`). In `FetchAgent::extract_patch` the commit is passed to `git show HEAD` and `git rev-parse HEAD^` with `current_dir(self.repo_path)`, which is the server's configured repository. The review therefore targets the server repo's local HEAD, not the commit the user meant. `git fetch <remote> HEAD` only populates FETCH_HEAD and is never consulted.\n\n3) Identity collision. The raw string `HEAD` is the dedupe key at three levels. The placeholder is `HEAD@sashiko.local`. The `FetchAgent` queue is a `HashSet<String>` of commit strings. The patch row uses `message_id = 'HEAD'`, and `create_patch` does `ON CONFLICT(message_id) DO UPDATE SET patchset_id, part_index, diff`. A second `submit` of HEAD after the repo has moved reuses the existing patchset; `create_fetching_patchset` only resets status when it is Failed or Fetching, otherwise it returns the old row id. The new diff then overwrites the previous HEAD patch row, so an earlier Reviewed patchset can silently end up showing a different commit's diff. I did not trace every later ingestion step in `process_parsed_article`, so the exact end state of the status field is unverified; the overwrite via ON CONFLICT is confirmed in the code read.\n\nThe server-side `id = sha.clone()` behaviour predates this commit, but the CLI is what makes symbolic refs and ranges the default and advertised path, so the defect is introduced by this change. Medium: it misleads the user about what was submitted and how to follow it, but needs no money, credential or store-corruption path beyond the review DB, and the submit route is loopback-only. Fix direction: resolve the ref (`git rev-parse`) in the CLI against the user's repo, or in the server before keying, and return the numeric patchset id from `create_fetching_patchset` in `SubmitResponse`.",
+    "locations": [
+     {
+      "code_snippet": "// Default to HEAD\n                (SubmitType::Remote, \"HEAD\".to_string())",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Sends an unresolved symbolic ref with the server-settings repo path; no git-repo check despite the help text."
+     },
+     {
+      "code_snippet": "let id = sha.clone();",
+      "file": "src/api.rs",
+      "function_or_symbol": "submit_patch",
+      "line": "214",
+      "why_this_location_matters": "The raw client string becomes both the placeholder key and the ID returned to the user."
+     },
+     {
+      "code_snippet": "let root_msg_id = format!(\"{}@sashiko.local\", article_id);",
+      "file": "src/db.rs",
+      "function_or_symbol": "create_fetching_patchset",
+      "line": "2495",
+      "why_this_location_matters": "The stored key carries a suffix that get_patchset_details_by_msgid does not add, so the returned ID misses the placeholder; repeats reuse the same row."
+     },
+     {
+      "code_snippet": ".args([\"show\", &format!(\"--format={}\", format), commit])",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "extract_patch",
+      "line": "None",
+      "why_this_location_matters": "Runs in the server's repo_path, so HEAD resolves to the server repo's HEAD, not the user's checkout."
+     }
+    ]
+   },
+   {
+    "problem": "status shows zeros from a failing DB and omits cancelled",
+    "severity": "Medium",
+    "type": "Silent Failure (surfaced by new consumer)",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: `sashiko-cli status` (new in this commit) calls GET /api/stats and prints the result as the server's authoritative state. `get_stats` in src/api.rs converts any DB error into zero counts with HTTP 200 and `\"status\": \"ok\"`. `count_messages(None, None).await.unwrap_or(0)` and `count_patchsets(None, None).await.unwrap_or(0)` turn a failed query into 0. `get_patchset_counts_by_status().await.unwrap_or_default()` turns a failure into an empty map, so every breakdown bucket becomes 0 through `counts.get(..).unwrap_or(&0)`. The handler has no error path, since its return type is `Json<serde_json::Value>`. A caller therefore cannot tell a locked, corrupt or unreachable database from an empty healthy server. The CLI adds a second layer: `breakdown.get(key).unwrap_or(&zero)` hides any missing key as 0, and `handle_status` never inspects the `status` field. An operator or script running `sashiko-cli status` during a DB outage sees 'Messages: 0, Patchsets: 0' and all-zero queue counts, which reads as an idle, healthy system. The `--format json` output passes the same zeros through for scripts. Second defect: `get_stats` emits `breakdown.cancelled` (`let cancelled = *counts.get(\"Cancelled\")...` and `\"cancelled\": cancelled`), but the CLI's `items` array stops at `incomplete`. Cancelled patchsets are counted in `Patchsets` but never shown, so the displayed buckets do not sum to the total. Preexisting split: the server-side swallowing predates this commit, because the diff only adds Deserialize derives to api.rs and does not touch `get_stats`. The CLI's silent default and the missing `cancelled` row are introduced here, and the CLI is the first consumer to present the zeros as authoritative. Impact is a misleading status display, not data loss or money movement, and it is reachable only when the DB errors or when cancelled patchsets exist (the second defect). The cancelled omission needs only a Cancelled patchset to occur. Severity is Medium. Fixes: `get_stats` should return 500/503 on a DB error, and the CLI should list `cancelled`.",
+    "locations": [
+     {
+      "code_snippet": "let messages = state.db.count_messages(None, None).await.unwrap_or(0);\n    let patchsets = state.db.count_patchsets(None, None).await.unwrap_or(0);\n    let counts = state\n        .db\n        .get_patchset_counts_by_status()\n        .await\n        .unwrap_or_default();\n...\n    Json(serde_json::json!({\n        \"status\": \"ok\",",
+      "file": "src/api.rs",
+      "function_or_symbol": "get_stats",
+      "line": "None",
+      "why_this_location_matters": "DB errors become zero counts with a 200 and status ok; the handler has no error path."
+     },
+     {
+      "code_snippet": "(\"Incomplete\", \"incomplete\"),\n                    ];\n\n                    let zero = serde_json::json!(0);\n                    for (label, key) in items {\n                         let val = breakdown.get(key).unwrap_or(&zero);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_status",
+      "line": "None",
+      "why_this_location_matters": "The CLI defaults missing keys to 0, never checks the status field, and its list omits the server's cancelled key, so the buckets do not sum to Patchsets."
+     }
+    ]
+   },
+   {
+    "problem": "base URL built from server.host, which the server ignores",
+    "severity": "Low",
+    "type": "Platform: base URL",
+    "preexisting": false,
+    "explanation": "Consequence: with a wildcard or non-loopback server.host, the CLI cannot reach the server, or submit is refused, and the printed hint blames the wrong cause. Reachability: this needs an operator to edit host, because the checked-in Settings.toml sets host = \"127.0.0.1\" and no deploy config in .github or README sets it, so the default setup is unaffected. It is a contained usability defect with no data or money risk, hence Low. Verified: (1) run_server in src/api.rs:142 binds SocketAddr::from(([0, 0, 0, 0], settings.port)) and never reads settings.host, so host is a dead setting for the server, and a user may set 0.0.0.0 to match what the server really does. SASHIKO_SERVER__HOST also overrides it through the config crate. (2) main in src/bin/sashiko-cli.rs:115-117 formats http://{host}:{port} straight from that value when --server and SASHIKO_SERVER are absent. Connecting to 0.0.0.0 fails on Windows with WSAEADDRNOTAVAIL, while Linux routes it to localhost. That Windows behaviour is platform knowledge, not something this repo can demonstrate. The CLI then prints the hint 'Is the Sashiko server running'. A specific non-loopback host such as a LAN IP reaches the server, but the connection's peer address is then that LAN IP. submit_patch (src/api.rs:176-181) requires addr.ip().is_loopback() and returns a bare StatusCode::FORBIDDEN with no body. handle_submit then reports 'Submission failed (403 Forbidden): ' with an empty body. The CLI's status-based hints in main are dead code for this case, because the error is an anyhow! string, not a reqwest error with a status, so no explanation is shown. Not confirmed: a trailing slash on --server yields //api/... paths; the routes are registered exactly and no path normalisation layer appears in run_server, so this is likely a 404, but I did not verify axum's behaviour with a test. The --server help text says the default is 127.0.0.1:8080, but the code uses the settings value; this is accurate only for the checked-in config. A fix would map 0.0.0.0 or :: to 127.0.0.1 when building the URL, trim trailing slashes from --server, and have the 403 path return an explanatory body or have the CLI print a hint on 403.",
+    "locations": [
+     {
+      "code_snippet": "format!(\"http://{}:{}\", settings.server.host, settings.server.port)",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "115",
+      "why_this_location_matters": "A listen address from settings is reused as a connect address without normalising wildcards, and --server is used without trimming a trailing slash."
+     },
+     {
+      "code_snippet": "let addr = SocketAddr::from(([0, 0, 0, 0], settings.port));",
+      "file": "src/api.rs",
+      "function_or_symbol": "run_server",
+      "line": "142",
+      "why_this_location_matters": "The server always binds all interfaces and ignores settings.host, so the host value cannot be relied on as a connect address."
+     },
+     {
+      "code_snippet": "if !addr.ip().is_loopback() {\n        info!(\"Refused patch submission from non-localhost: {}\", addr);\n        return Err(StatusCode::FORBIDDEN);\n    }",
+      "file": "src/api.rs",
+      "function_or_symbol": "submit_patch",
+      "line": "176",
+      "why_this_location_matters": "Refuses with an empty 403 body, so the CLI shows no reason when the URL host is not loopback."
+     }
+    ]
+   },
+   {
+    "problem": "server-sourced text printed to terminal without sanitizing",
+    "severity": "Medium",
+    "type": "Terminal injection",
+    "preexisting": false,
+    "explanation": "Consequence: a patch author who can get a mail into the ingested lists can put ESC/CSI/OSC bytes in a subject or author header, or steer model output into a review summary or log, and have the maintainer's terminal interpret them when they run `sashiko-cli list`, `show` or `submit`. That can rewrite or hide earlier lines, forge the coloured Verdict line, or emit title and clipboard OSC sequences. Reachability: `handle_list` prints `subject_display` for every row, and `handle_show` prints `details[\"subject\"]`, `details[\"author\"]`, per-patch `subject` and `apply_error`, `failed_reason`, the review `summary`, `model` and `logs`. `handle_submit` echoes the raw server error body through `anyhow!(\"Submission failed ({}): {}\", status, text)`, which `main` prints with `println!`. Verification: `git_grep` over `src/` at d67c8bd for `is_control|sanitize|strip_ansi|escape_default|escape_debug` returned no matches, so neither the ingestion/API code nor the CLI strips control characters, and the repo has no sanitizer the CLI could call. The values are deserialized as plain `String` or `serde_json::Value` and printed with `println!`/`print!`. The text format is the default (`default_value = \"text\"`), so the default output path is the exposed one. `--format json` goes through `serde_json::to_string_pretty`, which escapes control characters, so it is not affected. Mitigations and limits: this is a human-facing CLI, not parsed by other programs, and exploitation needs a maintainer to view attacker-influenced data, so I rate it Medium, not High. It is not preexisting because the CLI is new in this commit. A fix would be a small helper that replaces `char::is_control` characters (other than newline/tab where wanted) with a visible placeholder, applied to every server-sourced string before printing. Note on a related defect in the same lines: `&subject[..45]` in `handle_list` slices by byte offset and panics on a multi-byte character straddling byte 45, so a non-ASCII subject crashes `list`.",
+    "locations": [
+     {
+      "code_snippet": "println!(\"  Subject:   {}\", details[\"subject\"].as_str().unwrap_or(\"\"));",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_show",
+      "line": "434",
+      "why_this_location_matters": "Mail-derived subject written raw to the terminal; the author line at 435 and the patch subject at 454 do the same."
+     },
+     {
+      "code_snippet": "println!(\" {:<50} {}\", subject_display, date_display);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "371",
+      "why_this_location_matters": "Every listed subject is printed unsanitized, so one crafted patch affects each `list` run."
+     },
+     {
+      "code_snippet": "return Err(anyhow::anyhow!(\"Submission failed ({}): {}\", status, text));",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "The raw server error body is echoed to the terminal by main's println!."
+     }
+    ]
+   },
+   {
+    "problem": "mbox read as UTF-8 only; BOM defeats split_mbox, non-UTF-8 refused",
+    "severity": "Medium",
+    "type": "Platform: encoding and line endings",
+    "preexisting": false,
+    "explanation": "Consequence: on Windows, mbox files produced by PowerShell can be rejected or mis-split, so a patch is not submitted or is parsed wrongly. Reachability: `sashiko-cli submit <file>` or stdin, the documented path for `git format-patch` output. It is operator-triggered, not a loop, so Medium. The candidate is partly wrong. (1) CRLF is tolerated. `split_mbox` splits on b'\\n' bytes, `is_mbox_separator` only counts colons, `extract_message_id` uses `lines()`, and the `patch.rs` tests parse `\\r\\n` messages. (2) A UTF-16LE file, which PowerShell 5.1 `>` produces, fails loudly: `read_to_string` errors, `main` prints `Error: ...` and exits 1. That is not a silent failure. The real defects are: (a) A UTF-8 BOM, from `Out-File -Encoding utf8` or a BOM-bearing file, survives `read_to_string`. `is_mbox_separator` requires `line.starts_with(b\"From \")`, so the first line `\\u{feff}From <sha> ...` is not recognised as a separator. It is appended to the first message as body or header text, and `Inject` is posted with it intact. The server guardrail `raw.contains(\"From \")` still passes, so the server accepts it with 200 and an ID. Whether `parse_email` (mail-parser) then recovers the first message's headers is unverified; if it does not, the first patch is silently misparsed or dropped after the success message. That is an assumption about mail-parser behaviour. (b) `SubmitRequest::Inject.raw` is a `String` and the CLI uses `read_to_string`, so any mbox with non-UTF-8 bytes, such as a Latin-1 diff, is refused at the CLI. The server ingest path (`ingestor::split_mbox`, `extract_message_id` via `from_utf8_lossy`, `parse_email(&[u8])`) is byte-oriented, so the String-only wire type and CLI read are the limiting factor. The shell re-encoding to `?` that the candidate describes happens before the CLI sees the bytes and cannot be fixed in this code. To confirm (a), feed a BOM-prefixed single-patch mbox to `/api/submit` and check the stored patchset. Fix: strip a leading U+FEFF, and on a UTF-8 error report the encoding and suggest `git format-patch --stdout` through a byte-safe path.",
+    "locations": [
+     {
+      "code_snippet": "std::fs::read_to_string(&target).with_context(|| format!(\"Failed to read file {:?}\", target))?",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "228",
+      "why_this_location_matters": "The only place mbox bytes are decoded; it neither strips a BOM nor accepts non-UTF-8 bytes, and the result goes into a String-typed Inject.raw."
+     },
+     {
+      "code_snippet": "if !line.starts_with(b\"From \") {\n        return false;\n    }",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "is_mbox_separator",
+      "line": "546",
+      "why_this_location_matters": "A BOM before 'From ' makes the first separator line fail this check, so the envelope line stays inside the first message."
+     }
+    ]
+   },
+   {
+    "problem": "submit with no INPUT reads stdin whenever it is not a TTY",
+    "severity": "Low",
+    "type": "Platform: stdin selection",
+    "preexisting": false,
+    "explanation": "Consequence: an unattended run of 'sashiko-cli submit' with no INPUT (cron, systemd, CI, a script launched with inherited stdin) does not use the documented HEAD default. With stdin on /dev/null or NUL, the CLI posts an empty mbox and the server rejects it. With an open stdin that never closes, the CLI hangs forever. Reachability: only submit with no INPUT and no --type, so it is an operator or script path, not a hot path. Empty-payload half is not silent: handle_submit in src/api.rs rejects it with 'if raw.trim().is_empty() { return Err(StatusCode::BAD_REQUEST); }'. The CLI turns that into 'Submission failed (400 Bad Request): ' with an empty body, prints it and exits 1. That output does not say stdin was the problem, because the CLI never checks for empty content before posting. The server also has a second guard for non-mbox text (the 'From ' / 'Subject:' check). Hang half: 'std::io::stdin().read_to_string(&mut buffer)' is synchronous, unbounded and has no deadline. It sits in an async fn on the tokio main runtime. With a single task there is no other work to starve, so the worker-blocking concern is minor. The real effect is that the process waits indefinitely and buffers all of stdin in memory. Reading stdin when piped is documented in the help text. The defect is that the TTY check cannot tell 'a patch is being piped' from 'stdin is just not a terminal'. It overrides the 'Defaults to HEAD if in a git repo' branch in exactly the unattended cases. Platform: the same on Windows (a non-interactive PowerShell host or scheduled task has a non-terminal stdin) and on Linux. Fix: the CLI should refuse an empty stdin payload with a clear message, and ideally require an explicit '-' to read stdin.",
+    "locations": [
+     {
+      "code_snippet": "if !std::io::stdin().is_terminal() { (SubmitType::Mbox, \"-\".to_string()) } else { (SubmitType::Remote, \"HEAD\".to_string()) }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Terminal detection decides the submission type for unattended runs and shadows the HEAD default."
+     },
+     {
+      "code_snippet": "std::io::stdin().read_to_string(&mut buffer).context(\"Failed to read from stdin\")?;",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "Blocking, unbounded read with no empty-content check before the POST."
+     },
+     {
+      "code_snippet": "if raw.trim().is_empty() { return Err(StatusCode::BAD_REQUEST); }",
+      "file": "src/api.rs",
+      "function_or_symbol": "submit handler (SubmitRequest::Inject arm)",
+      "line": "None",
+      "why_this_location_matters": "Shows the server answer for an empty raw: 400 with no body, so the failure is loud but unexplained."
+     }
+    ]
+   },
+   {
+    "problem": "submit sends default repo path as a git remote URL, unresolved",
+    "severity": "Medium",
+    "type": "Platform: path handling",
+    "preexisting": false,
+    "explanation": "Consequence: 'sashiko-cli submit <sha>' and the Range form post a 'repo' string taken unchanged from --repo or from settings.git.repository_path. The server uses that string as a git remote URL. Reachability: every Remote and Range submit that does not pass an absolute, server-resolvable path. This is the default flow. Evidence: Settings.toml sets 'repository_path = \"third_party/linux\"', a relative path. The CLI sends it as SubmitRequest::Remote { sha, repo }. The api.rs handler forwards it as 'FetchRequest { repo_url: repo, commit_hash: sha }'. FetchAgent.ensure_remote runs 'git remote add <name> <url>' with 'current_dir(&self.repo_path)', and fetch_commits and fetch_all then run 'git fetch <remote>' in that same directory. The server's repo_path is that same 'third_party/linux'. A relative local-path remote is resolved against the cwd at fetch time, so the remote points at third_party/linux/third_party/linux. That path does not exist, the fetch fails, and the server emits Event::IngestionFailed. The user has already received 'Submission accepted' plus a placeholder 'Fetching ... from ...' patchset, so the failure shows up only later in the server log or patchset status. Other forms fail the same way. '~' is expanded only by shells (PowerShell 5.1 and cron do not expand it inside an argument like --repo=~/x), and git does not expand it in a remote URL. A relative --repo is resolved against the server's directory, not the user's cwd. A Windows path such as C:\\src\\linux, produced by to_string_lossy on a Windows desktop, means nothing to a Linux server. The CLI also loads Settings from its own cwd and environment, which can differ from the running server's config. The assumption is that the server runs with the repo's Settings.toml defaults. If its deployment uses an absolute repository_path and the CLI loads the same file, the default case works and only the --repo cases remain. --repo is documented only as 'Override repository path (defaults to settings)', which suggests a local path, while the server treats it as a remote URL or path on its own host. Fix: document --repo as a server-side URL or path, or canonicalize local paths (expand '~', make relative paths absolute) in the CLI, and make the server resolve the value against its own repo or reject it with a 400.",
+    "locations": [
+     {
+      "code_snippet": "let repo_path = repo.map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|| settings.git.repository_path.clone());",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_submit",
+      "line": "None",
+      "why_this_location_matters": "The path crosses the process and host boundary with no expansion or canonicalization."
+     },
+     {
+      "code_snippet": ".current_dir(&self.repo_path).args([\"remote\", \"add\", name, url])",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "FetchAgent::ensure_remote",
+      "line": "None",
+      "why_this_location_matters": "The value is used verbatim as a remote URL inside the server's repo, so a relative path resolves against that repo."
+     },
+     {
+      "code_snippet": "repository_path = \"third_party/linux\"",
+      "file": "Settings.toml",
+      "function_or_symbol": "[git] repository_path",
+      "line": "32",
+      "why_this_location_matters": "The default sent by the CLI is relative, so it points at a nonexistent nested path from within that repo."
+     }
+    ]
+   },
+   {
+    "problem": "list panics slicing a multi-byte subject at byte 45",
+    "severity": "Medium",
+    "type": "Division by zero",
+    "preexisting": false,
+    "explanation": "Consequence: sashiko-cli list aborts with a panic instead of printing the table whenever one displayed row has a subject longer than 48 bytes whose byte 45 falls inside a multi-byte UTF-8 character. A single such row hides the whole page. Reachability: handle_list does `subject.len() > 48` and then `&subject[..45]`. Both use byte offsets, and str slicing panics off a char boundary. Subjects come from mailing-list mail through the server's PatchsetRow.subject, and non-ASCII text in subjects (names, CJK, accented characters) is routine. Any `sashiko-cli list` page containing such a patchset, in text format, triggers it; the default `list` is exactly this path. This was found while verifying H12's division by per_page: that division itself is safe against the real server (see dismissal), but the same function has this crash. It follows the error-handling guidance that `&s[..n]` panics inside a multi-byte character. It is not preexisting because the file is new in this commit. A fix is to truncate on chars, e.g. `subject.chars().take(45).collect::<String>()`, and to count chars rather than bytes for the length test.",
+    "locations": [
+     {
+      "code_snippet": "let subject_display = if subject.len() > 48 {\n    format!(\"{}...\", &subject[..45])\n} else {\n    subject\n};",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "Byte-index slice of a server-supplied, mail-derived string; panics when byte 45 is not a char boundary."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "The CLI show text output might read JSON keys that /api/patch does not produce (failed_reason, patches part_index, patches apply_error).",
+    "reasoning": "get_patchset_details builds a top-level failed_reason (db.rs:2188) and per-patch objects with part_index (line 2288), status, subject and apply_error (line 2292), matching the keys handle_show reads, along with id, subject, author, status and date. The keys exist; only the separate review-lookup key problem remains.",
+    "locations": [
+     {
+      "code_snippet": "let failed_reason: Option<String> = row.get(11).ok();",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_patchset_details",
+      "line": "2188",
+      "why_this_location_matters": "failed_reason is read and emitted."
+     },
+     {
+      "code_snippet": "p.get::<Option<String>>(6).ok(),",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_patchset_details",
+      "line": "2292",
+      "why_this_location_matters": "apply_error is emitted per patch."
+     }
+    ]
+   },
+   {
+    "description": "Strict Deserialize on PatchsetsResponse/PatchsetRow couples the CLI to the server's row structs, and the new chrono dependency and clap env feature are said to need a Cargo.lock update that the commit omits.",
+    "reasoning": "1) Cargo.lock is not tracked in this repository: `.gitignore` line 8 is `Cargo.lock`, and the root listing at the target commit has no Cargo.lock. The commit therefore cannot omit a tracked lockfile update, and no --locked build can rely on one from the repo. 2) The types are symmetric. list_patchsets returns `Json<PatchsetsResponse>` built from `db.get_patchsets` rows, which are `crate::db::PatchsetRow`. The CLI deserializes the very same struct from the same crate (`sashiko::api::PatchsetsResponse`). Every PatchsetRow field is either `Option<..>` (which accepts null or missing), or `id: i64` / `subsystems: Vec<String>`, which the server always emits. Serializing and deserializing the same definition round-trips. 3) The only remaining risk is version skew between a CLI and a different-version server reached through --server, which is speculative and not a defect in this commit. show and status use untyped Value by design. 4) SubmitRequest keeps `#[serde(tag = \"type\", rename_all = \"lowercase\")]`, so the wire form is unchanged and only Serialize was added.",
+    "locations": [
+     {
+      "code_snippet": "Cargo.lock",
+      "file": ".gitignore",
+      "function_or_symbol": "ignore list",
+      "line": "8",
+      "why_this_location_matters": "Cargo.lock is gitignored, so there is no tracked lockfile the commit could have failed to update."
+     },
+     {
+      "code_snippet": "#[derive(Serialize, Deserialize)]\npub struct PatchsetsResponse {\n    pub items: Vec<crate::db::PatchsetRow>,",
+      "file": "src/api.rs",
+      "function_or_symbol": "PatchsetsResponse",
+      "line": "48",
+      "why_this_location_matters": "Server and CLI share one struct definition, so the round trip is symmetric."
+     }
+    ]
+   },
+   {
+    "description": "handle_list divides by the server-returned per_page, which could panic with division by zero if per_page were 0.",
+    "reasoning": "list_patchsets is the only sashiko route that builds PatchsetsResponse. It computes `let per_page = pagination.per_page.unwrap_or(50).clamp(1, 100);`, so per_page is at least 1. The same binding is used for the query (`get_patchsets(per_page, ...)`) and is placed in the response by shorthand `PatchsetsResponse { items, total, page, per_page }` on its sole success return; the other exits are `?` errors that return a StatusCode and no body. `--per-page 0` on the CLI is therefore clamped to 1 by the server and never echoed back as 0. handle_list also returns early on an empty item list. Zero could only come from a non-sashiko server supplied through --server or SASHIKO_SERVER, which is not a path in this repository. The real defect found in the same function is reported separately as a finding.",
+    "locations": [
+     {
+      "code_snippet": "let per_page = pagination.per_page.unwrap_or(50).clamp(1, 100);",
+      "file": "src/api.rs",
+      "function_or_symbol": "list_patchsets",
+      "line": "271",
+      "why_this_location_matters": "Bounds per_page to at least 1 before it is used and echoed back."
+     },
+     {
+      "code_snippet": "Ok(Json(PatchsetsResponse {\n        items,\n        total,\n        page,\n        per_page,\n    }))",
+      "file": "src/api.rs",
+      "function_or_symbol": "list_patchsets",
+      "line": "290",
+      "why_this_location_matters": "The clamped per_page is the value placed in the response."
+     },
+     {
+      "code_snippet": "(data.total + data.per_page - 1) / data.per_page",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_list",
+      "line": "None",
+      "why_this_location_matters": "The division targeted by the candidate; its divisor is always at least 1 for a sashiko server."
+     }
+    ]
+   }
+  ]
+ }
+}

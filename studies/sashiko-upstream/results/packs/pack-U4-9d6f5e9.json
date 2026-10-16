@@ -1,0 +1,708 @@
+{
+ "commit": "9d6f5e9",
+ "label": "U4",
+ "A": {
+  "summary": "This change generalizes Sashiko's email outbox so it can carry\ntransactional mail, such as a sign-in link addressed to a person, in\naddition to review notifications tied to a patch. It adds an explicit\nkind column, an insert path that skips the per-patch dedup guard, and\nextra headers on sign-in mail so autoresponders ignore it and\nrecipients can filter it.\n\nA new EmailKind enum (ReviewNotification, SignInLink) is stored as text\nin a new kind column. Migration 003 adds the column with a default of\nreview_notification, so existing rows are classified without being\nrewritten, and it adds an index on (kind, created_at). The schema\nversion moves from 2 to 3. An unrecognized stored kind is logged as a\nwarning and treated as a review notification, so it is still delivered.\nlock_pending_email now returns the kind, and the worker log line\nincludes it.\n\nA new insert_transactional_email writes a row with no patch, no dedup,\nan empty cc list and no threading headers. The caller supplies the row\nstatus, so a dry-run deployment can park the row in a status the poller\nnever selects instead of leaving it Pending forever.\n\nIn the email worker, sign-in mail gets an Auto-Submitted header and a\nList-Id header derived from the sender's domain, both defined through a\nsmall macro for custom lettre headers. The sender address is now parsed\nwith parse_lenient, which accepts the display-name form.\n\nA new test queues two sign-in emails to one address, checks that both\nare delivered with no patch and the expected recipient JSON, and checks\nthat a row with status Dry-Run is never picked up by the poller.\n\nBefore:\n  Every outbox row was a review notification tied to a patch. A second\n  message to the same recipient could be suppressed by the per-patch\n  dedup guard, and there was no way to queue mail for a person.\n  Outgoing mail carried no Auto-Submitted or List-Id header.\n\nAfter:\n  A sign-in link can be queued with insert_transactional_email, and two\n  requests to the same address produce two messages. The delivered mail\n  carries \"Auto-Submitted: auto-generated\" and, for a sender at\n  example.org, \"List-Id: <sashiko-auth.example.org>\". Review\n  notifications look the same as before.",
+  "inline_review": "- [MEDIUM] In src/worker/email.rs (EmailWorker::send_email), the dry-run\n  branch logs the full email body at info level for every kind and then\n  returns Ok, so run() marks the row Sent without delivery. For a\n  SignInLink the body is a bearer credential, so it reaches the journal.\n  The Pending-with-dry_run state is reachable: insert_transactional_email\n  in src/db.rs takes a free-form status that nothing ties to the worker\n  setting, dry_run defaults to true, and sweep_ghost_emails revives stuck\n  Sending rows to Pending regardless of kind. mark_email_sent and\n  mark_email_failed never clear the body, so every issued link stays in\n  the database and its backups. Severity rises if the link is a long-lived\n  or raw token.\n\n- [MEDIUM] In src/db.rs (Database::insert_transactional_email), the doc\n  comment says volume is bounded at the request endpoint, but no such\n  endpoint calls this function in the tree and no limit exists. The\n  migration header claims kinds are rate limited and observed differently,\n  yet no code reads kind for limiting or metrics. Once a caller lands\n  without a limit, anyone can queue mail to arbitrary recipients from the\n  sender address and delay review mail. The index\n  idx_email_outbox_kind_created in\n  src/migrations/003_email_outbox_kind.sql has no reader and only adds\n  write cost to every outbox insert.\n\n- [MEDIUM] In src/worker/email.rs (EmailWorker::run) and src/db.rs\n  (mark_email_failed, sweep_ghost_emails), sign-in mail inherits the\n  review-mail lifecycle. Any send error, transient or permanent, sets\n  terminal Failed, which nothing revives, so one SMTP deferral permanently\n  loses the link. If the process crashes or mark_email_sent fails after\n  SMTP accepted the message, the row stays Sending and after 600s is reset\n  to Pending and resent; the new insert path has no dedup, so a second\n  live link goes out. The requester gets a bare 200 and cannot see either\n  outcome. This is latent: request_link in src/api.rs does not yet use the\n  outbox.\n\n- [MEDIUM] Test gap: in src/worker/email.rs (EmailWorker::send_email) and\n  src/db.rs (EmailKind::from_stored), nothing tests the Auto-Submitted and\n  List-Id headers or the unknown-kind fallback. The only new test,\n  test_transactional_email_escapes_patch_dedup, exercises insert and lock\n  and never builds a message. Removing the SignInLink header block,\n  swapping header names, emitting a malformed List-Id, or changing the\n  fallback would leave all tests green. Message construction is inside\n  send_email, so the built Message is not observable; splitting it out\n  would let a test assert the bytes.\n\n- [LOW] In src/db.rs (Database::lock_pending_email), selection takes any\n  Pending row with LIMIT 1, no ORDER BY, and ignores kind. A sign-in link\n  can queue behind a backlog of review mail, and src/api.rs already mints\n  sign_in_link tokens with a 30 minute lifetime, so a delayed link can\n  arrive expired. Needs a large backlog or slow SMTP relay; the user can\n  request another link. Ordering transactional kinds first would fix it.\n\n- [LOW] In src/db.rs (Database::insert_transactional_email), status is a\n  free-form string. Any value other than exactly Pending is silently never\n  delivered, with no error or log, and a wrongly passed Pending queues\n  mail the deployment meant to suppress. The status derivation (Disabled,\n  Dry-Run, Pending) is duplicated inline in src/reviewer.rs with no shared\n  helper or enum for a new caller to reuse. Nothing calls the function yet.\n\n- [LOW] In src/db.rs (Database::migrate) and\n  src/migrations/003_email_outbox_kind.sql, ALTER TABLE ADD COLUMN is not\n  idempotent and user_version is read before the transaction opens. Two\n  processes migrating the same file at version 2 can make the loser fail\n  at startup with a duplicate column error. Nothing is corrupted and a\n  restart recovers; no second production migrator was found, so the\n  trigger is speculative.\n\n- [LOW] In src/worker/email.rs (EmailWorker::send_email, parse_lenient),\n  the From address is now parsed with parse_lenient instead of the lettre\n  Mailbox parser, for all mail kinds, not only sign-in mail. parse_lenient\n  splits on the first '<' and last '>' and strips quotes, so a quoted\n  display name containing angle brackets or escaped quotes can fail\n  (marking every mail Failed) or change on the wire. The commit message\n  does not mention this, and no test covers sender display names. Plain\n  addresses are unaffected. Using the original parse and taking the domain\n  from it would avoid the change.\n\n- [LOW] In src/db.rs (tests::test_transactional_email_escapes_patch_dedup),\n  the final assertion only shows that no row is Pending. It passes equally\n  if no row was inserted or the status was wrong (for example Sent). The\n  parked Dry-Run row is never read back, so the claim in the comment and\n  commit message is not checked.\n\n- [LOW] In src/db.rs (Database::insert_email_outbox) and\n  src/migrations/003_email_outbox_kind.sql, review rows get their kind only\n  from the column DEFAULT, because the review inserts omit kind. No test\n  reads back a review row's kind or upgrades a populated version 2\n  database, so dropping or mistyping the DEFAULT would still pass on a\n  fresh database.",
+  "findings": [
+   {
+    "problem": "Auto-Submitted/List-Id headers and kind fallback have no test",
+    "severity": "Medium",
+    "type": "Test Gap",
+    "preexisting": false,
+    "explanation": "Contained test gap: the commit advertises new outbound headers (Auto-Submitted, List-Id) and the unknown-kind fallback, but the only new test (test_transactional_email_escapes_patch_dedup) exercises insert and lock in db.rs and never calls EmailWorker::send_email or EmailKind::from_stored. Deleting the SignInLink header block, swapping the header names, emitting a malformed List-Id, or changing the from_stored fallback would leave every test green. The worker tests cover only parse_lenient. The code may well be right, but the commit message claims behaviour that nothing in the diff can verify. send_email builds and sends in one function, so the built Message is never observable. Splitting message construction out would let a test assert the bytes.",
+    "locations": [
+     {
+      "code_snippet": "builder = builder\n                .header(AutoSubmitted(\"auto-generated\".to_string()))\n                .header(ListId(format!(\"<sashiko-auth.{}>\", from.email.domain())));",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::send_email",
+      "line": "None",
+      "why_this_location_matters": "This is the advertised header behaviour, and no test builds the message."
+     },
+     {
+      "code_snippet": "pub fn from_stored(value: &str) -> Self {",
+      "file": "src/db.rs",
+      "function_or_symbol": "EmailKind::from_stored",
+      "line": "938",
+      "why_this_location_matters": "The unknown-value fallback is a stated design decision with no test."
+     }
+    ]
+   },
+   {
+    "problem": "review-row default for kind after migration 003 is never asserted",
+    "severity": "Low",
+    "type": "Test Gap: migration claim unverified",
+    "preexisting": false,
+    "explanation": "Existing review rows become ReviewNotification only through the column DEFAULT, because insert_email_outbox and insert_patchwork_notification omit kind. setup_db runs the migration on an empty in-memory database, and no test reads back a review row's kind or upgrades a populated v2 database. If the DEFAULT were dropped or mistyped, the fresh-database path would still pass. This is a weak test, not a defect in the code, and the SQLite behaviour is standard.",
+    "locations": [
+     {
+      "code_snippet": "ALTER TABLE email_outbox ADD COLUMN kind TEXT NOT NULL DEFAULT 'review_notification';",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "ALTER TABLE email_outbox ADD COLUMN kind",
+      "line": "12",
+      "why_this_location_matters": "The DEFAULT is the only thing that classifies legacy and review rows."
+     },
+     {
+      "code_snippet": "INSERT INTO email_outbox (patch_id, status, to_addresses, cc_addresses, subject, in_reply_to, references_hdr, body, created_at)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_email_outbox",
+      "line": "6457",
+      "why_this_location_matters": "The review insert omits kind, so it relies on the default and nothing asserts that."
+     }
+    ]
+   },
+   {
+    "problem": "sign-in link body logged in dry-run and kept after send",
+    "severity": "Medium",
+    "type": "Credential Exposure",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: a SignInLink body, which is a bearer credential for the recipient, can be written to the service journal at info level, and the row is then marked Sent although nothing was delivered. Separately, the body stays in email_outbox.body indefinitely. Reachability is conditional, because insert_transactional_email has no caller in the tree other than the new test, so the endpoint that will call it is not visible. Severity is capped at Medium because the link's lifetime and whether it carries a raw token are unknown. If the link is a long-lived or unhashed token, this rises to High.\n\nVerified at 9d6f5e99:\n1. EmailWorker::send_email (src/worker/email.rs) begins with 'if self.settings.dry_run { info!(\"DRY RUN Body:\\n{}\", email_row.body); return Ok(()); }'. It does not look at email_row.kind. run() treats Ok as success, logs 'Successfully sent email ID', and calls mark_email_sent. Both the credential leak and the false 'Sent' (silent-failure pattern 3) happen on this path.\n2. The Pending-with-dry_run=true state is reachable. Worker dry_run comes from SmtpSettings, whose default is true (default_dry_run), and it is fixed at process start. reviewer.rs avoids the mismatch only because it derives the status from the same setting when it queues ('Some(s) if s.dry_run => \"Dry-Run\"'). insert_transactional_email takes the status as a free-form &str, so nothing ties it to the worker's setting. Concrete cases: (a) a row is queued as Pending while dry_run=false, and the service is then restarted with dry_run=true (the default for any config that omits the key), so the worker locks that row and logs its body; (b) any future caller that passes \"Pending\" unconditionally. The new test itself inserts SignInLink rows as Pending. The Dry-Run parking in the commit message protects only callers that compute the status correctly. sweep_ghost_emails resets any 'Sending' row older than 10 minutes back to Pending with no dry_run or kind check, which is a further route into the same branch.\n3. Retention: mark_email_sent only sets status='Sent', locked_at=NULL, and mark_email_failed only sets status, error_log and locked_at. Nothing clears or redacts body for any status, and the diff adds no purge. Every issued link therefore remains in the database file and its backups for the life of the row, including Dry-Run and Failed rows.\n\nThe dismissal argument (callers will park rows as Dry-Run) rests on code that does not exist yet, and the worker's own branch does not enforce it.\n\nWhat would confirm or refute: the future caller computing status exactly as reviewer.rs does, plus the worker branch skipping the body log for SignInLink, plus a body that is cleared or replaced once the row reaches Sent or Failed.",
+    "locations": [
+     {
+      "code_snippet": "info!(\"DRY RUN Body:\\n{}\", email_row.body);\n            return Ok(());",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::send_email",
+      "line": "71",
+      "why_this_location_matters": "Logs the full body for every kind, so a SignInLink credential reaches the journal, then returns Ok so the row is marked Sent without delivery."
+     },
+     {
+      "code_snippet": "VALUES (NULL, ?, ?, ?, '[]', ?, '', '', ?, ?)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6758",
+      "why_this_location_matters": "Stores the body verbatim with a caller-chosen free-form status; nothing ties the status to the worker's dry_run setting."
+     },
+     {
+      "code_snippet": "UPDATE email_outbox SET status = 'Sent', locked_at = NULL WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_email_sent",
+      "line": "6519",
+      "why_this_location_matters": "Terminal transition leaves body intact, so the sign-in link is retained after delivery."
+     },
+     {
+      "code_snippet": "UPDATE email_outbox SET status = 'Pending', locked_at = NULL WHERE status = 'Sending' AND locked_at < ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::sweep_ghost_emails",
+      "line": "6534",
+      "why_this_location_matters": "Revives stuck rows to Pending regardless of kind or dry_run, giving another route into the dry-run logging branch."
+     }
+    ]
+   },
+   {
+    "problem": "unmetered transactional mail insert; limit and kind index unused",
+    "severity": "Medium",
+    "type": "Claim Not Backed By Diff",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: insert_transactional_email can be called with any address, repeatedly, and nothing in the tree limits it. Today it has no caller outside its own test, so nothing in production reaches it and there is no live exposure. The risk begins when a sign-in endpoint is added without a limit. Each request would then queue a row in the shared outbox that EmailWorker drains one at a time. lock_pending_email takes any Pending row with LIMIT 1 and no ORDER BY, so a flood would delay review mail behind it and let anyone use the sender address to mail arbitrary recipients. Verification: git_grep at 9d6f5e99 finds insert_transactional_email only at its definition (src/db.rs:6745) and in test_transactional_email_escapes_patch_dedup. git_log for 9d6f5e99..HEAD returns no later commits, so the series does not supply the endpoint or the limit, and the dismissal that it may land later is unproven. The doc comment says volume is bounded at the request endpoint instead, but no such endpoint exists in this change. The migration header says kinds are rate limited and observed differently, but no code reads kind for limiting or metrics. The only reads of kind are EmailKind::from_stored in lock_pending_email and the header branch in src/worker/email.rs:80. No query filters or groups on kind. The grep hits for kind = in src/db.rs, src/api.rs and src/migrations/002_bugs.sql concern other tables, and idx_email_outbox_kind_created appears only in its CREATE statement. The index therefore adds write cost to every outbox insert with no reader. Severity is Medium because the commit and code comments claim a safeguard that the diff does not contain, and the unguarded path becomes exposed the moment a caller lands. It is not High, because the function is unreachable today. To confirm or close: the commit that adds the sign-in request endpoint should show a per-recipient and global limit before calling this function, and either a query that uses the kind/created_at index or removal of the index.",
+    "locations": [
+     {
+      "code_snippet": "Volume is bounded at the request endpoint instead.",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6745",
+      "why_this_location_matters": "The justification for having no dedup or cap points to an endpoint that does not exist in the tree, and the function has no caller outside its test."
+     },
+     {
+      "code_snippet": "CREATE INDEX IF NOT EXISTS idx_email_outbox_kind_created ON email_outbox(kind, created_at);",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "idx_email_outbox_kind_created",
+      "line": "14",
+      "why_this_location_matters": "No query filters on kind or orders by created_at for the outbox, so the index is pure write overhead and suggests a rate-limit query that was not written."
+     }
+    ]
+   },
+   {
+    "problem": "outbox status is a free-form string with no shared definition",
+    "severity": "Low",
+    "type": "API Safety",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: insert_transactional_email has no caller yet outside its own test, so nothing misbehaves today. Once the sign-in endpoint calls it, a misspelled or wrongly chosen status either strands the mail or queues mail the deployment meant to suppress. The first case is the real exposure. lock_pending_email selects only status = 'Pending' (src/db.rs:6479), and the INSERT writes whatever string it is given, so any other value (for example 'Dry-run') is accepted silently and never delivered. There is no error, no log line and no way for the requester to tell it from a lost message. The second case is partly covered: EmailWorker::send_email checks self.settings.dry_run (src/worker/email.rs:66) and logs a DRY RUN instead of sending. Settings default dry_run to true (src/settings.rs default_dry_run), so a wrongly passed Pending in a dry-run deployment is unlikely to reach SMTP. Answer to the verification question: there is no shared constant or enum. ReviewStatus in src/lib.rs covers patchset and review states, not outbox states. Outbox statuses ('Pending', 'Skipped', 'Muted', 'Disabled', 'Dry-Run', 'Sending', 'Sent', 'Failed') appear only as string literals. The derivation of Disabled, Dry-Run or Pending from settings.smtp is written out inline twice in src/reviewer.rs (around lines 2350 and 2619). A new caller has to copy that match by hand. The new test passes the literals 'Pending' and 'Dry-Run' itself, so it checks the poller's selection behaviour but cannot catch a caller choosing the wrong status. Because the dry-run case is mitigated by the worker and nothing calls the function yet, this is a hardening gap and not a live defect. A small OutboxStatus enum, or a helper that derives the status from the smtp settings and is used by both reviewer.rs and the sign-in endpoint, would settle it. A rejected-status check in insert_transactional_email would also catch typos.",
+    "locations": [
+     {
+      "code_snippet": "status: &str,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6745",
+      "why_this_location_matters": "A free-form status decides whether and when the message is delivered, and any value other than Pending is silently inert."
+     },
+     {
+      "code_snippet": "let status = match &ctx.settings.smtp { None => \"Disabled\", Some(s) if s.dry_run => \"Dry-Run\", _ => \"Pending\", };",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "review result email status selection",
+      "line": "2619",
+      "why_this_location_matters": "The status derivation is duplicated inline (also near line 2350), with no shared helper or constant a new caller could reuse."
+     }
+    ]
+   },
+   {
+    "problem": "sign-in mail gets terminal Failed and 600s requeue duplicates",
+    "severity": "Medium",
+    "type": "Duplicate Send / Delivery Semantics",
+    "preexisting": false,
+    "explanation": "Consequence: a person waiting on a sign-in link can be sent nothing, or sent a second live link, with nothing telling the requester which. Reachability: latent today. insert_transactional_email has no caller outside its own test. request_link in src/api.rs only logs the magic token and returns 200, and git_grep found no other caller. It becomes live as soon as the request endpoint is switched to the outbox, which is what this API was added for. Verified in code: (1) EmailWorker::run calls mark_email_failed on any send_email error. That sets status='Failed' with locked_at=NULL, and nothing in the tree moves Failed rows back to Pending. sweep_ghost_emails only touches status='Sending', and the grep for other writers in api.rs, main.rs and bin returned no matches. A single transient SMTP error (connect failure, 4xx deferral) therefore permanently loses the link. (2) If mark_email_sent fails after SMTP accepted the message, or the process crashes between send and mark, the row stays 'Sending'. After 600s sweep_ghost_emails resets it to Pending and the worker resends it. insert_transactional_email deliberately has no dedup, so nothing suppresses the second message. The duplicate is a second valid sign-in link, because tokens last 1800s per create_token in request_link, so it is mostly noise rather than a security issue. (3) Nothing surfaces outbox status to the requester. The endpoint returns a bare 200 and there is no status route in the tree. The dismissal argument that the request endpoint is not in the tree is only partly true: request_link is in the tree and does not use the outbox yet, so no code shows that a retry, resend or status check will cover these failures. The lifecycle is unchanged and was acceptable for best-effort review notifications, but this commit routes a message a person is actively waiting on through it without a retry classification for transient SMTP errors or a status the requester can see. Capped at Medium because the endpoint wiring is not in this change. Confirming evidence would be the endpoint's resend or status behaviour once it is wired.",
+    "locations": [
+     {
+      "code_snippet": "if let Err(e) = self.db.mark_email_sent(email.id).await {\n    error!(\"Failed to mark email {} as sent: {}\", email.id, e);\n}",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::run",
+      "line": "39",
+      "why_this_location_matters": "A bookkeeping failure after a successful send is only logged and leaves the row Sending, so the sweep will resend it."
+     },
+     {
+      "code_snippet": "self.db.mark_email_failed(email.id, &e.to_string()).await",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::run",
+      "line": "44",
+      "why_this_location_matters": "Every send error, transient or permanent, takes the same terminal path. There is no classification and no retry."
+     },
+     {
+      "code_snippet": "UPDATE email_outbox SET status = 'Failed', error_log = ?, locked_at = NULL WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_email_failed",
+      "line": "6530",
+      "why_this_location_matters": "Failed is terminal. No poller or sweep revives it, so a transient SMTP error permanently loses the sign-in link."
+     },
+     {
+      "code_snippet": "UPDATE email_outbox SET status = 'Pending', locked_at = NULL WHERE status = 'Sending' AND locked_at < ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::sweep_ghost_emails",
+      "line": "6537",
+      "why_this_location_matters": "Requeues possibly delivered mail after 600s regardless of kind, and the new no-dedup insert path has nothing to suppress the duplicate."
+     },
+     {
+      "code_snippet": "tracing::info!(\n    \"SIGN-IN LINK REQUESTED for {}: http://{}:{}/?magic_token={}\",\n    ... token\n);\nOk(StatusCode::OK)",
+      "file": "src/api.rs",
+      "function_or_symbol": "request_link",
+      "line": "3436",
+      "why_this_location_matters": "The requester gets a bare 200 with no outbox status, so a lost or duplicated link is invisible to them. The endpoint does not yet call insert_transactional_email."
+     }
+    ]
+   },
+   {
+    "problem": "sign-in link can queue behind review mail, no priority",
+    "severity": "Low",
+    "type": "Latency / Expiry",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: a sign-in link can arrive after its token has expired, and the user sees the sign-in feature as broken. This needs a Pending review-mail backlog large enough to delay delivery past the token lifetime. Database::lock_pending_email is the only selector and is called only by EmailWorker::run. Its query is 'WHERE id = (SELECT id FROM email_outbox WHERE status = 'Pending' LIMIT 1)', with no ORDER BY and no use of the new kind column. A sign-in row is therefore served in whatever order SQLite happens to scan, which is typically rowid order and so behind older review rows. The worker sends serially, one message per loop iteration, and sleeps only when nothing is Pending. The patch adds idx_email_outbox_kind_created, but nothing in this patch uses it for selection, so it does not help.\n\nWhat the code establishes: the dismissal claim that no sign-in producer exists is partly wrong. src/api.rs:3439 already mints a sign_in_link token with a 1800 second (30 minute) lifetime, and src/api.rs:3466 and src/auth.rs:95 consume it. A grep of src/ shows insert_transactional_email has no callers outside the test in db.rs, so the endpoint does not queue mail in this commit. I did not read the later patches in the series. The delay becomes real once a caller is wired. No other code orders or prioritises outbox selection. sweep_ghost_emails only reclaims stuck 'Sending' rows. Failed sends are marked Failed and not retried, so a failing SMTP server does not grow the backlog by itself.\n\nWhat I could not establish: the real Pending backlog size and SMTP send latency. At roughly one to a few seconds per message, delaying a sign-in link past 30 minutes needs on the order of a thousand or more queued review mails, or a slow or rate-limiting SMTP relay. I cannot prove this is impossible, because a burst of ingested patches can enqueue many notifications. What would confirm or refute it is observed outbox depth and send latency in a production deployment. The impact is recoverable, since the user can request another link, which is also why dedup is deliberately absent. Severity is therefore Low, cap Medium on the unverified assumption. A cheap fix is to order selection by kind (transactional first) then id, for example 'ORDER BY (kind = 'review_notification'), id'.",
+    "locations": [
+     {
+      "code_snippet": "WHERE id = (SELECT id FROM email_outbox WHERE status = 'Pending' LIMIT 1)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_pending_email",
+      "line": "6479",
+      "why_this_location_matters": "The only outbox selector has no ordering and ignores the new kind column, so interactive mail gets no priority over bulk review notifications."
+     },
+     {
+      "code_snippet": "crate::auth::create_token(&payload.email, secret, Some(\"sign_in_link\".to_string()), 1800)",
+      "file": "src/api.rs",
+      "function_or_symbol": "sign-in link token creation",
+      "line": "3439",
+      "why_this_location_matters": "Shows a 30 minute token lifetime already exists, so queue delay can outlive the token once a caller queues the mail."
+     },
+     {
+      "code_snippet": "match self.db.lock_pending_email().await {",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::run",
+      "line": "28",
+      "why_this_location_matters": "The single serial consumer of the outbox; one message per loop iteration bounds throughput."
+     }
+    ]
+   },
+   {
+    "problem": "migration 003 ADD COLUMN not idempotent, version read outside tx",
+    "severity": "Low",
+    "type": "Concurrency Hazard",
+    "preexisting": false,
+    "explanation": "Consequence: if two processes migrate the same database file at user_version 2 at the same moment, the loser fails at startup with a duplicate column name error and does not come up. Nothing is corrupted, because the loser's transaction rolls back and the winner's migration has committed. Restarting the loser succeeds, since it then reads user_version 3 and skips the block. Reachability: Database::migrate reads PRAGMA user_version on self.conn before any transaction (db.rs:1293-1300), then runs `if current_version < 3` and only afterwards opens `self.conn.transaction()` (db.rs:1318-1320). The check and the write are therefore not atomic. libsql transactions are deferred by default, so the loser's first write statement is the ALTER. It takes the write lock after the winner has committed and sees the column already present. The ALTER has no IF NOT EXISTS form in SQLite, so the version gate is the only guard, and it is stale in that window. Migration 003 is the first migration with this property. A grep of src/migrations finds ALTER TABLE only in 003_email_outbox_kind.sql:12, and the CREATE INDEX beside it is guarded with IF NOT EXISTS. Migrations 001 and 002 are not shown to hit it, though I did not read their full bodies. Callers: the production migrator found is src/main.rs:389-390 (daemon startup). All other `db.migrate()` call sites are in tests (db.rs, api.rs, reviewer.rs, linux_bug.rs). src/bin/benchmark.rs:101 calls Database::new without migrate. I did not find a second production process that migrates the same file, but I cannot prove that none is run by deployment, such as a second daemon instance, a restart overlapping the old process, or a CLI subcommand in main.rs that I did not read. Severity is capped at Low because the trigger is speculative, the failure is loud rather than silent, and a plain restart recovers. What would confirm it: a deployment that runs two sashiko processes against one database file at upgrade time. A fix would be to read user_version inside the transaction, or to open it with BEGIN IMMEDIATE and re-check the version before the ALTER.",
+    "locations": [
+     {
+      "code_snippet": "if current_version < 3 {\n    info!(\"Applying database migration version 3 (email outbox kind)...\");\n    let tx = self.conn.transaction().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate",
+      "line": "1318",
+      "why_this_location_matters": "current_version was read at the top of migrate, before the transaction opens, so a concurrent migrator can commit between the check and the ALTER."
+     },
+     {
+      "code_snippet": "ALTER TABLE email_outbox ADD COLUMN kind TEXT NOT NULL DEFAULT 'review_notification';",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "ALTER TABLE email_outbox",
+      "line": "12",
+      "why_this_location_matters": "SQLite has no IF NOT EXISTS for ADD COLUMN, so a second run fails with a duplicate column error. This is the first non-idempotent statement among the migrations."
+     },
+     {
+      "code_snippet": "let db = Arc::new(Database::new(&settings.database).await?);\n    db.migrate().await?;",
+      "file": "src/main.rs",
+      "function_or_symbol": "main (daemon startup)",
+      "line": "389",
+      "why_this_location_matters": "The only non-test caller of migrate that I found, so concurrency requires two processes both running this path on the same database file."
+     }
+    ]
+   },
+   {
+    "problem": "From now parsed by parse_lenient, not Mailbox::parse, for all mail",
+    "severity": "Low",
+    "type": "Behaviour Change For All Mail",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: if sender_address is a quoted display name that itself contains '<' or '>', every outbound mail (review notifications and sign-in links) fails in send_email with the `?` at line 75 and is marked Failed. Other names that Mailbox::parse took verbatim can be altered on the wire. The input is operator configuration in settings.rs (SmtpSettings.sender_address), not attacker-controlled. The only values in the repo are plain addresses (\"bot@sashiko.dev\" in reviewer.rs tests), so a normal deployment is unaffected. That is why this is Low. Proof: before this commit the From was built with sender_address.parse()?, i.e. lettre's Mailbox FromStr. Now it goes through parse_lenient (src/worker/email.rs:182), which splits on the first '<' and the last '>' with s.find('<') and s.rfind('>'). It then runs trim_matches('\"') on the name and re-wraps it in Mailbox::new. Plain addresses, `Name <addr>` and `\"Name\" <addr>` behave the same, and the existing unit tests cover them. Divergences exist for inputs the old parser accepted: (1) `\"A <b>\" <x@y.z>`: the first '<' is inside the quoted name, so the address slice becomes `b>\" <x@y.z` and Address parsing fails. (2) A name with escaped quotes, `\"Foo \\\"Bar\\\"\" <x@y.z>`, has its outer and trailing quote characters stripped by trim_matches. (3) An RFC 2047 encoded-word name is stored raw and may be re-encoded by lettre, instead of being decoded by the old parser. This rests on my recollection of lettre's Mailbox parser, since lettre source is not in this repo; reading the pinned lettre version's Mailbox FromStr would confirm it. The change is needed to get from.email.domain() for the List-Id header, but the commit message never mentions that sender parsing changed for all mail, and no test covers parse_lenient with a sender display name. Fix: use the original parse for the From address and take the domain from it, or add a test pinning the accepted sender forms.",
+    "locations": [
+     {
+      "code_snippet": "let from = parse_lenient(&self.settings.sender_address)?;",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::send_email",
+      "line": "75",
+      "why_this_location_matters": "Replaced sender_address.parse()? for every mail kind; a parse failure here aborts the send and the row is marked Failed."
+     },
+     {
+      "code_snippet": "if let Some(start) = s.find('<')\n        && let Some(end) = s.rfind('>')\n        && start < end",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "parse_lenient",
+      "line": "182",
+      "why_this_location_matters": "Splits on the first '<' and last '>' without honouring quoted strings, and strips quotes with trim_matches, so it differs from lettre's own parser for quoted names containing angle brackets or escaped quotes."
+     }
+    ]
+   },
+   {
+    "problem": "dry-run test never checks the parked outbox row exists",
+    "severity": "Low",
+    "type": "Weak Assertion",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: this is a test-strength gap only, with no runtime effect. The candidate's premise that the assertion cannot fail is partly wrong, but a real weakness remains in the same path. Failing cases: if insert_transactional_email ignored its status argument and wrote Pending, the earlier rows are already Sent, so lock_pending_email would return Some and the assertion would fail. The dedup claim is also checkable. Both transactional inserts pass patch_id NULL, and if the function gained any dedup guard the second expect(\"second message queued\") would fail. Weak spot: the final check, assert!(db.lock_pending_email().await?.is_none()), proves only that nothing is Pending. It passes equally if insert_transactional_email inserted no row for a non-Pending status, or wrote a wrong status such as Sent or Failed. The comment and commit message claim the row is parked in a status the poller never selects, but no query reads the row back to confirm it exists with status Dry-Run. The remaining concern is that the guard in insert_email_outbox is not exercised here. That guard is keyed on patch_id = ?, which never matches NULL, so the test only shows that the new path does not add one. I did not find a test of that guard's own behaviour, and none was verified. A SELECT status, kind, patch_id FROM email_outbox for the third row, or a count of non-Sent rows, would make the claim checkable. Severity is Low: the production insert is a plain INSERT with the caller's status, and the poller selects only 'Pending'.",
+    "locations": [
+     {
+      "code_snippet": "assert!(db.lock_pending_email().await?.is_none());",
+      "file": "src/db.rs",
+      "function_or_symbol": "tests::test_transactional_email_escapes_patch_dedup",
+      "line": "6887",
+      "why_this_location_matters": "This is the only assertion on the dry-run path. It cannot distinguish a parked Dry-Run row from no row at all."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "The positional column indexes in lock_pending_email may be misaligned after kind was added to the RETURNING list.",
+    "reasoning": "RETURNING lists 13 columns: id(0), patch_id(1), kind(2), status(3), to_addresses(4), cc_addresses(5), subject(6), in_reply_to(7), references_hdr(8), body(9), locked_at(10), error_log(11), created_at(12). The diff reads exactly these indices, and kind is read as a String from a NOT NULL column, so pre-existing rows cannot yield NULL.",
+    "locations": [
+     {
+      "code_snippet": "RETURNING id, patch_id, kind, status, to_addresses, cc_addresses, subject, in_reply_to, references_hdr, body, locked_at, error_log, created_at",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_pending_email",
+      "line": "6480",
+      "why_this_location_matters": "The column order fixes the indexes used by the reads."
+     }
+    ]
+   },
+   {
+    "description": "Migration 003 might leave NULL kinds in existing rows or break the other writers of email_outbox.",
+    "reasoning": "The column is NOT NULL with a constant DEFAULT, which SQLite accepts for ADD COLUMN and which gives existing rows review_notification. insert_email_outbox and insert_patchwork_notification name their columns and omit kind, so they receive the same default, which is correct for review mail. The ADD COLUMN runs in a transaction with the user_version bump. A previous binary does not select kind and skips its migration gates on a version-3 database.",
+    "locations": [
+     {
+      "code_snippet": "ALTER TABLE email_outbox ADD COLUMN kind TEXT NOT NULL DEFAULT 'review_notification';",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "ALTER TABLE email_outbox ADD COLUMN kind",
+      "line": "12",
+      "why_this_location_matters": "A NOT NULL constant default means no row can have a NULL kind."
+     }
+    ]
+   },
+   {
+    "description": "The List-Id header is built from the sender domain and could allow CRLF header injection.",
+    "reasoning": "The domain comes from operator configuration, parsed through parse_lenient into a lettre Address, which rejects whitespace and control characters. The other header value is a fixed string, and display() passes the value through lettre's HeaderValue::new. No request-controlled input reaches either header.",
+    "locations": [
+     {
+      "code_snippet": "let addr: lettre::Address = email.parse()?;",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "parse_lenient",
+      "line": "None",
+      "why_this_location_matters": "The sender is validated by lettre's Address parser before its domain is used."
+     }
+    ]
+   },
+   {
+    "description": "Transactional rows with NULL patch_id might be swallowed by the per-patch dedup guard or corrupt patch-joined queries.",
+    "reasoning": "insert_transactional_email issues a direct INSERT and never runs the SELECT 1 FROM email_outbox WHERE patch_id = ? guard in insert_email_outbox. The patch listing join is ON eo.patch_id = p.id, and a NULL never equals anything in SQL, so NULL-patch rows cannot join to a patch.",
+    "locations": [
+     {
+      "code_snippet": "SELECT 1 FROM email_outbox WHERE patch_id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_email_outbox",
+      "line": "6442",
+      "why_this_location_matters": "The guard is local to the review insert path."
+     }
+    ]
+   },
+   {
+    "description": "The migration might not be exercised by the new test, so a broken ALTER would go unnoticed.",
+    "reasoning": "setup_db() runs migrate() on a fresh in-memory database at user_version 0, which executes every gate through version 3 including the 003 batch. A failed ALTER would make migrate return an error, and lock_pending_email's RETURNING names kind, so a missing column would error. The DDL is therefore exercised. The separate upgrade-of-populated-database gap is reported as its own finding.",
+    "locations": [
+     {
+      "code_snippet": "if current_version < 3 {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate",
+      "line": "1318",
+      "why_this_location_matters": "This block runs on a fresh database in every test that uses setup_db()."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This commit generalizes the email outbox so it can carry transactional\nmail addressed to a person, such as a sign-in link, in addition to review\nnotifications tied to a patch. Sign-in mail must not be swallowed by the\nper-patch dedup guard, and it needs different handling than review mail.\n\nMigration 003 adds a kind column to email_outbox, defaulting to\n'review_notification' so existing rows need no rewrite, plus an index on\n(kind, created_at). The schema version moves from 2 to 3.\n\nA new EmailKind enum (ReviewNotification, SignInLink) is stored with each\nrow and read back by lock_pending_email. An unrecognized stored value is\nlogged and treated as a review notification, so the row is still delivered.\n\nA new Database::insert_transactional_email queues a single-recipient row\nwith no patch and no dedup. The caller supplies the row status, so a\ndry-run deployment can park the message where the poller never selects it\ninstead of leaving it Pending forever. A unit test checks that two\nidentical sign-in requests are both queued and that a Dry-Run row is not\npicked up.\n\nThe email worker adds two headers to SignInLink mail, and its log line for\na locked email now includes the kind.\n\nUser-visible effect: nothing changes for existing review mail, and no code\npath creates SignInLink rows yet. Once sign-in mail is queued, it will look\nlike this to the recipient (example sender domain example.org):\n\nBefore:\n  Outbound mail carried no Auto-Submitted or List-Id header, and a repeat\n  message to the same recipient could be suppressed by the per-patch\n  dedup guard.\n\nAfter:\n  Sign-in link mail carries these headers, and every request produces its\n  own message:\n    Auto-Submitted: auto-generated\n    List-Id: <sashiko-auth.example.org>",
+  "inline_review": "- [MEDIUM] In src/worker/email.rs (EmailWorker::send_email), the dry-run\n  branch logs the full email body via info! for every email kind, including\n  SignInLink, whose body holds a bearer sign-in link. The dry-run path then\n  returns Ok, so the row is marked Sent. The link should be withheld from\n  logs unless server.log_sign_in_links is set. The commit makes the live\n  path kind-aware but leaves the dry-run log path kind-blind. Rows that are\n  Pending while the worker runs in dry-run mode, such as ones queued before\n  dry_run was enabled or from a caller that passes Pending, would leak the\n  link into logs.\n\n- [MEDIUM] In src/worker/email.rs (EmailWorker::send_email) and src/main.rs\n  (email worker spawn), the SMTP send has no tokio::time::timeout and the\n  worker is started with plain tokio::spawn rather than\n  spawn_supervised_worker. A hung SMTP endpoint stalls the sequential run\n  loop, including sweep_ghost_emails, and a panic ends delivery until\n  restart. This commit routes sign-in mail, which a user is actively\n  waiting for, through this path, so a stall is now user-visible. The code\n  itself was not changed by this commit.\n\n- [MEDIUM] In src/worker/email.rs (EmailWorker::send_email, text_header!\n  macro), no test covers the SignInLink branch or the hand-written\n  Auto-Submitted and List-Id headers. A wrong wire name, a malformed List-Id,\n  or an inverted kind check would go unnoticed. An inverted check could\n  attach these headers to review mail sent to public lists, or leave\n  sign-in mail without Auto-Submitted. The only added test is DB-level and\n  never builds a Message.\n\n- [LOW] In src/db.rs (Database::insert_transactional_email), the doc comment\n  and commit message justify the lack of dedup by saying volume is bounded\n  at the request endpoint. No such bound exists in the tree: request_link in\n  src/api.rs has no rate limit, only an ACL membership check, and it does\n  not call this function yet. The commit that wires it up must add the\n  throttle first, or the comment should stop asserting a bound that does\n  not exist.\n\n- [LOW] In src/migrations/003_email_outbox_kind.sql\n  (idx_email_outbox_kind_created), the new index has no reader. Every\n  email_outbox query filters by status or patch_id, and lock_pending_email\n  is unchanged. The index only adds write cost to each outbox insert and\n  status update, including the high-volume review notification path. Drop\n  it until a query needs it, or add the rate-limit query in the same\n  change.\n\n- [LOW] In src/db.rs (Database::migrate) and\n  src/migrations/003_email_outbox_kind.sql, user_version is read outside\n  the transaction, and the migration then runs a non-idempotent ALTER TABLE\n  ADD COLUMN. If two processes migrate the same upgrading database\n  concurrently, the second fails with a duplicate column error at startup.\n  The failure clears on restart and migration 2 uses the same pattern.\n  Re-reading user_version inside an immediate transaction would harden it.\n\n- [LOW] In src/db.rs (Database::migrate), no test seeds a version 2\n  database containing email_outbox rows and then runs migrate(). Nothing\n  verifies that existing rows read back as ReviewNotification after the\n  default-based backfill, which is the behavior the commit message relies\n  on.\n\n- [LOW] In src/db.rs (EmailKind::from_stored), the fallback that maps an\n  unrecognized stored kind to ReviewNotification is untested. A later\n  refactor that turns it into an error would silently stop delivery of rows\n  written by a newer binary.\n\n- [LOW] In src/worker/email.rs (text_header! macro, EmailWorker::send_email),\n  the List-Id value is built from the sender domain and passed to\n  HeaderValue::new with no local CR/LF check. Safety relies on lettre's\n  address validation. The domain comes from operator configuration, not\n  untrusted input, so exploitation is unlikely. This header construction is\n  also untested.",
+  "findings": [
+   {
+    "problem": "no test for SignInLink Auto-Submitted and List-Id headers",
+    "severity": "Medium",
+    "type": "Test Coverage",
+    "preexisting": false,
+    "explanation": "Missing unit test coverage for new behavior on the email path (Medium per severity.md). EmailWorker::send_email now branches on EmailKind::SignInLink and attaches two hand-written lettre headers built by the text_header! macro, with List-Id derived from the sender domain. The diff adds only a DB-level test that never builds a Message. A wrong wire name, a malformed List-Id, or an inverted kind check would go unnoticed. An inverted check could also attach these headers to review mail sent to public lists, or leave sign-in mail without Auto-Submitted. Downstream, nothing guards the anti-autoresponder purpose stated in the commit message.",
+    "locations": [
+     {
+      "code_snippet": "if email_row.kind == crate::db::EmailKind::SignInLink {",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::send_email",
+      "line": "80",
+      "why_this_location_matters": "Only place the new headers are attached; no test exercises either branch."
+     },
+     {
+      "code_snippet": "text_header!(\n    AutoSubmitted,\n    \"Auto-Submitted\",",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "text_header! (AutoSubmitted, ListId)",
+      "line": "None",
+      "why_this_location_matters": "Custom Header impls define wire names and values and are untested."
+     }
+    ]
+   },
+   {
+    "problem": "EmailKind::from_stored fallback for unknown kinds is untested",
+    "severity": "Low",
+    "type": "Test Coverage",
+    "preexisting": false,
+    "explanation": "Missing test for a deliberate forward-compatibility branch (Low). from_stored maps an unrecognized stored value to ReviewNotification with a warning so rows from a newer binary are delivered plainly instead of dropped. The new test only writes kinds through insert_transactional_email and never feeds an unknown string through from_stored. A later refactor that turns the fallback into an error would silently stop delivery of those rows (a downstream consequence), and nothing would fail.",
+    "locations": [
+     {
+      "code_snippet": "other => {\n    tracing::warn!(\"Unrecognized email kind {:?}, treating as review\", other);\n    EmailKind::ReviewNotification\n}",
+      "file": "src/db.rs",
+      "function_or_symbol": "EmailKind::from_stored",
+      "line": "None",
+      "why_this_location_matters": "Only untested branch with intentional fallback semantics."
+     }
+    ]
+   },
+   {
+    "problem": "dry-run send_email logs full body of SignInLink mail",
+    "severity": "Medium",
+    "type": "Security / Secret Exposure",
+    "preexisting": false,
+    "explanation": "Blast radius is limited to the operator's own logs, and the trigger needs a Pending SignInLink row to reach a worker with smtp.dry_run = true. That row can come from a caller that passes Pending while dry_run is on, or from a row queued before dry_run was switched on and restarted. Because of that precondition, and because no caller exists in this commit, the finding is partly speculative and capped at Medium. I read EmailWorker::send_email at the target commit: the dry-run branch runs info!(\"DRY RUN Body:\\n{}\", email_row.body) for every kind, with no check of email_row.kind. lock_pending_email selects any Pending row regardless of kind. The dry-run branch returns Ok, so run() then calls mark_email_sent and the row becomes Sent. The dismissal argument (D15) only holds for rows parked as Dry-Run. The worker's dry_run check is the independent second kill-switch precisely for rows that are Pending anyway, and that is where the link would be logged. A sign-in link is a bearer credential. The api-auth guide says links are withheld from logs unless server.log_sign_in_links is set, and that setting defaults to false. This commit adds EmailKind::SignInLink and makes the live path kind-aware (Auto-Submitted and List-Id headers) but leaves the dry-run log path kind-blind. git_grep at this commit shows insert_transactional_email is called only from its own test (src/db.rs:6851 and 6879), so no production caller choosing the status is visible. Whether the status is always Dry-Run when dry_run is true cannot be verified here. The guard also rests on every future caller choosing the status correctly, and nothing covers rows queued earlier. The contract is therefore not enforced where the link is logged.",
+    "locations": [
+     {
+      "code_snippet": "info!(\"DRY RUN Body:\\n{}\", email_row.body);",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::send_email",
+      "line": "71",
+      "why_this_location_matters": "Logs the body unconditionally in the dry-run branch, including SignInLink bodies that contain a bearer link, and the caller then marks the row Sent. It should skip the body for SignInLink unless server.log_sign_in_links is set."
+     },
+     {
+      "code_snippet": "status: &str,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6745",
+      "why_this_location_matters": "The caller-supplied status decides whether the row is eligible for the worker. A Pending status combined with a dry-run worker reaches the unconditional body log."
+     }
+    ]
+   },
+   {
+    "problem": "transactional email doc claims endpoint rate limit that is not in tree",
+    "severity": "Low",
+    "type": "Email Safety / Unbounded Growth",
+    "preexisting": false,
+    "explanation": "Low: the abuse path is not reachable at this commit, so this is a documentation and forward-hazard issue, and it is speculative about future wiring. git_grep for insert_transactional_email at HEAD finds only the definition (src/db.rs:6745) and the unit test (6851, 6879). No production code calls it. request_link (src/api.rs:3400) still only calls tracing::info! with the magic-link URL and sends no mail, so no mail can currently be generated through this path. The doc comment on insert_transactional_email says 'Volume is bounded at the request endpoint instead', and the commit message makes the same argument for omitting dedup. In the tree, request_link has no per-recipient or per-IP throttle: it is unauthenticated, and its only gate is the blocklist check plus membership of the address in the admins, ingest, cancel or review ACL lists. A grep of src/api.rs for rate, throttle or limit returns a single unrelated match at line 139. When a later change wires request_link to this function, any anonymous caller could trigger unlimited sign-in mails to a configured ACL address, and the outbox has no dedup to absorb repeats. Recipients are limited to ACL-listed people, not arbitrary victims, and the mail is not sent to public lists, which is why this is not higher than Low. The dedup-collision part of the candidate does not hold. insert_patchwork_notification's dedup query (src/db.rs:6699-6700) matches patch_id IS NULL AND to_addresses AND subject AND in_reply_to. Sign-in rows are inserted with in_reply_to = '' and a sign-in subject. Patchwork notifications are inserted from reviewer.rs:2356 with in_reply_to set to the trimmed message id and a subject from compose_patchwork_email, so the two cannot match in practice. Patch-less sign-in rows only add to the NULL-patch_id set, which is covered by idx_email_outbox_patch_id (001_initial.sql:262), and their volume is the same unbounded-by-this-commit concern described above. Action: the commit that wires request_link must add the throttle before calling insert_transactional_email, or this comment should be reworded so it stops asserting a bound that does not exist.",
+    "locations": [
+     {
+      "code_snippet": "Volume is bounded at the request endpoint instead.",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6745",
+      "why_this_location_matters": "The no-dedup design is justified by a bound that lives in code not present in this tree."
+     },
+     {
+      "code_snippet": "if !is_known {\n    tracing::warn!(\"Unauthorized login attempt for unknown identity: {}\", payload.email);\n    return Err(StatusCode::FORBIDDEN);\n}",
+      "file": "src/api.rs",
+      "function_or_symbol": "request_link",
+      "line": "3400",
+      "why_this_location_matters": "The only gate on the endpoint is ACL membership. There is no rate limit, and the handler does not yet call insert_transactional_email."
+     }
+    ]
+   },
+   {
+    "problem": "idx_email_outbox_kind_created has no reader and adds write cost",
+    "severity": "Low",
+    "type": "Problem Validity / Index Hygiene / Queue Fairness",
+    "preexisting": false,
+    "explanation": "Low: the cost is a small extra index write per outbox insert/update, and the unordered claim only matters once a sign-in consumer exists. Neither causes data loss, wrong mail, or a stuck queue. Verification: git_log for 9d6f5e99..HEAD returned no commits, so no later patch in the series uses the index. git_grep for email_outbox at HEAD shows every query filters by status (idx_email_outbox_status) or patch_id (idx_email_outbox_patch_id), or is an INSERT. None filters or orders by kind or created_at. git_grep for idx_email_outbox matches only the definition in 003_email_outbox_kind.sql, so nothing references or hints at the new index. The migration comment says kind lets mail be 'deduplicated, rate limited and observed differently', but the only code added is a dedup-free INSERT, and its doc comment says volume is bounded 'at the request endpoint', which is not in the tree. The index therefore serves a hypothetical future query and is written on every outbox INSERT and status UPDATE (Pending->Sending->Sent), including the high-volume review-notification path. The commit message does not mention the index. The second half of the concern, unordered claim, is partly unfounded: lock_pending_email is unchanged, and SELECT ... WHERE status='Pending' LIMIT 1 via idx_email_outbox_status returns the lowest-rowid Pending row, so claiming is roughly FIFO, not random. The real consequence is that a sign-in link queued behind a review-mail backlog waits for that backlog. That is speculative because no consumer exists yet, and is not a regression from this patch. The fix is to drop the index until a query needs it, or to add the rate-limit query that uses it in the same change.",
+    "locations": [
+     {
+      "code_snippet": "CREATE INDEX IF NOT EXISTS idx_email_outbox_kind_created\n    ON email_outbox(kind, created_at);",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "idx_email_outbox_kind_created",
+      "line": "14",
+      "why_this_location_matters": "The index is created but no query in the tree filters or orders by kind or created_at, so it only adds write amplification on email_outbox."
+     },
+     {
+      "code_snippet": "WHERE id = (SELECT id FROM email_outbox WHERE status = 'Pending' LIMIT 1)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_pending_email",
+      "line": "6479",
+      "why_this_location_matters": "The claim query is unchanged: it ignores kind and has no ORDER BY, so a sign-in link gets no priority over queued review mail and the new index is not used here."
+     }
+    ]
+   },
+   {
+    "problem": "EmailWorker has no SMTP timeout and is not supervised",
+    "severity": "Medium",
+    "type": "Async Discipline",
+    "preexisting": false,
+    "explanation": "Medium: the defect is contained to mail delivery. It needs a hung or panicking SMTP path and clears on restart, but it can stall every queued email, including the new sign-in links. Verified at the series head. (1) src/main.rs:832 starts the worker with a bare tokio::spawn(async move { email_worker.run().await; }). It does not use spawn_supervised_worker, which patterns/concurrency.md section 1 invariant 5 requires. A panic anywhere in run() ends the task. The JoinHandle is kept in email_handle but nothing restarts it, so all mail stops until the daemon restarts. (2) In EmailWorker::send_email, mailer.send(msg).await? has no tokio::time::timeout, which the same invariant also requires. run() awaits send_email inline in a single sequential loop. A hung SMTP endpoint therefore blocks every later row. It also blocks the sweep_ghost_emails call at the top of the loop, because the sweep runs only inside that same loop. The dismissal's point D8 (sweep resets Sending rows older than 600s) does not help here, since the sweeper is the stalled task. After a panic or hang the row stays in Sending until a restart. If the send actually succeeded before the hang or crash, the later sweep resets the row to Pending and the message is sent again. (3) D9 (no std lock across an await) is true but does not address either gap. (4) The code was not changed by this commit: git_diff of src/main.rs shows no change, and the email.rs diff does not touch the mailer.send call. I still set preexisting=false, because the commit sends a new class of mail (SignInLink, a message the user is actively waiting for) through this unbounded, unsupervised path. A stall now blocks sign-in, which makes the gap newly user-visible.",
+    "locations": [
+     {
+      "code_snippet": "let mailer = mailer_builder.build();\n\nmailer.send(msg).await?;",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "EmailWorker::send_email",
+      "line": "None",
+      "why_this_location_matters": "The SMTP send has no tokio::time::timeout. A hang blocks the whole sequential run() loop, including sweep_ghost_emails."
+     },
+     {
+      "code_snippet": "Some(tokio::spawn(async move {\n            email_worker.run().await;\n        }))",
+      "file": "src/main.rs",
+      "function_or_symbol": "main (Start Email Worker)",
+      "line": "832",
+      "why_this_location_matters": "The worker is spawned with plain tokio::spawn rather than spawn_supervised_worker, so a panic permanently stops mail delivery until the daemon restarts."
+     }
+    ]
+   },
+   {
+    "problem": "migration 3 reads user_version unlocked, then runs non-idempotent ALTER",
+    "severity": "Low",
+    "type": "Migration Safety / Concurrency",
+    "preexisting": false,
+    "explanation": "Reasoning: the failure is a startup error that clears on restart. It needs two processes to migrate the same upgrading database file at the same moment. No data is lost or corrupted and no mail is sent. Verified at this revision: Database::migrate (src/db.rs:1292) reads PRAGMA user_version with a plain query on self.conn, outside any transaction. Migration 3 then calls self.conn.transaction() (deferred), runs execute_batch on 003_email_outbox_kind.sql, sets user_version = 3 and commits. The SQL is a bare ALTER TABLE email_outbox ADD COLUMN kind, which is not re-runnable. If another process commits migration 3 between the version read and this transaction's first write, the ALTER fails with a duplicate column error and migrate() returns Err. The candidate's premise is partly inaccurate. The begin_transaction/tx_lock/tx_conn/DatabaseTransaction machinery named in the guidelines does not exist at this revision. The only match is an unrelated begin_transaction at src/db.rs:3742 returning Result<()>, and the Database struct holds only conn and the bug_* fields. So migration 2 uses the same self.conn.transaction() pattern and migration 3 follows the existing convention rather than violating a helper that exists. Reachability: the only non-test caller of migrate() found by git_grep is the daemon startup at src/main.rs:390. The other hits are in tests in src/db.rs, src/api.rs, src/reviewer.rs and src/workflows/linux_bug.rs, and none are in src/bin. The scenario therefore needs two daemons started against the same upgrading database file. I cannot prove that impossible, so it stays a speculative Low finding. The patch adds a new migration relying on this pattern, so preexisting is false. A cheap hardening would be to re-read user_version inside an immediate transaction, or to make the DDL tolerant of a re-run.",
+    "locations": [
+     {
+      "code_snippet": "if current_version < 3 {\n    info!(\"Applying database migration version 3 (email outbox kind)...\");\n    let tx = self.conn.transaction().await?;\n    tx.execute_batch(include_str!(\"migrations/003_email_outbox_kind.sql\"))",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate",
+      "line": "1320",
+      "why_this_location_matters": "Deferred transaction opened after an unlocked version read, so a concurrent migrator can make the check stale."
+     },
+     {
+      "code_snippet": "ALTER TABLE email_outbox ADD COLUMN kind TEXT NOT NULL DEFAULT 'review_notification';",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "ALTER TABLE email_outbox ADD COLUMN kind",
+      "line": "12",
+      "why_this_location_matters": "ADD COLUMN has no IF NOT EXISTS form in SQLite, so a second application fails with a duplicate column error."
+     }
+    ]
+   },
+   {
+    "problem": "migration 003 upgrade path not tested against a v2 database with rows",
+    "severity": "Low",
+    "type": "Test Coverage",
+    "preexisting": false,
+    "explanation": "Reasoning: this is a test-coverage gap only. Migration 003 is a single ALTER TABLE ... ADD COLUMN with a constant NOT NULL DEFAULT, plus CREATE INDEX IF NOT EXISTS, run in a transaction together with the user_version bump. That is a well-understood additive pattern in SQLite, so the chance of data loss is low and the blast radius is small. A regression would show up as a startup failure on upgrade, not as silent corruption. Verification: git_grep for 'PRAGMA user_version' across src at the target commit returns only the five lines inside Database::migrate (src/db.rs:1294, 1306, 1314, 1321, 1323). No test sets user_version to 2 or seeds email_outbox rows before calling migrate(). Every test reaches the schema through setup_db or Database::new followed by migrate() on an empty :memory: database, so migrations 001 to 003 run back to back with no rows present. The comment at src/db.rs:12496 describes a v1 legacy-constraint upgrade, but it is attached to test_bug_crud_and_links, which also starts from a fresh database. The new test test_transactional_email_escapes_patch_dedup in this commit also runs on a fresh database. Nothing therefore checks that a pre-existing outbox row reads back as EmailKind::ReviewNotification after the upgrade, or that the migration runs cleanly with rows present. That backfill is the reason the migration relies on the schema default, and the commit message calls it out explicitly. The gap is confirmed and is introduced by this patch (preexisting=false), but is capped at Low.",
+    "locations": [
+     {
+      "code_snippet": "tx.execute_batch(include_str!(\"migrations/003_email_outbox_kind.sql\"))",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate",
+      "line": "1321",
+      "why_this_location_matters": "This is the only code that applies the kind column to existing databases. No test seeds a v2 schema with email_outbox rows and then runs migrate() to check the default backfill."
+     }
+    ]
+   },
+   {
+    "problem": "SignInLink header construction is unverified and untested",
+    "severity": "Low",
+    "type": "Panic Safety / Header Injection",
+    "preexisting": false,
+    "explanation": "Low, and speculative because I could not read the dependency: lettre is not vendored in the repo (git_find_files for lettre paths returned nothing), and Cargo.lock only pins lettre 0.11.23. Nothing in the repository proves that HeaderName::new_from_ascii_str cannot panic or that the List-Id domain cannot carry CR/LF. What the repo does show: (1) the header names are the fixed literals \"Auto-Submitted\" and \"List-Id\", so no attacker input reaches new_from_ascii_str. It is called from Header::name(), which also runs inside display(). If lettre asserts on the name, the panic would be deterministic, not input-dependent. (2) The domain comes from from.email.domain(), where from = parse_lenient(&self.settings.sender_address). sender_address is operator configuration (src/settings.rs:102) and goes through lettre::Address parsing, not a free-form string. It is not attacker-controlled, so header injection is not reachable from untrusted patches or email. (3) ListId(format!(\"<sashiko-auth.{}>\", ...)) is passed to HeaderValue::new without any local CR/LF check, so safety rests entirely on lettre's Address validation and header folding. (4) No test exercises send_email's SignInLink branch; the added db test only covers the outbox insert and lock path. A panic in send_email would kill the email worker task and stall all outbound mail, but only if lettre's assertion rejects these literals, which is unlikely. Capped at Low given the operator-only input and the unverified premise. Unanswered question: lettre 0.11.23's behaviour in new_from_ascii_str and HeaderValue::new for the name literals and a CR/LF-bearing domain.",
+    "locations": [
+     {
+      "code_snippet": "lettre::message::header::HeaderName::new_from_ascii_str($wire) ... .header(ListId(format!(\"<sashiko-auth.{}>\", from.email.domain())))",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "text_header! macro / EmailWorker::send_email",
+      "line": "None",
+      "why_this_location_matters": "The raw domain string is placed into a header value without a local CR/LF check. The panicking constructor sits on the transactional-mail path that no test covers."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Migration 003 might break, lose, or misread existing rows, or be skipped on fresh databases.",
+    "reasoning": "The column is added NOT NULL with a constant DEFAULT, so existing rows read back as review_notification and legacy INSERTs that omit kind still succeed. from_stored is total, with a fallback arm. The migration is transactional with the user_version bump, gated by current_version < 3, and the index uses IF NOT EXISTS.",
+    "locations": [
+     {
+      "code_snippet": "ALTER TABLE email_outbox ADD COLUMN kind TEXT NOT NULL DEFAULT 'review_notification';",
+      "file": "src/migrations/003_email_outbox_kind.sql",
+      "function_or_symbol": "ALTER TABLE email_outbox",
+      "line": "12",
+      "why_this_location_matters": "Additive and default-backed."
+     }
+    ]
+   },
+   {
+    "description": "Adding kind to RETURNING might misalign row.get indices.",
+    "reasoning": "RETURNING lists 13 columns (id, patch_id, kind, status, ..., created_at) and the code reads kind at 2, status 3 through created_at 12. They match one-to-one.",
+    "locations": [
+     {
+      "code_snippet": "let kind = EmailKind::from_stored(&row.get::<String>(2)?);",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_pending_email",
+      "line": "6487",
+      "why_this_location_matters": "Indices line up with RETURNING order."
+     }
+    ]
+   },
+   {
+    "description": "Legacy insert paths do not set kind and might misclassify or pick up sign-in headers.",
+    "reasoning": "Both legacy INSERTs omit kind and take the default review_notification. The worker adds headers only when kind == SignInLink.",
+    "locations": [
+     {
+      "code_snippet": "INSERT INTO email_outbox (patch_id, status, to_addresses, cc_addresses, subject, in_reply_to, references_hdr, body, created_at)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_patchwork_notification",
+      "line": "6718",
+      "why_this_location_matters": "No kind column, so default applies."
+     }
+    ]
+   },
+   {
+    "description": "String slicing in parse_lenient might panic on multi-byte characters.",
+    "reasoning": "Indices come from find('<') and rfind('>'), which are ASCII and always char boundaries, with start < end checked before slicing.",
+    "locations": [
+     {
+      "code_snippet": "let name = s[..start].trim();",
+      "file": "src/worker/email.rs",
+      "function_or_symbol": "parse_lenient",
+      "line": "None",
+      "why_this_location_matters": "Slice at an ASCII delimiter index."
+     }
+    ]
+   },
+   {
+    "description": "lock_pending_email might allow a double claim.",
+    "reasoning": "Selection and transition happen in a single UPDATE ... WHERE id = (SELECT ...) RETURNING statement, with no separate read then write.",
+    "locations": [
+     {
+      "code_snippet": "WHERE id = (SELECT id FROM email_outbox WHERE status = 'Pending' LIMIT 1)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_pending_email",
+      "line": "6479",
+      "why_this_location_matters": "Atomic claim."
+     }
+    ]
+   },
+   {
+    "description": "The new insert path might widen To/Cc.",
+    "reasoning": "to_address is serialized as a one-element array and cc_addresses is the literal '[]', so one row addresses exactly one recipient.",
+    "locations": [
+     {
+      "code_snippet": "serde_json::to_string(&[to_address])",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6745",
+      "why_this_location_matters": "Single recipient."
+     }
+    ]
+   },
+   {
+    "description": "The new DB test might share state with other tests.",
+    "reasoning": "setup_db builds a fresh :memory: database per call. The test uses no ports, env vars, or sleeps, and its assertions do not depend on row order.",
+    "locations": [
+     {
+      "code_snippet": "url: \":memory:\".to_string(),",
+      "file": "src/db.rs",
+      "function_or_symbol": "setup_db",
+      "line": "7615",
+      "why_this_location_matters": "Private database per test."
+     }
+    ]
+   },
+   {
+    "description": "Sign-in link bodies are stored in plaintext in email_outbox.body and never cleared after Sent or Failed, so DB access or a backup would expose usable links.",
+    "reasoning": "1. The commit under review is the tip of the series (HEAD is 9d6f5e99), so its state is the series end. 2. git_grep for insert_transactional_email and EmailKind::SignInLink across src/ finds the definition at src/db.rs:6745, the unit test at src/db.rs:6851-6880 (which passes the literal body \"body\"), and the header branch at src/worker/email.rs:80. There is no production caller. 3. request_link in src/api.rs does not enqueue anything. It mints the token and only logs it via tracing::info!, so no credential-bearing body reaches email_outbox at this commit. 4. Even once a caller is added, the token embedded in the link is a JWT created with a 1800 second lifetime, so a stored body stops being usable 30 minutes after creation. verify_link also re-checks the blocklist. 5. The absence of any DELETE or scrub on email_outbox is true, but it is the existing design. Review-notification bodies are deliberately retained and read back by src/reviewer.rs (SELECT body FROM email_outbox WHERE patch_id = ?), and they are public mailing-list content. The candidate's exposure therefore depends on a future caller that does not exist in this series. That caller is where body content and retention should be decided, so this is not a defect in the patch. Caveat: the helper takes an arbitrary body string and has no purge, so whoever wires request_link to it should keep the link's 30 minute lifetime in mind or scrub the body after Sent.",
+    "locations": [
+     {
+      "code_snippet": "crate::auth::create_token(&payload.email, secret, Some(\"sign_in_link\".to_string()), 1800)",
+      "file": "src/api.rs",
+      "function_or_symbol": "request_link",
+      "line": "3439",
+      "why_this_location_matters": "The sign-in token has a 1800 second lifetime, so any stored copy expires within 30 minutes."
+     },
+     {
+      "code_snippet": "tracing::info!(\n            \"SIGN-IN LINK REQUESTED for {}: http://{}:{}/?magic_token={}\",",
+      "file": "src/api.rs",
+      "function_or_symbol": "request_link",
+      "line": "3441",
+      "why_this_location_matters": "request_link only logs the link and never calls insert_transactional_email, so no link body is persisted to email_outbox at the series end."
+     },
+     {
+      "code_snippet": "db.insert_transactional_email(\n                EmailKind::SignInLink,\n                \"Pending\",\n                \"maintainer@example.org\",\n                \"[sashiko] Your sign-in link\",\n                \"body\",",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email (test_transactional_email_escapes_patch_dedup)",
+      "line": "6851",
+      "why_this_location_matters": "The only callers of the helper are tests, which pass a placeholder body and no credential."
+     }
+    ]
+   },
+   {
+    "description": "insert_patchwork_notification's dedup query scans patch_id IS NULL rows without a kind predicate and could collide with, suppress, or be slowed by sign-in rows.",
+    "reasoning": "The dedup SELECT requires to_addresses, subject and in_reply_to to all match. Sign-in rows are inserted by insert_transactional_email with in_reply_to = '' and the sign-in subject. The only caller of insert_patchwork_notification (src/reviewer.rs:2356) passes the trimmed Message-ID as in_reply_to and a subject from compose_patchwork_email. A collision therefore needs an identical subject and an empty in_reply_to, which does not occur. The query can use idx_email_outbox_patch_id for the patch_id IS NULL lookup, so extra NULL-patch rows add bounded scan cost and not a table scan.",
+    "locations": [
+     {
+      "code_snippet": "WHERE patch_id IS NULL AND to_addresses = ? AND subject = ? AND in_reply_to = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_patchwork_notification",
+      "line": "6700",
+      "why_this_location_matters": "The match on in_reply_to and subject keeps sign-in rows, which store '' and a different subject, from matching patchwork notifications."
+     },
+     {
+      "code_snippet": "VALUES (NULL, ?, ?, ?, '[]', ?, '', '', ?, ?)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6758",
+      "why_this_location_matters": "Sign-in rows are written with an empty in_reply_to, which cannot equal a real Message-ID."
+     }
+    ]
+   },
+   {
+    "description": "Outbox status is a free-form &str, and the new test uses an invented 'Dry-Run' status, so it only exercises the poller's status = 'Pending' filter and is not tied to the status the real dry-run insert path uses.",
+    "reasoning": "The premise that 'Dry-Run' is invented is false. The production dry-run path in Reviewer::queue_notifications (src/reviewer.rs) computes the outbox status with the identical literal: None => 'Disabled', Some(s) if s.dry_run => 'Dry-Run', _ => 'Pending'. The same match appears at both outbox insert sites (around lines 2350 and 2619). The test's 'Dry-Run' therefore matches exactly what real dry-run rows carry, and lock_pending_email selects only status = 'Pending', so the test checks the real parking behaviour. The stringly-typed status is also not new: the existing insert at src/db.rs:6457 and the existing patchwork insert at :6718 already take status as &str with these same literals, so insert_transactional_email follows the established convention. A grep for insert_transactional_email at this commit finds only the test callers (src/db.rs:6851 and :6879), so no production caller exists that could pass 'Pending' under dry_run. A future caller that passes the wrong status is hypothetical and out of scope for this commit. No concrete failure path exists in the changed code, and the rest of the concern is a style preference about typing the status, not a defect.",
+    "locations": [
+     {
+      "code_snippet": "Some(s) if s.dry_run => \"Dry-Run\",\n                    _ => \"Pending\",",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer::queue_notifications",
+      "line": "2621",
+      "why_this_location_matters": "The real dry-run insert path uses the same 'Dry-Run' literal as the test, so the test is tied to the production status."
+     },
+     {
+      "code_snippet": "\"Dry-Run\",",
+      "file": "src/db.rs",
+      "function_or_symbol": "test_transactional_email_escapes_patch_dedup",
+      "line": "6881",
+      "why_this_location_matters": "The status used by the test matches production, and the assertion that lock_pending_email returns None verifies the Pending-only filter."
+     },
+     {
+      "code_snippet": "kind: EmailKind,\n        status: &str,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::insert_transactional_email",
+      "line": "6747",
+      "why_this_location_matters": "The &str status mirrors the existing insert helpers, and no production caller of this function exists at this commit."
+     }
+    ]
+   }
+  ]
+ }
+}

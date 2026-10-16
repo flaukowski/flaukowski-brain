@@ -1,0 +1,1178 @@
+{
+  "ec1258f": {
+    "label": "U1",
+    "A": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 2,
+      "why": "Finding 2 names effort nested inside the thinking object (should be top-level output_config) in ThinkingConfig/translate_ai_request in src/ai/claude.rs, and also the type-less object when only effort is set.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "translate_ai_request wraps ThinkingConfig in Some unconditionally, so an unconfigured client serializes \"thinking\":{}; confirmed in code and later fixed by 5716d7b."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: the diff changes the serialized request shape with no unit test, and upstream's GEMINI.md (the file AGENTS.md links to) says to write unit tests for new logic."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Same confirmed empty thinking object on the default configuration (duplicate of finding 0)."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Its concrete claim is the confirmed empty thinking object emitted when both fields are None."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 2,
+      "why": "Finding 2 names effort sent as thinking.effort instead of output_config.effort in ThinkingConfig in src/ai/claude.rs (built in translate_ai_request), rejected or ignored by the API.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the diff changes the serialized request shape with no unit test, and upstream's GEMINI.md (the file AGENTS.md links to) says to write unit tests for new logic."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: the unconditional Some(ThinkingConfig) serializes \"thinking\":{} on the default configuration (later fixed by 5716d7b)."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Same confirmed empty thinking object (duplicate)."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Same confirmed empty thinking object when unset (duplicate)."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Same confirmed empty thinking object when unset (duplicate)."
+        }
+      ]
+    }
+  },
+  "ff3ee61": {
+    "label": "U2",
+    "A": {
+      "detected": false,
+      "void": true,
+      "detecting_finding": null,
+      "why": "Void: findings 0 and 4 cite commit 2afd5c82f37b, which is the fix commit 2afd5c8. Without the citation, finding 0 would have named the mechanism (deny_unknown_fields on the partial LocalReviewSettings structs, read from the full Settings.toml) and its location.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Classed because the item is void and nothing counts as the detection: deny_unknown_fields on LocalReviewSettings/LocalReviewReviewSettings rejects the other top-level keys of a full Settings.toml. Confirmed, and it is the known defect."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: the message quotes code in backticks, which upstream's GEMINI.md forbids, and it claims a test battery the diff does not add."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "The diff adds no test even though the commit message claims the test battery now validates every Settings.toml property; confirmed."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "It is confirmed that a cfg-gated [ai.vertex] is now rejected as an unknown field on a default build, but that matches the commit's intended strictness, and whether the generic error is a defect is a judgment call."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Classed because the item is void: it is the same confirmed known defect as finding 0."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 0,
+      "why": "Finding 0 names deny_unknown_fields on the partial LocalReviewSettings/LocalReviewReviewSettings structs, which are deserialized from the full ./Settings.toml in Settings::local_review_from_file/ai_from_file in src/settings.rs, so the other top-level keys fail.",
+      "other_findings": [
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "The commit message claims test validation that the diff does not contain; confirmed."
+        },
+        {
+          "index": 2,
+          "class": "PLAUSIBLE",
+          "why": "handle_local does swallow a Settings::new() error with --server (line 1450) and falls back to the local path. That code is pre-existing, and whether the user then sees the error from the local review subprocess was not established."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 3: the gated [ai.vertex] rejection is confirmed but is arguably the intended strictness."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "No test exercises the new strictness even though the message claims one does; confirmed message inaccuracy."
+        }
+      ]
+    }
+  },
+  "7ff827d": {
+    "label": "U3",
+    "A": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 0,
+      "why": "Finding 0 names CachingAiProvider::generate_content in src/ai/cache.rs setting cached_tokens to the stored cached_tokens plus prompt_tokens on a hit, which can exceed prompt_tokens. That is the double count.",
+      "other_findings": [
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: the lookup path uses ? on query/next/get, so a cache read error fails the AI call even though cache writes are best-effort."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: expired rows are reaped only in new(), and request_json is written on every miss but never read, so the file grows until restart."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: the INSERT OR REPLACE result is dropped with let _ = and no warning is logged."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Confirmed: caps.model_name is bound to both the provider and model columns."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: ttl_days as i64 * 86400 is unchecked, so a huge value wraps to a future cutoff that deletes every row (the value comes from operator configuration)."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: src/ai/cache.rs adds new logic with no test module, against upstream's GEMINI.md rule to write unit tests for new logic."
+        },
+        {
+          "index": 7,
+          "class": "FALSE",
+          "why": "A missing motivation paragraph breaks no upstream rule at this commit; the finding itself calls the missing why the only defect."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: AiRequest has no model/provider field and the lookup matches request_hash only, so a model or provider change replays another model's answer."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: create_provider_cached takes Path::parent of database.url even though Database::new treats libsql:// and https:// URLs as remote, and ':memory:' resolves to a cwd file."
+        },
+        {
+          "index": 10,
+          "class": "REAL",
+          "why": "Confirmed: create_provider_cached has no caller and AiSettings has no response_cache_ttl_days, so the configuration the message documents does nothing."
+        },
+        {
+          "index": 11,
+          "class": "PLAUSIBLE",
+          "why": "Every Ok response, truncated ones included, is cached unconditionally (confirmed), but the claimed retry-replay depends on wiring that does not exist at this commit."
+        },
+        {
+          "index": 12,
+          "class": "PLAUSIBLE",
+          "why": "The Rows binding does live across the inner await, but the WAL-snapshot consequence depends on libsql drop/reset semantics that could not be confirmed."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 5,
+      "why": "Finding 5 names src/ai/cache.rs CachingAiProvider::generate_content setting cached_tokens = stored cached + prompt_tokens on a hit, which can exceed prompt_tokens.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the cache key hashes only the AiRequest, which has no model/provider, and the lookup is by request_hash alone."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: write errors are dropped with let _ = while read errors propagate with ?."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: create_provider_cached has no caller and there is no response_cache_ttl_days setting, contrary to the commit message."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: src/ai/cache.rs adds new logic with no test module, against upstream's GEMINI.md rule to write unit tests for new logic."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Confirmed: the cache path is derived with Path::parent from database.url even for remote URLs and ':memory:'."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Its confirmed claim is the unwired cache and the missing TTL setting (duplicate of finding 2); it marks the bad-Ok replay as latent."
+        },
+        {
+          "index": 7,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 12: the cursor lifetime is real, but the WAL consequence rests on unverified libsql semantics."
+        }
+      ]
+    }
+  },
+  "9d6f5e9": {
+    "label": "U4",
+    "A": {
+      "detected": false,
+      "void": false,
+      "detecting_finding": null,
+      "why": "No final finding says that SignInLink mail goes through the send_email builder that always applies smtp.reply_to; the reply_to branch is never discussed.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the only new test covers insert/lock, and neither the SignInLink header branch nor from_stored is tested, against GEMINI.md's unit-test rule for new logic."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "The migration runs in every setup_db test; asking for an extra populated-upgrade test is a test-strength wish, not a defect or rule violation, and the finding says itself that it is not a code defect."
+        },
+        {
+          "index": 2,
+          "class": "PLAUSIBLE",
+          "why": "The dry-run branch does log every body regardless of kind (confirmed), but leaking a sign-in link needs a Pending SignInLink row under dry_run, and no caller exists to show that happens."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "No rate limit or index reader exists in the tree (confirmed), but the endpoint is not wired yet, so whether this is a defect depends on future code."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "insert_transactional_email takes the outbox status as a free-form &str, which breaks GEMINI.md's rule against raw string values for application state; a typo silently strands the row."
+        },
+        {
+          "index": 5,
+          "class": "PLAUSIBLE",
+          "why": "The pre-existing Failed/sweep lifecycle is accurately described, but the harm to sign-in mail is latent until a caller exists."
+        },
+        {
+          "index": 6,
+          "class": "PLAUSIBLE",
+          "why": "Whether sign-in mail actually queues behind a backlog past token expiry depends on deployment volume and could not be established."
+        },
+        {
+          "index": 7,
+          "class": "PLAUSIBLE",
+          "why": "The version is read outside the transaction (confirmed, as for migration 2), but the two-process race is speculative."
+        },
+        {
+          "index": 8,
+          "class": "PLAUSIBLE",
+          "why": "From now goes through parse_lenient instead of Mailbox::parse (confirmed). The divergence for quoted names containing '<' depends on lettre parser behaviour that could not be checked, and the input is operator configuration."
+        },
+        {
+          "index": 9,
+          "class": "FALSE",
+          "why": "A weak assertion in an existing test is not a code defect and breaks no upstream rule."
+        }
+      ]
+    },
+    "B": {
+      "detected": false,
+      "void": false,
+      "detecting_finding": null,
+      "why": "No final finding names reply_to being set on SignInLink mail in send_email; the findings cover headers, dry-run logging, indexes and migrations.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the SignInLink header branch in send_email has no test, against GEMINI.md's unit-test rule for new logic."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "from_stored runs in the new test through lock_pending_email; an untested fallback branch of a tested function is a coverage wish, not a rule violation."
+        },
+        {
+          "index": 2,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 2: the kind-blind dry-run body log is confirmed, but the trigger needs a Pending SignInLink row under dry_run, which no caller shows."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "The 'bounded at the request endpoint' claim has no throttle in the tree (confirmed), but the endpoint is not wired yet."
+        },
+        {
+          "index": 4,
+          "class": "PLAUSIBLE",
+          "why": "The new index has no reader (confirmed), but an index added ahead of its query is a design choice, not a confirmed defect."
+        },
+        {
+          "index": 5,
+          "class": "PLAUSIBLE",
+          "why": "The worker is spawned unsupervised (pre-existing, confirmed), but the hang claim ignores lettre's transport timeout, and spawn_supervised_worker does not exist at this commit."
+        },
+        {
+          "index": 6,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 7: a speculative two-process migration race."
+        },
+        {
+          "index": 7,
+          "class": "FALSE",
+          "why": "Same as A finding 1: the migration is exercised by every setup_db test; a missing populated-upgrade test is not a defect."
+        },
+        {
+          "index": 8,
+          "class": "FALSE",
+          "why": "The header names are fixed valid ASCII literals and the domain comes from a parsed lettre Address, so the panic and injection premise does not hold; the finding itself rates it unlikely."
+        }
+      ]
+    }
+  },
+  "81f64ea": {
+    "label": "U5",
+    "A": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 7,
+      "why": "Finding 7 names GeminiClient::post_request in src/ai/gemini.rs parsing the Retry-After header as f64 and passing it, with no finiteness or range check, to Duration::from_secs_f64, which panics on NaN, infinite, negative or overflowing values.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the status is the stripped first line and is never validated, and ERROR or unparsed statuses fall into the '_ => {}' arm, so the counters do not sum to the total."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: the latest review is taken with no status filter, and the review and findings query errors are mapped to None or zero findings, which are scored as NOT_REVIEWED or MISSED."
+        },
+        {
+          "index": 2,
+          "class": "PLAUSIBLE",
+          "why": "Settings.toml concurrency did go from 1 to 24, and the daemon shares that key, but whether 24 is harmful in deployment is not shown."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "A dev tool that takes no arguments and runs when given extra ones is a design choice, not a defect; overwriting its output file is normal."
+        },
+        {
+          "index": 4,
+          "class": "PLAUSIBLE",
+          "why": "Results are written only at the end and without a temp-file rename (confirmed); whether that is a defect for an offline tool is a judgment, and the cited repo rule is not in upstream's rule files."
+        },
+        {
+          "index": 5,
+          "class": "PLAUSIBLE",
+          "why": "Review text is interpolated into the judge prompt undelimited (confirmed), but an actual steering effect is speculative."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "The commit bundles a new tool, a config change, a Retry-After change and fmt churn, against GEMINI.md's 'Never create commits like do X and Y' rule."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: GenAiClient::generate_content loops on QuotaExceeded with no attempt cap or deadline, and the new benchmark calls it directly."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "The API key travels in the ?key= URL, and reqwest's error Display includes the URL (without_url is never used). process_entry now stores e.to_string() in benchmark_results.json."
+        },
+        {
+          "index": 10,
+          "class": "REAL",
+          "why": "Same confirmed swallowing of DB errors into NOT_FOUND/NOT_REVIEWED/MISSED (duplicate of finding 1)."
+        },
+        {
+          "index": 11,
+          "class": "REAL",
+          "why": "Same confirmed swallowed DB errors and uncounted ERROR status (duplicate of findings 0 and 1)."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 5,
+      "why": "Finding 5 names the Retry-After header in GeminiClient::post_request (src/ai/gemini.rs) parsed as f64 and passed unchecked to Duration::from_secs_f64, which panics on negative, NaN, infinite or overflowing input.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: verdicts are unvalidated, and unrecognized statuses are dropped from every counter."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: DB errors are mapped to NOT_REVIEWED or zero findings, and so to MISSED."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: the review query takes ORDER BY id DESC LIMIT 1 with no status predicate, so a newer failed attempt hides an earlier successful one."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "The commit bundles unrelated changes, against GEMINI.md's one-change-per-commit rule."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Same as A finding 9: the key in the URL reaches logs and benchmark_results.json through reqwest's error Display."
+        },
+        {
+          "index": 6,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 2: the 1-to-24 change is confirmed, but its harm is not shown."
+        },
+        {
+          "index": 7,
+          "class": "REAL",
+          "why": "Pre-existing but confirmed: the DB worker runs a raw BEGIN IMMEDIATE on the single shared Database.conn that the reviewer and API also use, so their statements execute inside the ingest transaction."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Pre-existing but confirmed: reviewer status and completion writes are discarded with let _ = and never logged (classed the same way as the swallowed cache write in U3)."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: the 429 retry loop is unbounded, and reqwest::Client::new() sets no timeout, on the new benchmark path."
+        },
+        {
+          "index": 10,
+          "class": "PLAUSIBLE",
+          "why": "There is indeed no index on reviews(patch_id), but a material cost for an offline per-entry lookup is not shown."
+        }
+      ]
+    }
+  },
+  "d67c8bd": {
+    "label": "U6",
+    "A": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 0,
+      "why": "Finding 0 names handle_list in src/bin/sashiko-cli.rs byte-slicing &subject[..45] after a byte-length check, which panics when byte 45 is inside a multi-byte UTF-8 character.",
+      "other_findings": [
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: unwrap_or_else re-calls the same Settings::new() and expects it, so any settings failure panics before --server is used."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: the list filter and show id are spliced into query strings without encoding."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: handlers return anyhow string errors and never call error_for_status, so the NOT_FOUND/BAD_REQUEST hints are dead code, and errors go to stdout."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Confirmed: with no input the CLI sends the literal 'HEAD' with the server's repository_path and never checks the local repo, contrary to its help text."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: mbox input is read with read_to_string, so a valid non-UTF-8 mbox is refused."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: the commit message quotes code in backticks, which upstream's GEMINI.md forbids."
+        },
+        {
+          "index": 7,
+          "class": "REAL",
+          "why": "Confirmed: s.contains(\"..\") is tested before PathBuf::exists, so ../x.mbox is sent as a Range, and --type with no input defaults to HEAD."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: print_colored unwraps set_color/write!/reset, so a closed pipe panics."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: a non-success /api/review response is dropped silently, with no else branch."
+        },
+        {
+          "index": 10,
+          "class": "PLAUSIBLE",
+          "why": "Untrusted strings are printed raw in text mode (confirmed), but practical terminal-spoofing impact is not shown."
+        },
+        {
+          "index": 11,
+          "class": "REAL",
+          "why": "Confirmed: the new 526-line binary has no tests, against GEMINI.md's unit-test rule for new logic."
+        },
+        {
+          "index": 12,
+          "class": "REAL",
+          "why": "Confirmed: handle_show queries /api/review?id=<patchset id>, but get_review_details keys on reviews.id."
+        },
+        {
+          "index": 13,
+          "class": "REAL",
+          "why": "Confirmed: submit_patch uses the literal sha 'HEAD' as the id, and create_fetching_patchset keys on 'HEAD@sashiko.local', so repeat HEAD submissions collide."
+        },
+        {
+          "index": 14,
+          "class": "REAL",
+          "why": "Same confirmed byte-slice panic as finding 0 (a duplicate of the known defect)."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 1,
+      "why": "Finding 1 names handle_list in src/bin/sashiko-cli.rs: a byte-length check, then &subject[..45] with no char-boundary check, which panics on multi-byte UTF-8.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the settings fallback repeats the failing Settings::new() and panics."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: errors and hints go to stdout through print_colored/println even with --format json."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: the 404/400 hints are unreachable because error_for_status is never used."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Confirmed: the filter and id go into URLs unencoded."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: a failed review fetch is dropped silently and the command exits 0."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: the '..' check precedes the file-existence check, so a ../ path mbox is misrouted."
+        },
+        {
+          "index": 7,
+          "class": "REAL",
+          "why": "Confirmed: print_colored unwraps write errors, so a closed pipe panics."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: reqwest Client::new() has no timeout, so a silent server hangs the CLI."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: the new CLI ships with no tests, against GEMINI.md's unit-test rule."
+        },
+        {
+          "index": 10,
+          "class": "REAL",
+          "why": "Confirmed: show passes the patchset id to /api/review, which looks up reviews.id."
+        },
+        {
+          "index": 11,
+          "class": "REAL",
+          "why": "Confirmed: get_review_details emits no 'verdict' key (grep finds verdict only in the CLI), so the Verdict line never prints."
+        },
+        {
+          "index": 12,
+          "class": "REAL",
+          "why": "Confirmed: the literal HEAD or range string becomes the id and the placeholder key, so it cannot be tracked and collides."
+        },
+        {
+          "index": 13,
+          "class": "REAL",
+          "why": "Confirmed: the CLI's breakdown list omits the 'cancelled' key that get_stats emits, and get_stats maps DB errors to zeros."
+        },
+        {
+          "index": 14,
+          "class": "PLAUSIBLE",
+          "why": "run_server binds 0.0.0.0 and ignores host (confirmed), but the failure needs an operator-edited host and a platform-specific connect behaviour."
+        },
+        {
+          "index": 15,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 10: raw printing is confirmed, but the impact is not shown."
+        },
+        {
+          "index": 16,
+          "class": "REAL",
+          "why": "Its confirmed part is that a non-UTF-8 mbox is refused by read_to_string (same as A finding 5); the BOM part is unverified."
+        },
+        {
+          "index": 17,
+          "class": "PLAUSIBLE",
+          "why": "Reading stdin whenever it is not a TTY is the documented behaviour; harm in unattended runs depends on how the CLI is invoked."
+        },
+        {
+          "index": 18,
+          "class": "PLAUSIBLE",
+          "why": "The relative repository_path is sent as a remote URL (confirmed), but whether the server's fetch then fails depends on deployment paths and git's resolution of relative remotes."
+        },
+        {
+          "index": 19,
+          "class": "REAL",
+          "why": "Same confirmed byte-slice panic as finding 1 (a duplicate of the known defect)."
+        }
+      ]
+    }
+  },
+  "39bf2ac": {
+    "label": "U7",
+    "A": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 0,
+      "why": "Finding 0 names OpenAiCompatClient::post_request in src/ai/openai.rs: the 429 body's 'Please retry in Ns' capture is parsed as f64 and passed with no finiteness or range check to Duration::from_secs_f64, which panics on infinite or overflowing values.",
+      "other_findings": [
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: translate_ai_response turns invalid tool-call arguments into Value::Null with unwrap_or, with no error or log."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: the builder failure falls back to Client::new() with no auth header or timeout, and a missing or invalid key silently omits the header."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "The named functions (translate_ai_request, create_provider, default_* helpers) do have tests; untested extra branches are a coverage wish, not a defect or rule violation."
+        },
+        {
+          "index": 4,
+          "class": "FALSE",
+          "why": "Compiling a regex per request is negligible next to an HTTP LLM call and is not a defect."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: finish_reason is deserialized but never read, so length-truncated content is returned as a normal response."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: AiResponseFormat::Json { .. } maps to a bare json_object and the caller's schema is silently discarded."
+        },
+        {
+          "index": 7,
+          "class": "PLAUSIBLE",
+          "why": "Raw error bodies are logged and wrapped (confirmed), but a credential leak depends on provider behaviour, and the body-read unwrap_or_default only loses diagnostics."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: the design doc gives a five-argument new() with a 120s timeout while the code takes api_timeout_secs (default 300), and the Azure example cannot work with a Bearer-only header."
+        },
+        {
+          "index": 9,
+          "class": "PLAUSIBLE",
+          "why": "api_timeout_secs = 0 is accepted unvalidated, but this is an explicit operator misconfiguration and the reqwest behaviour was not confirmed."
+        },
+        {
+          "index": 10,
+          "class": "PLAUSIBLE",
+          "why": "A generic [ai] api_timeout_secs is read only by the OpenAI client (confirmed); whether that scope is a defect or a naming choice is a judgment call."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 5,
+      "why": "Finding 5 names OpenAiCompatClient::post_request in src/ai/openai.rs parsing the 429 body's retry value to a huge or infinite f64 that Duration::from_secs_f64 panics on, with no clamp.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: malformed tool-call arguments become Value::Null silently."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: finish_reason is never inspected, so truncated output is returned as success."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: the client silently loses the auth header (bad or empty key) and the timeout (builder fallback)."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "One key is sent to whichever host the model prefix selects (confirmed), but the misdirection needs a mismatched environment and config, and the design chose one key on purpose."
+        },
+        {
+          "index": 4,
+          "class": "PLAUSIBLE",
+          "why": "Error bodies are carried unredacted (confirmed), but leaking a key depends on providers echoing it."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: the requested JSON schema is dropped in translate_ai_request."
+        },
+        {
+          "index": 7,
+          "class": "REAL",
+          "why": "Confirmed: the design doc (120s timeout, five-argument new) disagrees with the code, and the commit message omits the new setting."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: post_request, the error mapping, and the openai-compatible factory arm have no test, against GEMINI.md's unit-test rule."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: RateLimitExceeded displays as 'Rate limit exceeded, retry after 60s', which matches neither 'Quota exceeded' nor '429' in the reviewer loop, so a 429 ends the request with Err instead of backing off."
+        },
+        {
+          "index": 10,
+          "class": "REAL",
+          "why": "Confirmed: every send() error maps to TransientError, which the reviewer loop retries, and deadline += slept extends the deadline by every backoff, so a permanently failing base_url retries without bound."
+        },
+        {
+          "index": 11,
+          "class": "PLAUSIBLE",
+          "why": "usage, index and finish_reason are required (confirmed), but whether the named providers actually omit them is unverified."
+        }
+      ]
+    }
+  },
+  "313bdbe": {
+    "label": "U8",
+    "A": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 1,
+      "why": "Finding 1 names process_issue_worker in src/workflows/linux_bug.rs: BUG_DEDUP_LOCK covers only the Stage 3 block while vector_json and status 'open' are written in Stage 7, so concurrent identical candidates both register as open bugs.",
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: process_issue stores severity_explanation None and keeps the reasoning only in raw_input, and BugWorker::run rebuilds reasoning from severity_explanation, so every bug gets 'No reasoning provided.'."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: BugWorker::run tokio::spawns one pipeline per claimed bug with no semaphore or cap."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: update_bug_outcome assigns severity, logs, vector_json and the rest directly, and the failure arm passes ..Default::default(), wiping them."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Confirmed: TracingSession::validate runs a blocking std::process::Command git call inside the async session, contrary to the design's spawn_blocking."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: let _ = Severity::from_str(...) means an invalid severity never fails validation."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: get_master_sha silently returns the literal 'master', which is persisted as verified_on_sha."
+        },
+        {
+          "index": 7,
+          "class": "REAL",
+          "why": "Confirmed: the dedup rejection branches, BugWorker and the cat-file check are never exercised (all tests pass tools None), against GEMINI.md's unit-test rule."
+        },
+        {
+          "index": 8,
+          "class": "FALSE",
+          "why": "No upstream rule at 313bdbe (GEMINI.md, MAINTAINERS_GUIDE.md) requires benchmark evidence in the commit message; the rule cited is the reviewer's own."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: nothing constructs or spawns BugWorker, and process_issue is called only from tests."
+        },
+        {
+          "index": 10,
+          "class": "REAL",
+          "why": "Confirmed: mark_bug_as_duplicate's INSERT OR IGNORE omits is_newly_discovered, which defaults to 1, unlike migrate_review_bugs, which writes 0."
+        },
+        {
+          "index": 11,
+          "class": "REAL",
+          "why": "Confirmed: lock_raw_bug is SELECT then an unguarded UPDATE, and nothing ever resets 'processing' rows; the failure write is let _ =."
+        },
+        {
+          "index": 12,
+          "class": "REAL",
+          "why": "Confirmed: mark_bug_as_duplicate opens a transaction on the single shared Database.conn, which the newly concurrent tasks also use."
+        },
+        {
+          "index": 13,
+          "class": "PLAUSIBLE",
+          "why": "No index on status exists and the vector loader reads every row (confirmed), but material scalability cost is not shown."
+        },
+        {
+          "index": 14,
+          "class": "REAL",
+          "why": "Confirmed: cat-file -e <sha>^{commit} accepts any commit-ish (HEAD, tags, short SHAs), and the raw string is stored as introduced_in_commit even though the prompt demands a full SHA."
+        },
+        {
+          "index": 15,
+          "class": "REAL",
+          "why": "Confirmed: MaintainersIndex::from_repo does a synchronous read and parse of MAINTAINERS inside the async process_issue_worker, with no spawn_blocking."
+        },
+        {
+          "index": 16,
+          "class": "PLAUSIBLE",
+          "why": "The sessions use the default call_tools with no duplicate-call guard; the cited engine rule is not in upstream's rule files, and the cost is bounded by max_turns."
+        },
+        {
+          "index": 17,
+          "class": "FALSE",
+          "why": "The db.rs changes serve the new pipeline, and no upstream rule requires the message to enumerate them."
+        }
+      ]
+    },
+    "B": {
+      "detected": true,
+      "void": false,
+      "detecting_finding": 0,
+      "why": "Finding 0 names process_issue_worker in src/workflows/linux_bug.rs: the dedup guard covers only Stage 3, and vector_json/status 'open' are written in Stage 7 outside it, so concurrent same-defect candidates both become open.",
+      "other_findings": [
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: BugWorker::run rebuilds reasoning from the empty severity_explanation, so verification runs on the placeholder."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: tasks are spawned without a cap, the failure write is let _ =, and ..Default::default() overwrites the columns."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: the literal 'master' fallback is stored as verified_on_sha."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "Confirmed: severity validation is a no-op, and a false positive with no evidence is dismissed with a generic reason."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: there is a blocking git call in the synchronous validate, and the SHA is not checked as 40-hex."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Confirmed: the design-listed tests are absent, and the tools-dependent paths and BugWorker are never exercised."
+        },
+        {
+          "index": 7,
+          "class": "FALSE",
+          "why": "Same as A finding 17: omitting supporting db.rs details from the message breaks no upstream rule."
+        },
+        {
+          "index": 8,
+          "class": "REAL",
+          "why": "Confirmed: BugWorker and process_issue are never wired in, and link_review_to_bug is never called."
+        },
+        {
+          "index": 9,
+          "class": "REAL",
+          "why": "Confirmed: there is no reset or lease for 'processing' rows, and the failure write is swallowed."
+        },
+        {
+          "index": 10,
+          "class": "PLAUSIBLE",
+          "why": "The lock is held across the dedup LLM call by design; an unbounded stall depends on which provider is configured."
+        },
+        {
+          "index": 11,
+          "class": "REAL",
+          "why": "Confirmed: mark_bug_as_duplicate's transaction runs on the single shared connection."
+        },
+        {
+          "index": 12,
+          "class": "PLAUSIBLE",
+          "why": "Problem and reasoning are interpolated undelimited and dismissal is taken on trust (confirmed), but the injection path rests on a producer that is not in this diff."
+        }
+      ]
+    }
+  },
+  "5a5b667": {
+    "label": "X1",
+    "A": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "FALSE",
+          "why": "The commit adds a test for bootstrap_repo's failure path; untested log-only redaction sites are a coverage wish, not a defect."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "The finding itself concedes that production redaction is correct; the concern is assertion strength, based on unverified git stderr behaviour."
+        }
+      ]
+    },
+    "B": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "FALSE",
+          "why": "Same as A finding 0: a coverage wish for log-only branches of a tested function."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "Same as A finding 1: test-strength speculation; the production behaviour is correct."
+        }
+      ]
+    }
+  },
+  "505a024": {
+    "label": "X2",
+    "A": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: UPSERT_PATCHSET_SECTION_SQL does SET source = excluded.source, so a later part with a weaker source demotes a maintainers_section row, contrary to add's own never-narrow doc comment."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: replace runs its SELECT, DELETEs and UPSERTs as separate autocommit statements with no transaction (its comment even talks about one), so a mid-way error leaves a half-applied set."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "A test-strength wish about tested functions; the underlying defect is classed separately in finding 0."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "A coverage wish (asserting the column default and CHECK), not a defect or upstream rule violation; the new code has tests."
+        },
+        {
+          "index": 4,
+          "class": "FALSE",
+          "why": "A coverage wish for one input to a tested function; the finding shows no defect."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed: the create_patchset merge block copies patchsets_subsystems but never patchset_maintainer_sections, then deletes the patchset, and the new ON DELETE CASCADE (foreign_keys ON) drops its sections."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Same confirmed merge-cascade loss as finding 5 (duplicate)."
+        },
+        {
+          "index": 7,
+          "class": "PLAUSIBLE",
+          "why": "There is no audit trigger like the bug_subsystems one (confirmed), but whether patchset reattribution must be audited is a design decision with no consumer yet."
+        }
+      ]
+    },
+    "B": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the upsert lets a weaker source overwrite maintainers_section, so authority depends on arrival order."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: replace_patchset_maintainer_sections is not atomic."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Same confirmed source-downgrade defect as finding 0 (duplicate)."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "Confirmed: the patchset merge loses the merged row's sections through ON DELETE CASCADE."
+        },
+        {
+          "index": 4,
+          "class": "FALSE",
+          "why": "The finding itself says this is a coverage gap with a correct implementation; it is not a defect."
+        }
+      ]
+    }
+  },
+  "0035364": {
+    "label": "X3",
+    "A": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "PLAUSIBLE",
+          "why": "--agent does silently override --interactive and --format with no conflicts_with (confirmed), but precedence for agent mode is arguably intended; this is a UX judgment."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: with --no-ai the worker returns review: null and no error, so format_agent_review_output yields empty findings and status 'clean' for code that was never reviewed."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Confirmed: let result = result? runs before the agent branch, so hard failures print no JSON despite the message's promise of error metadata, and they exit with code 1, the same code used for high/critical findings."
+        }
+      ]
+    },
+    "B": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Same confirmed 'clean' status for a null review under --no-ai."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Same confirmed hard-failure path: no JSON on stdout, and an exit code that collides with the findings exit code."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "status reports whether there are findings and the exit code reports new high or critical ones; two different, accurate signals are not a defect."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 0: the silent flag precedence is confirmed, but whether it is a defect is a judgment call."
+        },
+        {
+          "index": 4,
+          "class": "FALSE",
+          "why": "The new output function and flag parsing are tested; untested branches in handle_local are a coverage wish, not a rule violation."
+        },
+        {
+          "index": 5,
+          "class": "FALSE",
+          "why": "The finding itself says the code is not shown to be wrong; weak assertions are not a defect."
+        },
+        {
+          "index": 6,
+          "class": "FALSE",
+          "why": "An untested progress-callback branch with a cosmetic effect is a coverage wish, not a defect."
+        }
+      ]
+    }
+  },
+  "248f7cb": {
+    "label": "X4",
+    "A": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: NotIndexedYet is logged at info before the retry-exhaustion check, so the attempt that permanently marks the check Failed emits nothing above info."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "Retrying Api errors up to max_retries is pre-existing, bounded behaviour that ends in a correct Failed state; it is not a defect of this change."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "The finding itself says the test still guards the code; a weak assertion is not a defect."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "The arithmetic is right (5s + 30s, and the 180s tier is unreachable at max_retries 3), but whether Patchwork's indexing lag exceeds that window is unverified."
+        }
+      ]
+    },
+    "B": {
+      "other_findings": [
+        {
+          "index": 0,
+          "class": "PLAUSIBLE",
+          "why": "Same as A finding 3: the ~35s retry window is confirmed, but whether real lag exceeds it is unknown."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Same as A finding 0: an exhausted NotIndexedYet failure is logged only at info."
+        },
+        {
+          "index": 2,
+          "class": "REAL",
+          "why": "Pre-existing but confirmed: the worker's reqwest::Client::new() has no timeout and post_patchwork_check is awaited unbounded in the sequential loop (classed like the other no-timeout findings)."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "The core change is tested at the function level; a worker-level test is a coverage wish for a trivial log-level match."
+        },
+        {
+          "index": 4,
+          "class": "PLAUSIBLE",
+          "why": "Proxy environment variables could reroute the loopback tests, but that is environment-dependent and follows a codebase-wide convention."
+        }
+      ]
+    }
+  }
+}

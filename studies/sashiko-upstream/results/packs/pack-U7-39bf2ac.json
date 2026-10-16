@@ -1,0 +1,657 @@
+{
+ "commit": "39bf2ac",
+ "label": "U7",
+ "A": {
+  "summary": "This commit adds an OpenAI-compatible AI provider to Sashiko. One shared\nclient (OpenAiCompatClient in src/ai/openai.rs) talks to the OpenAI chat\ncompletions API and to compatible services such as GLM, Kimi and Minimax.\nIt picks the default endpoint and context window from the model name\nprefix, and both can be overridden in settings. The commit also adds a\ndesign document and an api_timeout_secs setting.\n\nUser-visible effect: two new provider names, \"openai\" and\n\"openai-compatible\", are accepted in the [ai] section of Settings.toml. A\nnew optional [ai.openai_compat] table sets base_url, context_window_size\nand max_tokens (default 4096). The API key is read from OPENAI_API_KEY,\nfalling back to LLM_API_KEY. The \"openai\" provider sends\nmax_completion_tokens in the request, while \"openai-compatible\" sends\nmax_tokens. A new [ai] setting, api_timeout_secs (default 300), controls\nthe HTTP request timeout for the new client.\n\nBefore:\n  [ai]\n  provider = \"openai\"\n  model = \"gpt-4o\"\n  -> startup fails with \"Unsupported AI provider: openai\"\n\nAfter:\n  [ai]\n  provider = \"openai-compatible\"\n  model = \"glm-4\"\n\n  [ai.openai_compat]\n  base_url = \"https://example.com/v1/chat/completions\"\n  max_tokens = 8192\n  -> Sashiko sends reviews to that endpoint, using OPENAI_API_KEY for\n     the Authorization: Bearer header. The request timeout defaults to\n     300 seconds and can be changed with api_timeout_secs.",
+  "inline_review": "- [MEDIUM] In src/ai/openai.rs (OpenAiCompatClient::post_request), on a 429 the\n  retry value captured from the response body is parsed as f64 and passed to\n  Duration::from_secs_f64 without a finiteness check or cap. A very long digit\n  string parses to infinity, and values above u64::MAX also overflow, so a\n  hostile or misbehaving endpoint (base_url is user-configurable) can panic\n  the review task instead of triggering a backoff. Use try_from_secs_f64,\n  require is_finite(), and cap at a maximum backoff.\n\n- [MEDIUM] In src/ai/openai.rs (translate_ai_response), tool-call arguments\n  that fail to parse are silently replaced with JSON null via unwrap_or. The\n  tool then runs or fails with a confusing missing-argument error, and the\n  model is never told its JSON was invalid, which undermines validation-retry\n  self-correction. This is likely with max_tokens truncation or weaker\n  OpenAI-compatible models. Return an error or log and surface the raw string.\n\n- [MEDIUM] In src/ai/openai.rs (translate_ai_response) and src/worker/\n  prompts.rs (stage execution loop), finish_reason is deserialized but never\n  checked. A response cut off by the output token limit is accepted as the\n  final stage result, and truncated tool-call arguments become null and are\n  executed. The new default max_tokens of 4096 in src/ai/mod.rs\n  (create_provider) makes truncation of long JSON review output realistic.\n  Treat a length finish_reason as an error or retry.\n\n- [MEDIUM] In src/ai/openai.rs (translate_ai_request), AiResponseFormat::Json\n  maps to a bare json_object and discards the schema, whereas Gemini forwards\n  it. In src/worker/prompts.rs, the Phase 0 pre-screen (selected_prompts) and\n  the planning pre-phase (relevant_stages) name their required keys only in\n  the schema, not in the prompt text. On the OpenAI path a model can return\n  valid JSON with different keys, so pre-screening and planning silently fall\n  back to loading all prompts and running all stages, increasing token spend.\n  Embed the schema in the injected system text or use json_schema response\n  format for the openai provider type.\n\n- [LOW] In src/ai/openai.rs (OpenAiCompatClient::new), the builder error is\n  swallowed via unwrap_or_else(reqwest::Client::new). The fallback client has\n  no Authorization header and no configured timeout, so requests can go out\n  unauthenticated and hang. A key that is an invalid header value, or a\n  missing OPENAI_API_KEY/LLM_API_KEY, also silently omits the header, and\n  misconfiguration surfaces only as an opaque per-request 401. Return a Result\n  or log a warning on each fallback.\n\n- [LOW] In src/ai/openai.rs (OpenAiCompatClient::post_request), the error body\n  is read with unwrap_or_default, so a body-read failure yields an empty\n  string and auth or server errors lose diagnostic text (\"Authentication\n  error: \"). The raw body is also logged verbatim in the 5xx branch and\n  stored unredacted in the error variants, unlike the transport-error path\n  which uses redact_secret. Gemini and Claude behave similarly, and\n  redact_secret would not mask bearer keys, so the leak part is speculative.\n\n- [LOW] In src/ai/openai.rs (OpenAiCompatClient::post_request), the retry\n  Regex is compiled with Regex::new on every request, including successful\n  ones, although it is only used on the 429 path. Use a LazyLock/OnceLock or\n  compile it only in the 429 branch.\n\n- [LOW] In src/settings.rs (AiSettings::api_timeout_secs) there is no\n  validation, so a value of 0 is passed to the reqwest client timeout in\n  src/ai/openai.rs (OpenAiCompatClient::new). Requests then likely fail\n  immediately, are classified as transient, and are retried instead of\n  failing fast with a clear configuration error.\n\n- [LOW] In src/settings.rs (AiSettings), api_timeout_secs is declared among\n  provider-agnostic settings but is consumed only by the OpenAI client in\n  src/ai/openai.rs. Gemini still uses a hardcoded 600s timeout in\n  src/ai/gemini.rs (GeminiClient::new) and Claude and Bedrock set none, so\n  operators changing it for other providers see no effect. Rename it to be\n  provider-scoped or apply it consistently.\n\n- [LOW] designs/DESIGN_OPENAI_COMPAT_PROVIDER.md diverges from the code. It\n  documents a five-argument new() with a 120s timeout, but the code takes\n  api_timeout_secs and defaults to 300s. It omits normalize_schema and its\n  tests. Its Azure example relies on Authorization Bearer, which Azure does\n  not accept for API keys (it needs an api-key header), so the example would\n  fail with 401. The GLM example also embeds an internal-looking endpoint\n  (api.eliza.yandex.net) unsuitable for a public repository. Update the doc\n  and drop the Azure example or add api-key header support.\n\n- [LOW] Test coverage gaps in src/ai/openai.rs and src/ai/mod.rs. The\n  translate_ai_request branch that appends the JSON hint to an existing\n  system message and the AiResponseFormat::Text mapping are untested.\n  default_base_url_for_model and default_context_window_for_model have no\n  assertions for the glm-, moonshot-, abab7- and gpt-3.5 branches.\n  test_create_provider covers only the openai arm, not openai-compatible or\n  the openai_compat overrides, and post_request status and retry parsing and\n  the new settings fields have no tests.",
+  "findings": [
+   {
+    "problem": "Duration::from_secs_f64 panics on huge 429 retry value",
+    "severity": "Medium",
+    "type": "Panic / Untrusted Input",
+    "preexisting": false,
+    "explanation": "Calibration: contained crash on a hostile or misbehaving endpoint, not a daemon-wide outage. In OpenAiCompatClient::post_request, on a 429 the regex capture ([0-9.]+) from the remote body is parsed with parse::<f64>().unwrap_or(retry_seconds). A digit string of about 310 or more digits parses to infinity, and a finite value above u64::MAX seconds also overflows. Duration::from_secs_f64(retry_seconds) then panics ('cannot convert float seconds to Duration'). The value is never checked for finiteness or clamped. The base_url is user-configurable, so a proxy or third-party endpoint controls this string. Immediate consequence: the review task or worker panics instead of backing off. Downstream consequence: the review fails and has to be retried by the reviewer. post_request has no tests for the status mapping or retry parsing, which is how this went unnoticed (C14). Fix: use Duration::try_from_secs_f64, require is_finite(), and cap at a MAX_BACKOFF.",
+    "locations": [
+     {
+      "code_snippet": "retry_seconds = caps[1].parse::<f64>().unwrap_or(retry_seconds);\n...\nDuration::from_secs_f64(retry_seconds)",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "None",
+      "why_this_location_matters": "An untrusted, unbounded f64 flows into a panicking constructor."
+     }
+    ]
+   },
+   {
+    "problem": "malformed tool-call arguments silently become JSON null",
+    "severity": "Medium",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "Calibration: a silent failure on a primary provider path, but the model can usually recover because the tool call itself fails. In translate_ai_response, serde_json::from_str(&t.function.arguments).unwrap_or(Value::Null) discards the parse error. This is reachable whenever a model emits invalid or truncated JSON arguments, which is likely with max_tokens truncation or weaker OpenAI-compatible models (GLM, Kimi, Minimax). Immediate consequence: the ToolCall is returned with arguments=null with no log, and the toolbox runs or fails with a confusing missing-argument error. Downstream consequence: the model is never told its JSON was invalid, so validation-retry self-correction is poor. No test pins or rejects this behavior (C15); test_translate_response_tool_calls covers only valid arguments. Fix: return an error, or log and surface the raw string.",
+    "locations": [
+     {
+      "code_snippet": "serde_json::from_str(&t.function.arguments).unwrap_or(serde_json::Value::Null);",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_response",
+      "line": "None",
+      "why_this_location_matters": "The parse error on model output is swallowed with no log."
+     }
+    ]
+   },
+   {
+    "problem": "OpenAI client silently drops auth header and timeout on failure",
+    "severity": "Low",
+    "type": "Error Handling",
+    "preexisting": false,
+    "explanation": "Calibration: swallowed errors in the OpenAiCompatClient::new constructor that are rarely triggered. .build().unwrap_or_else(|_| reqwest::Client::new()) discards the builder error. The fallback client has neither the default Authorization header nor the configured api_timeout_secs, so requests go out unauthenticated with no timeout. They can hang, or fail with a misleading 401. Separately, HeaderValue::from_str failure (for example a key containing a newline) and a missing OPENAI_API_KEY/LLM_API_KEY (unwrap_or_default) silently omit the header. Misconfiguration then surfaces only as an opaque per-request AuthenticationError, with no startup warning. The 401/403 mapping to AuthenticationError does at least fail fast. Fix: return Result from new(), or tracing::warn! on each fallback.",
+    "locations": [
+     {
+      "code_snippet": ".build()\n            .unwrap_or_else(|_| reqwest::Client::new());",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "None",
+      "why_this_location_matters": "The build error is swallowed and the fallback client has no auth or timeout."
+     }
+    ]
+   },
+   {
+    "problem": "untested json injection append path and provider config defaults",
+    "severity": "Low",
+    "type": "Test Coverage Gap",
+    "preexisting": false,
+    "explanation": "Calibration: test gaps for new behavior, with no runtime defect shown. translate_ai_request has an append-to-existing-system-message injection branch (content.push_str) that no test covers, and the AiResponseFormat::Text mapping is unasserted. default_base_url_for_model and default_context_window_for_model have no assertions for the glm-, moonshot-, abab7- and gpt-3.5 branches. test_create_provider covers only provider='openai'; the 'openai-compatible' arm and the openai_compat overrides are untested. The new api_timeout_secs default (300) and the [ai.openai_compat] parsing have no deserialization test. A typo in an endpoint URL or window size would go unnoticed.",
+    "locations": [
+     {
+      "code_snippet": "content.push_str(\"\\nRespond in JSON format.\");",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "None",
+      "why_this_location_matters": "This branch has no test."
+     },
+     {
+      "code_snippet": "if model.starts_with(\"glm-\") {",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::default_base_url_for_model",
+      "line": "None",
+      "why_this_location_matters": "Branch-per-provider defaults have no assertions."
+     },
+     {
+      "code_snippet": "settings.ai.provider = \"openai\".to_string();\nsettings.ai.model = \"gpt-4o\".to_string();",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "test_create_provider",
+      "line": "None",
+      "why_this_location_matters": "Only one factory arm and no override paths are tested."
+     }
+    ]
+   },
+   {
+    "problem": "retry regex recompiled on every OpenAI request",
+    "severity": "Low",
+    "type": "Maintainability / Performance",
+    "preexisting": false,
+    "explanation": "Calibration: a minor inefficiency with no correctness impact. post_request runs Regex::new(...).unwrap() on every call, including successful ones, although the regex is only used on the 429 path. It is a small CPU cost per LLM request, easily avoided with a LazyLock/OnceLock or by compiling only in the 429 branch.",
+    "locations": [
+     {
+      "code_snippet": "let re = Regex::new(r\"Please retry in ([0-9.]+)s\").unwrap();",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "None",
+      "why_this_location_matters": "The regex is rebuilt per request but only needed on 429."
+     }
+    ]
+   },
+   {
+    "problem": "openai ignores finish_reason; truncated output accepted as stage result",
+    "severity": "Medium",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "Reasoning: the failure is a silent wrong-output path on the OpenAI provider, but it only triggers when a response exceeds max_tokens (new default 4096), so it is contained to individual stages rather than the whole pipeline. Severity is capped at Medium because the downstream handling of truncated JSON beyond the stage loop could not be fully confirmed (only grep of src/workflow/ with no hits, which shows no stop-reason handling there). Verified: (1) OpenAiChoice.finish_reason is deserialized (openai.rs:94) but translate_ai_response only reads choice.message.content and tool_calls, so finish_reason of length is never inspected. (2) In the stage loop in src/worker/prompts.rs (around lines 1158-1200), a response with no tool_calls and Some(content) is returned directly as Ok(content), with no finish_reason or stop-reason check, so cut-off JSON or prose is accepted as the stage result. The planning and prompt-selection pre-phases in prompts.rs parse content with serde_json::from_str and silently fall through on parse error. (3) Truncated tool-call arguments are worse: translate_ai_response does serde_json::from_str(&t.function.arguments).unwrap_or(serde_json::Value::Null), so cut-off arguments become Null and the tool is called with Null instead of failing, which violates the error-handling pattern against unwrap_or_default on malformed LLM output. (4) The empty-content part of the candidate is NOT silent: when reasoning tokens exhaust max_completion_tokens, content is None with no tool_calls and the loop returns Err(No content or tool calls from AI), so that case fails loudly. (5) Gemini and Claude also do not check finish_reason or stop_reason (the fields are only struct definitions, with no use in translate_ai_response), and Claude hard-codes max_tokens 4096, so the gap is not unique to this patch; however this patch adds a new provider path with the same hole plus the Null-argument fallback, so preexisting is false. The 4096 default in create_provider (mod.rs) makes truncation likely for long JSON review outputs, and unlike Claude the value is user-configurable, but the default is what most deployments will use.",
+    "locations": [
+     {
+      "code_snippet": "let content = choice.message.content;",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_response",
+      "line": "None",
+      "why_this_location_matters": "finish_reason is never read, so a length-truncated response is converted into a normal AiResponse."
+     },
+     {
+      "code_snippet": "serde_json::from_str(&t.function.arguments).unwrap_or(serde_json::Value::Null)",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_response",
+      "line": "None",
+      "why_this_location_matters": "Cut-off tool-call arguments are silently replaced with Null and executed instead of producing an error."
+     },
+     {
+      "code_snippet": "} else if let Some(content) = resp.content { return Ok((content, t_in, t_out, t_cached));",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "stage execution loop (generate_content caller)",
+      "line": "None",
+      "why_this_location_matters": "The caller accepts any non-empty content as the final stage answer and has no truncation signal to act on."
+     },
+     {
+      "code_snippet": ".unwrap_or(4096);",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider",
+      "line": "None",
+      "why_this_location_matters": "Low default output cap makes truncation of long JSON review output realistic."
+     }
+    ]
+   },
+   {
+    "problem": "OpenAI provider drops JSON schema, Phase 0 and planning lose key names",
+    "severity": "Medium",
+    "type": "Incomplete Implementation",
+    "preexisting": false,
+    "explanation": "Reasoning: the impact is degraded pre-screening and extra token spend, not lost findings or a crash. Every failure path falls back to a safe default and only logs a warning. Likelihood depends on model behavior with json_object mode, so the finding is partly speculative and capped at Medium. Proof: translate_ai_request in src/ai/openai.rs matches AiResponseFormat::Json { .. } and emits only {\"type\":\"json_object\"}, so the schema is discarded. Gemini instead passes it as response_schema (src/ai/gemini.rs:510-512, normalize_schema applied). The only callers that request AiResponseFormat::Json are in src/worker/prompts.rs (Phase 0 pre-screen at ~466 and the planning pre-phase at ~623); the main stage sessions use response_format: None (~1151). In both callers the required key name exists only inside the schema. The Phase 0 prompt text never mentions 'selected_prompts'. The planning prompt says only 'Return ONLY a JSON object containing an array of integers', and never names 'relevant_stages'. The JSON-word injection in openai.rs satisfies the API's 'json' keyword requirement but supplies no shape information. On the OpenAI path a model can therefore return valid JSON with a different key. Phase 0 then logs \"did not contain 'selected_prompts' array\" and returns None, so build_context(None) loads the full prompt set. Planning logs \"did not contain 'relevant_stages' array\" and leaves planning_selected_stages as None, so all stages 1-7 run. The result is a silent loss of the pre-screening and planning cost optimizations, and a larger context on OpenAI-backed reviews. Review findings are not dropped. The design doc does not mention the limitation, and the test test_translate_request_json_format only asserts that the schema is ignored. Fix: embed the schema in the injected system text, or use response_format json_schema for provider type OpenAi. preexisting is false because this commit introduces the OpenAI path that discards the schema.",
+    "locations": [
+     {
+      "code_snippet": "AiResponseFormat::Json { .. } => serde_json::json!({\"type\": \"json_object\"}),",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "380",
+      "why_this_location_matters": "The schema is discarded here; Gemini forwards it via response_schema."
+     },
+     {
+      "code_snippet": "\"selected_prompts\": { \"type\": \"ARRAY\", \"items\": { \"type\": \"STRING\" } }",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "Phase 0 pre-screen",
+      "line": "444",
+      "why_this_location_matters": "The required key exists only in the schema, not in the prompt text; a mismatch yields None and falls back to loading all prompts."
+     },
+     {
+      "code_snippet": "\"relevant_stages\": { \"type\": \"ARRAY\", \"items\": { \"type\": \"INTEGER\" } }",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "planning pre-phase",
+      "line": "591",
+      "why_this_location_matters": "The key name is absent from planning_prompt; a mismatch leaves planning_selected_stages as None, so all stages run."
+     }
+    ]
+   },
+   {
+    "problem": "OpenAI client logs/wraps raw HTTP error bodies and hides body-read failures",
+    "severity": "Low",
+    "type": "Secret Leakage",
+    "preexisting": false,
+    "explanation": "Severity reasoning: the leak part is speculative, since it needs an upstream or user-configured openai-compatible endpoint to echo credential material in a 4xx/5xx body, and I could not verify that any provider does. Per the severity rules this caps at Medium, and the impact is small, so Low. What I verified: in OpenAiCompatClient::post_request (src/ai/openai.rs:250-273), error_text is read with res.text().await.unwrap_or_default(). It is then logged verbatim in the 5xx branch via tracing::warn!(\"OpenAI Server Error {}: {}\", status, error_text). It is also stored unredacted in AuthenticationError, TransientError and ApiError. The transport-error and success-body-read paths in the same function (lines 202 and 214) do call redact_secret, so the function is inconsistent. Two points weaken the candidate's premise. (1) redact_secret (src/utils.rs:49) only masks key|token|secret=... query parameters and user:pass@ URL credentials. It would not mask an echoed bearer key such as sk-..., so adding the call to the body paths would not fix the stated concern, and OpenAI's 401 body masks keys anyway. (2) The Gemini client (src/ai/gemini.rs:287-313) and Claude client (src/ai/claude.rs:220-238) also log or wrap raw error bodies, so this follows existing convention rather than being a new regression. The one concrete defect is that unwrap_or_default() on the error-body read silently turns a body-read failure into an empty string. A 401/403 then surfaces as 'Authentication error: ' and a 5xx as 'Transient error: , retry after 30s' with no diagnostic. Claude uses unwrap_or_else(|_| \"Unknown error\") and Gemini propagates the read error with ?, so OpenAI is the only client that loses it silently. I did not trace where the wrapped errors are persisted (for example reviewer.rs:1440-1466 or the ai_interactions table), so the persistence-based leak part is unverified.",
+    "locations": [
+     {
+      "code_snippet": "let error_text = res.text().await.unwrap_or_default();",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "250",
+      "why_this_location_matters": "A body-read failure is silently converted to an empty string, so auth and server errors lose their diagnostic text."
+     },
+     {
+      "code_snippet": "401 | 403 => Err(OpenAiCompatError::AuthenticationError(error_text))?,",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "265",
+      "why_this_location_matters": "The raw upstream body is propagated without redact_secret, unlike the transport-error path at line 202, and the string may later be logged or persisted."
+     },
+     {
+      "code_snippet": "tracing::warn!(\"OpenAI Server Error {}: {}\", status, error_text);",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "267",
+      "why_this_location_matters": "The raw body is written to logs unredacted."
+     }
+    ]
+   },
+   {
+    "problem": "OpenAI design doc diverges from code; Azure example cannot authenticate",
+    "severity": "Low",
+    "type": "Design/Implementation Mismatch",
+    "preexisting": false,
+    "explanation": "Reasoning: the impact is limited to documentation accuracy and one non-working example config. It does not affect the daemon, the review pipeline, the database, or email. Azure is a secondary use of the 'openai' provider, and the failure is a loud 401 at startup of a review, not silent. Verified by grep at HEAD, which is the only commit in this series. (1) designs/DESIGN_OPENAI_COMPAT_PROVIDER.md:131 documents new(base_url, provider_type, model, context_window_size, max_tokens) with a 120s timeout. src/ai/openai.rs:140 adds a sixth parameter, api_timeout_secs, applied via .timeout(Duration::from_secs(api_timeout_secs)) at line 156. src/settings.rs adds api_timeout_secs with a 300s default, so the documented 120s is wrong. The doc also omits normalize_schema and its three tests, and its test count is out of date. The doc's create_provider snippet is missing the settings.ai.api_timeout_secs argument that src/ai/mod.rs passes. (2) The doc's Azure example (line 337) points base_url at an Azure deployment endpoint with provider = \"openai\". The only auth header the code ever sets is Authorization: Bearer <key> (src/ai/openai.rs:151). Azure OpenAI authenticates API keys with an 'api-key' header; Bearer is accepted only for Entra ID tokens. A user following the example with an Azure key would get 401, mapped to AuthenticationError. The code has no way to configure a custom auth header, so the example is not achievable as written. The doc also embeds an internal-looking endpoint (api.eliza.yandex.net) in the GLM example, which is unsuitable for a public repository doc. Because the Rust code is the source of truth, the fix is to update the doc (timeout, signature, factory snippet, normalize_schema, tests) and either drop the Azure example or add api-key header support.",
+    "locations": [
+     {
+      "code_snippet": "`new(base_url, provider_type, model, context_window_size, max_tokens) -> Self` | Build `reqwest::Client` with `Authorization: Bearer {key}` header ... 120s timeout",
+      "file": "designs/DESIGN_OPENAI_COMPAT_PROVIDER.md",
+      "function_or_symbol": "Client Methods table, new()",
+      "line": "131",
+      "why_this_location_matters": "Documents a 5-argument constructor and a 120s timeout, but the code takes api_timeout_secs and defaults to 300s."
+     },
+     {
+      "code_snippet": "base_url = \"https://my-azure-instance.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-01\"",
+      "file": "designs/DESIGN_OPENAI_COMPAT_PROVIDER.md",
+      "function_or_symbol": "Configuration Examples (Azure proxy)",
+      "line": "337",
+      "why_this_location_matters": "Documented Azure setup relies on Bearer auth, which Azure does not accept for API keys, so it returns 401."
+     },
+     {
+      "code_snippet": "headers.insert(\"Authorization\", value);",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "151",
+      "why_this_location_matters": "The only auth header the client can send is Authorization Bearer; there is no api-key option for Azure."
+     },
+     {
+      "code_snippet": "api_timeout_secs: u64,",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "140",
+      "why_this_location_matters": "The extra constructor parameter and the timeout built from it at line 156 are absent from the design doc."
+     }
+    ]
+   },
+   {
+    "problem": "api_timeout_secs accepts 0, making every OpenAI request time out",
+    "severity": "Low",
+    "type": "Configuration Regression",
+    "preexisting": false,
+    "explanation": "Impact is limited to an operator who explicitly sets api_timeout_secs = 0 in Settings.toml, which is a misconfiguration and not the default (300). Only the openai / openai-compatible provider reads the field, and those are secondary-to-primary at best. The consequence is a self-inflicted outage of that provider, not data loss or a security issue, so this is hardening and not a functional regression for normal configs. Evidence: a grep of src/settings.rs for validate/bail!/ensure! returned no matches, so AiSettings.api_timeout_secs (u64, serde default 300) is deserialized without any lower-bound check. In src/ai/openai.rs the value flows unchanged into reqwest::Client::builder().timeout(Duration::from_secs(api_timeout_secs)) (line ~156), so 0 yields a zero-length request timeout. I did not read the reqwest source, so I am inferring that a zero timeout fails immediately; post_request would then map the transport error to OpenAiCompatError::TransientError(30s), which the caller treats as retryable, so every call fails and is retried instead of failing fast with a clear configuration error. Also noted: the new setting is documented as a generic ai.api_timeout_secs but is only consumed by the OpenAI client (src/ai/mod.rs:240); gemini.rs:201 still hardcodes 600s, and the claude client has no timeout call, so the 300s default is not consistent with the other providers. The design doc does not mention the new field at all.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(default = \"default_api_timeout_secs\")]\n    pub api_timeout_secs: u64,\n...\nfn default_api_timeout_secs() -> u64 {\n    300\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings::api_timeout_secs / default_api_timeout_secs",
+      "line": "146",
+      "why_this_location_matters": "No validation exists for this field anywhere in settings.rs, so 0 is accepted as-is."
+     },
+     {
+      "code_snippet": ".timeout(Duration::from_secs(api_timeout_secs))",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "156",
+      "why_this_location_matters": "The unvalidated value is applied directly as the client-wide request timeout; failures are then classified as transient and retried."
+     }
+    ]
+   },
+   {
+    "problem": "ai.api_timeout_secs only applies to the OpenAI client",
+    "severity": "Low",
+    "type": "Scope / Misleading Configuration",
+    "preexisting": false,
+    "explanation": "Reasoning: the impact is limited to a misleading configuration knob. No data is lost, no mail is sent, and no secret leaks. An operator who raises or lowers the setting for a Gemini, Claude or Bedrock deployment sees no change. Gemini is hardcoded to 600s and Claude's retry logic is unaffected, so the only consequence is wrong operator expectations about request timeouts. Proof: git_grep for api_timeout_secs at the target commit finds only three consumers. They are src/settings.rs (the field AiSettings.api_timeout_secs with a default of 300 via default_api_timeout_secs), src/ai/mod.rs:240 (passed only in the 'openai' | 'openai-compatible' arm of create_provider), and src/ai/openai.rs:156 (.timeout(Duration::from_secs(api_timeout_secs))). The other clients do not read it: src/ai/gemini.rs:201 uses .timeout(Duration::from_secs(600)), and the timeout/Duration grep over src/ai/ shows no .timeout(...) call in src/ai/claude.rs, only retry-after Durations. src/ai/bedrock.rs has no timeout configuration either, only a 30s throttle sleep. The setting is declared directly on AiSettings next to provider-agnostic fields such as temperature and max_interactions, with no provider prefix, so it looks global. The commit message does not mention it, and the design doc says the client has a 120s timeout while the code default is 300s. Not speculative: every cited consumer was read. Severity is Low because OpenAI is a primary provider and the setting does work for it. The defect is only the scope and naming mismatch plus the undocumented addition.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(default = \"default_api_timeout_secs\")]\n    pub api_timeout_secs: u64,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings",
+      "line": "147",
+      "why_this_location_matters": "The setting sits among provider-agnostic AiSettings fields but is consumed only by the OpenAI-compatible client."
+     },
+     {
+      "code_snippet": ".timeout(Duration::from_secs(600))",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::new",
+      "line": "201",
+      "why_this_location_matters": "Gemini ignores ai.api_timeout_secs and uses a hardcoded 600s timeout."
+     },
+     {
+      "code_snippet": ".timeout(Duration::from_secs(api_timeout_secs))",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "156",
+      "why_this_location_matters": "This is the only place the setting takes effect."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "OpenAiCompatClient::post_request reads the full response body with res.text() on both the success and error paths with no size cap, so a large body from a proxy or misbehaving base_url is buffered on the heap.",
+    "reasoning": "1) The Gemini and Claude clients, the two other primary providers, read response bodies the same way. git_grep over src/ai/ at the target commit shows res.text().await? in gemini.rs (success path and two error paths) and res.text().await? in claude.rs (success path), with a further res.text() call on the Claude error path. None of them cap the size. The OpenAI client therefore adds no new class of risk and matches the existing provider convention. 2) The resource-limits.md body-bound invariant (section 2, item 3) covers inbound Axum routes that accept JSON, webhooks or patch submissions (src/api.rs, src/forge.rs), where an untrusted client chooses the payload size. It does not cover outbound LLM client responses. Section 1 of that document bounds tool outputs and token budgets, not provider HTTP response bodies. 3) The endpoint is operator-controlled. base_url comes from [ai.openai_compat] in Settings or from a hard-coded per-model default. It is not influenced by patch, webhook or model content, so no untrusted input crosses a security boundary. A response of unbounded size would need a compromised or malicious endpoint that the operator chose and sent an API key to. 4) The read is time-bounded. The reqwest client is built with .timeout(Duration::from_secs(api_timeout_secs)), which defaults to 300 via default_api_timeout_secs. That timeout covers the whole request including body reads, so a body that never ends is cut off. 5) The failure mode needs a pathological endpoint, and nothing in the repository shows a realistic trigger. Per severity.md this is speculative, and the candidate itself estimates Low. This is a pre-existing provider-wide convention and not a defect specific to this patch.",
+    "locations": [
+     {
+      "code_snippet": "let body_text = res.text().await.map_err(|e| {",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "213",
+      "why_this_location_matters": "This is the candidate read. It is bounded only by the client-wide timeout set in OpenAiCompatClient::new (.timeout(Duration::from_secs(api_timeout_secs))) and targets an operator-configured endpoint."
+     },
+     {
+      "code_snippet": "let body_text = res.text().await?;",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "242",
+      "why_this_location_matters": "The Gemini client, a primary provider, reads the response body the same way without a cap."
+     },
+     {
+      "code_snippet": "let body_text = res.text().await?;",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeClient::post_request",
+      "line": "196",
+      "why_this_location_matters": "The Claude client, a primary provider, reads the response body the same way without a cap, so uncapped response reads are the existing provider convention."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change adds an OpenAI-compatible AI provider to Sashiko. One client,\nOpenAiCompatClient in src/ai/openai.rs, serves OpenAI, GLM, Kimi and Minimax\nchat-completions APIs. It translates Sashiko's internal request and response\ntypes to and from the OpenAI wire format, including tool calls, JSON response\nmode and token usage. It also adds an [ai.openai_compat] settings section, a\nnew api_timeout_secs setting, a design document, and unit tests.\n\nBefore:\n  Only gemini, claude and bedrock (plus the existing stdio and proxy\n  paths) could be selected. Setting provider = \"openai\" or\n  \"openai-compatible\" failed with \"Unsupported AI provider\".\n\nAfter:\n  Config such as the following creates the new client:\n\n    [ai]\n    provider = \"openai-compatible\"\n    model = \"glm-4\"\n\n    [ai.openai_compat]\n    base_url = \"https://.../v1/chat/completions\"\n    context_window_size = 128000\n    max_tokens = 4096\n\n  Provider \"openai\" sends max_completion_tokens in the request body, and\n  \"openai-compatible\" sends max_tokens.\n\n  If base_url is not set, the endpoint is chosen from the model name\n  prefix: glm-, moonshot-, abab7-, or the OpenAI default. The default\n  context window size follows the same rule.\n\n  The API key comes from OPENAI_API_KEY, falling back to LLM_API_KEY,\n  and is sent as a Bearer header.\n\n  For JSON response mode, the client sends {\"type\": \"json_object\"}. If\n  no message mentions \"json\", it adds \"Respond in JSON format.\" to the\n  first system message, or prepends a new system message.\n\n  Tool schema type names are lowercased, so OBJECT becomes object.\n\n  HTTP errors map to rate-limit, transient, authentication and API\n  errors. For 429 responses, the Retry-After header and the body hint\n  \"Please retry in Ns\" are honored.\n\nThe new [ai] key api_timeout_secs defaults to 300 seconds and sets the HTTP\nrequest timeout for the new client. The design document says 120 seconds,\nbut the code uses this setting.",
+  "inline_review": "- [HIGH] In src/reviewer.rs (ai_request retry loop), permanent OpenAI-compat\n  failures are retried with no attempt cap. post_request in src/ai/openai.rs\n  (OpenAiCompatClient::post_request) maps every reqwest send error, including\n  an invalid base_url builder error, to TransientError, which the loop\n  matches by substring and continues. Sleep time is added back to the\n  deadline, so an instantly failing request loops without bound. Error\n  bodies and parse errors embedded in ApiError can also contain 429, 503,\n  529 or overloaded and be misclassified as quota or transient.\n\n- [HIGH] In src/ai/openai.rs (translate_ai_response), malformed or truncated\n  tool-call arguments are parsed with unwrap_or(Value::Null) and returned as\n  a normal ToolCall with no error or log. The caller runs the tool with\n  empty input. No test covers invalid JSON arguments.\n\n- [HIGH] In src/ai/openai.rs (translate_ai_response, OpenAiChoice),\n  finish_reason is parsed but never checked. With max_tokens defaulting to\n  4096, finish_reason=length returns truncated content, including invalid\n  JSON under json_object mode, as a complete answer. A content_filter\n  response with no content is also returned as Ok.\n\n- [MEDIUM] In src/reviewer.rs (ai_request retry loop) and src/ai/openai.rs\n  (OpenAiCompatError::RateLimitExceeded), a 429 never reaches the\n  QuotaManager. The loop classifies by substring (Quota exceeded, 429,\n  Transient error), and the Display text Rate limit exceeded, retry after\n  Ns matches none, so the loop breaks with an error and the review fails.\n  Parsed Retry-After values are discarded and other reviews keep hitting\n  the limited endpoint. Downcast the typed error instead.\n\n- [MEDIUM] In src/ai/openai.rs (OpenAiResponse, OpenAiChoice,\n  post_request), response parsing is brittle. usage is required, and index\n  and finish_reason are non-optional, so a missing usage or a null\n  finish_reason fails the whole response. On parse failure only the serde\n  error is logged and the provider body is dropped, so an error envelope\n  inside an HTTP 200 is not diagnosable. gemini.rs uses Option for\n  finish_reason. Provider payloads were not verified against real bodies.\n\n- [MEDIUM] In src/ai/openai.rs (OpenAiCompatClient::new), an empty or\n  invalid API key (for example a trailing CR/LF from a CRLF-edited env file\n  on Windows) silently skips the Authorization header, and a builder failure\n  falls back to reqwest::Client::new(), which also drops the timeout. Nothing\n  is logged, so the operator later sees an opaque 401 and a possibly\n  unbounded hang.\n\n- [MEDIUM] In src/ai/openai.rs (OpenAiCompatClient::new,\n  default_base_url_for_model), one shared key from OPENAI_API_KEY or\n  LLM_API_KEY is attached to every request, and the destination host is\n  chosen by model-name prefix with a catch-all to api.openai.com. A key\n  meant for another vendor (README tells users to set LLM_API_KEY for\n  Gemini or Claude) can be sent to a different vendor without an explicit\n  base_url opt-in. The header is not marked sensitive.\n\n- [MEDIUM] In src/ai/openai.rs (OpenAiCompatClient::post_request), raw\n  upstream response bodies are embedded in AuthenticationError,\n  TransientError and ApiError and logged, while only the transport-error\n  path applies redact_secret. Gateways that echo a key or prefix in 401\n  bodies could leak it into logs. Whether a provider echoes keys is an\n  assumption.\n\n- [MEDIUM] In src/ai/openai.rs (translate_ai_request), AiResponseFormat::Json\n  is mapped to a bare json_object and the requested schema is dropped with\n  no log or error. Callers expecting schema-constrained output get\n  unconstrained JSON. test_translate_request_json_format passes a schema but\n  does not assert on it.\n\n- [MEDIUM] Tests in src/ai/openai.rs and src/ai/mod.rs cannot fail on the\n  risky paths. post_request (401/500 mapping, Retry-After and regex\n  override, parse failure, redaction) has no test. Response tests use\n  hand-built structs, not captured provider bodies. The JSON-injection\n  branch that appends to an existing system message is untested.\n  test_estimate_tokens bounds (10 to 200) are too loose. The factory test\n  asserts only model_name, not provider_type, base_url or max_tokens.\n\n- [LOW] In src/ai/openai.rs (OpenAiCompatClient::post_request), the 429\n  retry value parsed from the response body is unclamped and passed to\n  Duration::from_secs_f64, which panics on huge or infinite values. A\n  hostile or buggy endpoint could kill the worker task. The Retry-After\n  header path parses u64 and is safe.\n\n- [LOW] designs/DESIGN_OPENAI_COMPAT_PROVIDER.md disagrees with the code. It\n  states a 120s timeout and a five-argument new(), but the code takes\n  api_timeout_secs (default 300) as a sixth argument. The setting is added\n  to the generic AiSettings in src/settings.rs but only this client reads\n  it. The doc omits normalize_schema and its tests, README still mentions\n  only LLM_API_KEY, the commit message does not mention the timeout,\n  schema normalization or the max_tokens split, and the doc commits an\n  internal host name (api.eliza.yandex.net).",
+  "findings": [
+   {
+    "problem": "malformed tool-call arguments become JSON null and succeed",
+    "severity": "High",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "Consequence: a truncated or invalid tool-call arguments string from the model (likely at the 4096 max_tokens default, and with weaker-JSON providers such as GLM, Kimi and Minimax) is returned as a normal ToolCall with arguments=Null, with no error and no log. The review agent loop then runs the tool with empty or wrong input, or fails far from the cause, so the caller is told something false. Reachability: every tool-using request on this provider. translate_ai_response uses unwrap_or(Value::Null), which is the silent-failure default-on-error shape. test_translate_response_tool_calls only covers valid JSON, so no test can fail on this path.",
+    "locations": [
+     {
+      "code_snippet": "serde_json::from_str(&t.function.arguments).unwrap_or(serde_json::Value::Null);",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_response",
+      "line": "None",
+      "why_this_location_matters": "The parse error is swallowed and a fabricated empty-argument call is returned as success."
+     }
+    ]
+   },
+   {
+    "problem": "finish_reason ignored, truncated output returned as success",
+    "severity": "High",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "Consequence: with max_tokens defaulting to 4096, finish_reason=length yields partial content. With response_format json_object this is truncated, invalid JSON, passed downstream as a complete answer. A content_filter response with neither content nor tool_calls is also returned as Ok. A partial review can be accepted as complete. Reachability: any long review on this provider. OpenAiChoice.finish_reason is deserialized but never read in translate_ai_response.",
+    "locations": [
+     {
+      "code_snippet": "let content = choice.message.content;",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_response",
+      "line": "None",
+      "why_this_location_matters": "choice.finish_reason is in scope here but never checked, so truncation is invisible to the caller."
+     },
+     {
+      "code_snippet": "pub finish_reason: String,",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiChoice",
+      "line": "None",
+      "why_this_location_matters": "The field is parsed and then unused."
+     }
+    ]
+   },
+   {
+    "problem": "client silently loses auth header and timeout",
+    "severity": "Medium",
+    "type": "Silent Failure / Credentials",
+    "preexisting": false,
+    "explanation": "Consequence: an empty key, a key that HeaderValue::from_str rejects (for example a trailing CR/LF from a CRLF-edited env file on Windows), or a failed reqwest builder each produce a client with no Authorization header. The builder-failure fallback also drops the api_timeout_secs timeout, so a hung endpoint can block indefinitely. Nothing is logged and new() is infallible, so the operator sees only an opaque 401 later and reads it as a bad or expired key. Occurs only when the key or builder is bad, so Medium. The Windows CRLF trigger is plausible but not proven from this diff.",
+    "locations": [
+     {
+      "code_snippet": "if !api_key.is_empty()\n            && let Ok(value) =\n                reqwest::header::HeaderValue::from_str(&format!(\"Bearer {}\", api_key))",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "None",
+      "why_this_location_matters": "An empty or invalid key skips the header with no warning."
+     },
+     {
+      "code_snippet": ".build()\n            .unwrap_or_else(|_| reqwest::Client::new());",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "None",
+      "why_this_location_matters": "The fallback discards default headers and the timeout silently."
+     }
+    ]
+   },
+   {
+    "problem": "one shared API key sent to host chosen by model prefix",
+    "severity": "Medium",
+    "type": "Credential Safety",
+    "preexisting": false,
+    "explanation": "Consequence: OPENAI_API_KEY, falling back to LLM_API_KEY (which README.md:101 tells users to set for the Gemini or Claude provider), is installed as a default Authorization header on every request. default_base_url_for_model picks bigmodel.cn, moonshot.cn or minimax.chat from the model prefix, and anything unrecognised or differently cased falls through to api.openai.com. A key meant for one vendor can therefore go to another without any explicit base_url opt-in. The header is not marked sensitive. Design explicitly chose no provider-specific keys. Requires a mismatch between environment and config, so Medium.",
+    "locations": [
+     {
+      "code_snippet": "let api_key = std::env::var(\"OPENAI_API_KEY\")\n            .or_else(|_| std::env::var(\"LLM_API_KEY\"))",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::new",
+      "line": "142",
+      "why_this_location_matters": "A single key is attached to all requests regardless of destination."
+     },
+     {
+      "code_snippet": "pub fn default_base_url_for_model(model: &str) -> String {",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::default_base_url_for_model",
+      "line": "None",
+      "why_this_location_matters": "The key's destination is derived from the model string, with a catch-all to api.openai.com."
+     }
+    ]
+   },
+   {
+    "problem": "upstream error bodies embedded in errors without redaction",
+    "severity": "Medium",
+    "type": "Credential Safety",
+    "preexisting": false,
+    "explanation": "Consequence: AuthenticationError, TransientError and ApiError carry the raw response body, which is logged (warn on 5xx) and propagated via anyhow, while the transport-error path applies redact_secret. Some providers and gateways echo the submitted key or a prefix of it in 401 bodies, so a key fragment can land in logs. The inconsistent redaction is visible in the diff. Whether a given provider echoes the key is an assumption about the other side, so capped at Medium.",
+    "locations": [
+     {
+      "code_snippet": "401 | 403 => Err(OpenAiCompatError::AuthenticationError(error_text))?,",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "265",
+      "why_this_location_matters": "Raw provider body goes into the error unredacted."
+     }
+    ]
+   },
+   {
+    "problem": "Duration::from_secs_f64 can panic on 429 body value",
+    "severity": "Low",
+    "type": "Panic Risk",
+    "preexisting": false,
+    "explanation": "Consequence: a 429 body matching Please retry in <very long digit string>s parses to a huge or infinite f64, and Duration::from_secs_f64 panics, killing the worker task. The value comes from the remote response body and is unclamped. It needs a hostile or buggy endpoint, so Low. The Retry-After header path parses u64 and is safe.",
+    "locations": [
+     {
+      "code_snippet": "retry_seconds = caps[1].parse::<f64>().unwrap_or(retry_seconds);",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "258",
+      "why_this_location_matters": "The body-controlled value overrides the header with no bound."
+     },
+     {
+      "code_snippet": "Duration::from_secs_f64(retry_seconds),",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "262",
+      "why_this_location_matters": "The panicking constructor receives the unbounded value."
+     }
+    ]
+   },
+   {
+    "problem": "requested JSON schema silently dropped",
+    "severity": "Medium",
+    "type": "Silent Failure / Contract",
+    "preexisting": false,
+    "explanation": "Consequence: AiResponseFormat::Json { .. } is mapped to a bare json_object, so callers that pass a schema get unconstrained JSON with no log or error. Mismatches surface later as downstream parse errors. Reachable on every JSON-format request. Neither the commit message nor the design calls this out, and test_translate_request_json_format passes a schema without asserting on it.",
+    "locations": [
+     {
+      "code_snippet": "AiResponseFormat::Json { .. } => serde_json::json!({\"type\": \"json_object\"}),",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "None",
+      "why_this_location_matters": "The schema is ignored without notice."
+     }
+    ]
+   },
+   {
+    "problem": "design doc and commit message disagree with the code",
+    "severity": "Low",
+    "type": "Commit Hygiene / Evidence",
+    "preexisting": false,
+    "explanation": "Consequence: the design doc says a 120s timeout and a five-argument new(), but the code takes api_timeout_secs (default 300) as a sixth argument. The doc's factory snippet omits it. The setting is added under the generic [ai] table but only this client reads it; gemini.rs hardcodes 600 and the others ignore it, with no error. The doc lists 16 tests and omits normalize_schema and its three tests. README still tells users to set only LLM_API_KEY. The commit message mentions none of the timeout setting, schema normalization or the max_tokens split. The doc also commits an internal host name, api.eliza.yandex.net/raw/internal. Documentation drift only, so Low.",
+    "locations": [
+     {
+      "code_snippet": "Build `reqwest::Client` with `Authorization: Bearer {key}` header (from `OPENAI_API_KEY` → `LLM_API_KEY` env), 120s timeout",
+      "file": "designs/DESIGN_OPENAI_COMPAT_PROVIDER.md",
+      "function_or_symbol": "Client Methods table, new",
+      "line": "131",
+      "why_this_location_matters": "Contradicts the six-argument new() and the 300s default."
+     },
+     {
+      "code_snippet": "pub api_timeout_secs: u64,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings::api_timeout_secs",
+      "line": "147",
+      "why_this_location_matters": "A generic-looking [ai] key consumed only by the OpenAI client."
+     }
+    ]
+   },
+   {
+    "problem": "tests cannot fail on HTTP mapping, factory or fixtures",
+    "severity": "Medium",
+    "type": "Test Gap: HTTP error mapping untested",
+    "preexisting": false,
+    "explanation": "Consequence: post_request, the only network code, has no test: 401/500 mapping, Retry-After and regex override, 200 parse failure and redaction can all be mutated without failing anything. Response tests build structs by hand and never deserialize a captured provider body. The append-to-system-message JSON branch is untested. test_estimate_tokens bounds (>10, <200) are too loose to catch a dropped component. The factory test asserts only model_name, so provider_type, base_url, max_tokens and the openai-compatible arm are untested. The design doc promises behaviour with nothing in the diff behind it.",
+    "locations": [
+     {
+      "code_snippet": "assert_eq!(provider.get_capabilities().model_name, \"gpt-4o\");",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "tests::test_create_provider",
+      "line": "352",
+      "why_this_location_matters": "The only factory check cannot fail on wrong URL, token field or ignored settings."
+     },
+     {
+      "code_snippet": "assert!(tokens > 10);\n        assert!(tokens < 200);",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "tests::test_estimate_tokens",
+      "line": "None",
+      "why_this_location_matters": "Bounds are too wide to detect a dropped component."
+     }
+    ]
+   },
+   {
+    "problem": "OpenAI-compat 429 never reaches QuotaManager, review aborts",
+    "severity": "Medium",
+    "type": "Retry Classification",
+    "preexisting": false,
+    "explanation": "A rate-limited review on the new openai and openai-compatible providers fails outright with no backoff, and the shared QuotaManager is never told. Reachable on every 429 from the provider via the reviewer ai_request loop in src/reviewer.rs, which is the only consumer of create_provider output. The failure is visible (an error reply goes to the tool), not silent, and the Transient path is handled, so this is Medium. Proof: the loop classifies only by substring on e.to_string(): Quota exceeded or 429 leads to report_quota_error, Transient error or 503 or 529 or overloaded leads to report_transient_error, and anything else is break Err(e). OpenAiCompatError::RateLimitExceeded displays as Rate limit exceeded, retry after {duration:?}, for example 'retry after 60s'. That contains none of the substrings (the duration is formatted as Ns, so 429 would only match by coincidence). post_request maps 429 only to RateLimitExceeded, so the 429 never appears in the text. The loop therefore breaks with Err, the reply becomes {type:error}, and the review fails. QuotaManager::wait_for_access is never given a global pause, so concurrent and subsequent reviews keep sending requests into the limited endpoint. The Retry-After header and the body 'Please retry in Ns' value parsed in post_request are discarded. Even for a match, the reviewer would use a fixed 60s rather than the parsed duration. TransientError is correctly caught because its Display text starts with 'Transient error'. AuthenticationError is correctly non-retried. Gemini has a typed variant that is clearly named 'Quota exceeded', so the string match works for it only by naming coincidence. Fix: add a Rate limit exceeded substring match, or better downcast OpenAiCompatError in the reviewer and pass the carried Duration to report_quota_error. Add a test that feeds RateLimitExceeded through the loop classification.",
+    "locations": [
+     {
+      "code_snippet": "if err_str.contains(\"Quota exceeded\")\n    || err_str.contains(\"429\")",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "ai_request retry loop (Err(e) arm)",
+      "line": "1449",
+      "why_this_location_matters": "String classification that does not match the OpenAiCompatError::RateLimitExceeded Display text, so the 429 falls through to break Err(e)."
+     },
+     {
+      "code_snippet": "break Err(e);",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "ai_request retry loop",
+      "line": "1466",
+      "why_this_location_matters": "Unclassified rate-limit error aborts the request and is returned to the child tool as an error reply, with no QuotaManager report."
+     },
+     {
+      "code_snippet": "RateLimitExceeded(Duration),",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatError::RateLimitExceeded",
+      "line": "107",
+      "why_this_location_matters": "Carries the parsed Retry-After value, which no consumer reads."
+     }
+    ]
+   },
+   {
+    "problem": "permanent OpenAI-compat failures retried with no attempt cap",
+    "severity": "High",
+    "type": "Retry Classification",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: a review whose provider = openai or openai-compatible hits a permanent failure and re-sends the identical full prompt forever instead of failing. It holds a review worker and keeps the review in InReview until an operator intervenes. Reachable from every ai_request or ai_request_with_cache message handled in src/reviewer.rs. Two concrete triggers. (1) Transport and builder errors: OpenAiCompatClient::post_request maps every reqwest send() error, including an invalid or unsupported [ai.openai_compat].base_url (a builder error) and a TLS or URL failure, to OpenAiCompatError::TransientError(30s). It renders as 'Transient error: ...', and the reviewer loop matches err_str.contains('Transient error') and does 'continue'. There is no attempt cap in that loop (the max_retries at reviewer.rs:946 belongs to a different path). The only bound is the deadline, but each iteration does 'let slept = quota_manager.wait_for_access().await; deadline += slept;', which adds back every second slept. report_transient_error caps its backoff at 60s but never gives up. A request that fails instantly (bad URL) consumes about zero non-sleep time, so the deadline never approaches expiry and the loop is effectively unbounded. (2) Substring misclassification of permanent errors: the reviewer decides from the rendered text. A 400 context-length body such as '142938 tokens' is embedded verbatim by ApiError ('API error {0}: {1}') and contains '429', so it takes the quota branch, report_quota_error(60s), and 'continue'. Bodies containing '503', '529' or 'overloaded' take the transient branch. A 200 whose body fails to parse is also ApiError('Parse error: ... at line 1 column N'), and serde_json's column number can be 429, 503 or 529. These are permanent client or schema errors, so each retry gets the same refusal. Mitigation context: the 4xx case depends on digits appearing in the provider's error body, so it is probabilistic, but the bad-base_url case is deterministic. Not preexisting: the reviewer loop existed before, but this commit introduces the provider error mapping and error text that feeds it. 401/403 AuthenticationError and other 4xx do break out when their body has no matching digits, which is why this is not Critical. Fix: return typed errors and downcast::<OpenAiCompatError>() in the reviewer instead of substring-matching, and add an attempt cap. Make send() errors transient only when e.is_timeout() or e.is_connect() is true, and classify builder and URL errors as permanent.",
+    "locations": [
+     {
+      "code_snippet": "Err(e) => {\n    let err_str = redact_secret(&e.to_string());\n    return Err(OpenAiCompatError::TransientError(Duration::from_secs(30), err_str));\n}",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "204",
+      "why_this_location_matters": "Every reqwest send() failure, including a builder error from a bad base_url, is declared transient."
+     },
+     {
+      "code_snippet": "#[error(\"API error {0}: {1}\")]\nApiError(reqwest::StatusCode, String),",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatError::ApiError",
+      "line": "110",
+      "why_this_location_matters": "The raw response body and the serde parse error text are embedded in the rendered error that the reviewer substring-matches."
+     },
+     {
+      "code_snippet": "if err_str.contains(\"Quota exceeded\")\n    || err_str.contains(\"429\")\n{\n    quota_manager.report_quota_error(Duration::from_secs(60)).await;\n    continue;\n}\nif err_str.contains(\"Transient error\")\n    || err_str.contains(\"503\")\n    || err_str.contains(\"529\")\n    || err_str.contains(\"overloaded\")\n{\n    quota_manager.report_transient_error().await;\n    continue;\n}",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "ai_request retry loop in the review tool interaction",
+      "line": "1449",
+      "why_this_location_matters": "Retry classification is by substring of the rendered error text, there is no attempt counter, and 'continue' re-sends the same request."
+     },
+     {
+      "code_snippet": "let slept = quota_manager.wait_for_access().await;\ndeadline += slept;",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "ai_request retry loop in the review tool interaction",
+      "line": "1432",
+      "why_this_location_matters": "Sleep time is added back to the deadline, so backoff never consumes the review budget and an instantly failing request loops without a bound."
+     }
+    ]
+   },
+   {
+    "problem": "OpenAI-compat response parse is brittle and drops the provider body",
+    "severity": "Medium",
+    "type": "Wire Contract",
+    "preexisting": false,
+    "explanation": "Consequence: when a GLM, Moonshot or Minimax endpoint (or an OpenAI-compatible proxy) omits `usage`, returns `finish_reason: null`, or returns an error envelope inside an HTTP 200, `generate_content` fails with an unhelpful `Parse error`, and the real provider message is never logged. Reachability: every `generate_content` call through `create_provider` with provider `openai` or `openai-compatible` goes through `OpenAiCompatClient::post_request`. Proof from the code: `OpenAiResponse.usage` is a required `OpenAiUsage`, and `OpenAiChoice.index` is `u32` and `finish_reason` is `String`, so a missing or null value fails `serde_json::from_str::<OpenAiResponse>`. The error branch returns `ApiError(status, format!(\"Parse error: {}\", e))` and logs only `e`, never `body_text`. So on an error-in-200 the operator sees something like `missing field choices`, not the provider's own message (for example Minimax's reported `base_resp.status_msg`). `gemini.rs` declares `finish_reason: Option<String>` (src/ai/gemini.rs:130), so this client is stricter than the existing one for no benefit. `usage`, `index` and `finish_reason` are not used by `translate_ai_response` except for the token counts. This fails loudly rather than silently, so it is not High. Cap at Medium because I could not confirm the actual provider payloads: the repository has no recorded response from any provider (`git_grep` for `base_resp` found nothing, and the only JSON files are benchmarks/benchmark*.json). The unit tests only build `OpenAiResponse` structs by hand, so none of them can fail on a real wire shape. What would confirm or refute it: capture real 200 bodies from the GLM, Moonshot and Minimax endpoints (including an error case) and add them as fixtures. Suggested fix: make `usage` an `Option` (default to zero tokens), make `index` and `finish_reason` optional, accept `choices` as null or missing, and include a redacted, truncated `body_text` in the parse-error log and in the `ApiError` message.",
+    "locations": [
+     {
+      "code_snippet": "pub usage: OpenAiUsage,",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiResponse",
+      "line": "None",
+      "why_this_location_matters": "Required non-Option field: a response without `usage` cannot deserialize."
+     },
+     {
+      "code_snippet": "pub finish_reason: String,",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiChoice",
+      "line": "94",
+      "why_this_location_matters": "Non-Option `String`: `finish_reason: null`, which some providers send, fails the whole response."
+     },
+     {
+      "code_snippet": "format!(\"Parse error: {}\", e),",
+      "file": "src/ai/openai.rs",
+      "function_or_symbol": "OpenAiCompatClient::post_request",
+      "line": "None",
+      "why_this_location_matters": "The provider body is neither logged nor included, so an error envelope returned in a 200 is not diagnosable."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "New api_timeout_secs and openai_compat fields might break existing Settings.toml files or other AiSettings constructors.",
+    "reasoning": "api_timeout_secs has serde(default = default_api_timeout_secs) returning 300, openai_compat is Option and every inner field is Option with serde(default), and git_grep for the AiSettings struct literal found only the definition.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(default = \"default_api_timeout_secs\")]",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings.api_timeout_secs",
+      "line": "146",
+      "why_this_location_matters": "Default keeps old config files loading."
+     }
+    ]
+   },
+   {
+    "description": "QuotaManager might deadlock or hold a lock across a long await.",
+    "reasoning": "It uses tokio Mutex, report_transient_error is the only function taking two locks, always in the same order (count then blocked_until), and OpenAiCompatClient adds no shared mutable state.",
+    "locations": [
+     {
+      "code_snippet": "let mut count_guard = self.consecutive_transient_errors.lock().await;\n        *count_guard += 1;\n        let count = *count_guard;\n        ...\n        let mut block_guard = self.blocked_until.lock().await;",
+      "file": "src/ai/quota.rs",
+      "function_or_symbol": "QuotaManager::report_transient_error",
+      "line": "None",
+      "why_this_location_matters": "Fixed lock order."
+     }
+    ]
+   },
+   {
+    "description": "src/ai/proxy.rs:45 and src/bin/benchmark_review.rs:319 downcast only GeminiError, so OpenAI-compat errors are unclassified there.",
+    "reasoning": "Both sites are Gemini-only by construction and cannot receive an OpenAiCompatClient error. ProxyState holds Arc<GeminiClient> and calls generate_content_single directly, not the AiProvider trait. benchmark_review.rs calls client.generate_content(req) on a GeminiClient with a GenerateContentRequest. Neither goes through create_provider, so the new provider's errors never reach them. The real defect is confined to src/reviewer.rs, reported as a finding.",
+    "locations": [
+     {
+      "code_snippet": "pub client: Arc<GeminiClient>,",
+      "file": "src/ai/proxy.rs",
+      "function_or_symbol": "ProxyState",
+      "line": "22",
+      "why_this_location_matters": "The proxy state is typed to GeminiClient, so no OpenAI-compat error can enter its retry loop."
+     },
+     {
+      "code_snippet": "if let Some(err) = e.downcast_ref::<sashiko::ai::gemini::GeminiError>() {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "evaluate loop",
+      "line": "319",
+      "why_this_location_matters": "The error originates from client.generate_content on a GeminiClient, not the provider factory."
+     }
+    ]
+   }
+  ]
+ }
+}

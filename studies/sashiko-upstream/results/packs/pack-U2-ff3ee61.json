@@ -1,0 +1,351 @@
+{
+ "commit": "ff3ee61",
+ "label": "U2",
+ "A": {
+  "summary": "This commit adds the serde attribute deny_unknown_fields to every\nconfiguration struct in src/settings.rs, including Settings, the AI\nprovider settings, Database, Nntp, Smtp, Git, Review, Server, Forge,\nProject, Subsystems and LocalReview. Unknown keys or misspelled section\nnames, such as [pproject] instead of [project], now cause a parse error\ninstead of being silently dropped and replaced by defaults.\n\nThis has a user-visible effect on Settings.toml handling.\n\nBefore:\n  A Settings.toml containing an unknown key or a misspelled section\n  (for example \"[pproject]\") loaded without complaint. The unknown\n  fields were ignored and the affected settings fell back to their\n  defaults, so the daemon started with a configuration the operator\n  did not intend.\n\nAfter:\n  The same Settings.toml fails to load with a deserialization error\n  that names the unknown field. Sashiko will not start until the typo\n  is fixed or the stale key is removed. Existing configuration files\n  that still carry obsolete or extra keys will also be rejected and\n  must be cleaned up.",
+  "inline_review": "- [HIGH] In src/settings.rs (LocalReviewSettings and\n  LocalReviewReviewSettings), deny_unknown_fields was added to two\n  deliberately partial projections of the full config file.\n  Settings::local_review_from_file, Settings::ai_from_file and\n  local_review::run_worker deserialize the daemon's full Settings.toml\n  through them. Root tables such as log_level, project, forge, database,\n  nntp, server and git, and [review] keys such as worktree_dir,\n  timeout_seconds, max_retries and ignore_files, now produce an\n  unknown-field ConfigError. sashiko review and worker-run reviews fail\n  before any work starts for anyone with a normal Settings.toml in the\n  working directory. SASHIKO__* environment overrides outside these\n  structs also become fatal. The settings guide says the attribute must\n  not be re-added to these two structs (it was removed earlier for the\n  same reason). Remove it from both and keep it on AiSettings and the\n  other full-schema structs.\n\n- [MEDIUM] In src/settings.rs (tests::test_production_settings_is_valid),\n  the diff adds no tests. The only config test is skipped when\n  Settings.toml is absent from the cwd and parses only the full Settings\n  struct. It does not cover LocalReviewSettings, docs/examples/*.toml or\n  the embedded default settings, and there is no negative test that a\n  typo such as [pproject] is rejected. This is why the LocalReviewSettings\n  regression is not caught by CI.\n\n- [LOW] In src/settings.rs (AiSettings), the bedrock and vertex fields\n  exist only under cfg(feature), so with deny_unknown_fields an\n  [ai.vertex] section on a default build (or [ai.bedrock] with\n  --no-default-features) is rejected with a generic unknown-field error\n  that does not say the feature is not compiled in. Copying\n  docs/examples/Settings.claude-vertex.toml into a default build hits\n  this. The strictness is intended, but the error is misleading to\n  operators.\n\n- [LOW] The commit message quotes code with backticks, claims the test\n  battery now validates every Settings.toml property although no tests are\n  added, says \"panic parser errors\" although Settings::from_file returns a\n  ConfigError, and does not state that deployments with stray or\n  misspelled keys will now refuse to start.",
+  "findings": [
+   {
+    "problem": "deny_unknown_fields on LocalReview* breaks local review config",
+    "severity": "High",
+    "type": "Regression / Settings.toml parsing",
+    "preexisting": false,
+    "explanation": "Breaking a public configuration path (Settings.toml parsing) on the primary local-review route. LocalReviewSettings declares only `ai` and `review`, and LocalReviewReviewSettings declares only `concurrency` (visible in the diff context). Both are partial projections that Settings::local_review_from_file and Settings::ai_from_file deserialize from the full config file, which Settings::local_review_path_in prefers (./Settings.toml). The subsystem/settings.md guide explicitly says these two structs must never carry deny_unknown_fields (it was removed in 2afd5c82f37b for exactly this reason). With the attribute re-added, top-level tables such as log_level, project, forge, database, nntp, server and git, and [review] keys such as worktree_dir, timeout_seconds, max_retries and ignore_files, now return an unknown-field ConfigError. Consequences: `sashiko review` and local_review::run_worker (the settings_path branch and the local_review_settings branch) fail before any review work starts, and ai_from_file/local_review_ai fail in the same way. SASHIKO__* environment overrides that are not part of these structs also become fatal. test_production_settings_is_valid only parses the full Settings struct, so nothing in CI catches this. Fix: remove the attribute from LocalReviewSettings and LocalReviewReviewSettings (keep it on AiSettings and the other full-schema structs).",
+    "locations": [
+     {
+      "code_snippet": "#[serde(deny_unknown_fields)]\npub struct LocalReviewSettings {\n    pub ai: AiSettings,\n    pub review: Option<LocalReviewReviewSettings>,\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "LocalReviewSettings",
+      "line": "500",
+      "why_this_location_matters": "Partial projection of the shared config file now rejects every sibling section."
+     },
+     {
+      "code_snippet": "#[serde(deny_unknown_fields)]\npub struct LocalReviewReviewSettings {\n    pub concurrency: Option<usize>,\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "LocalReviewReviewSettings",
+      "line": "493",
+      "why_this_location_matters": "The real [review] table has worktree_dir, timeout_seconds, etc., which are now rejected."
+     },
+     {
+      "code_snippet": "s.try_deserialize()",
+      "file": "src/settings.rs",
+      "function_or_symbol": "Settings::local_review_from_file / Settings::ai_from_file",
+      "line": "554",
+      "why_this_location_matters": "Deserializes the whole file plus environment into the strict projection."
+     },
+     {
+      "code_snippet": "let local_settings = Settings::local_review_from_file(path)",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker",
+      "line": "276",
+      "why_this_location_matters": "Worker/local review entry point that propagates the new error."
+     }
+    ]
+   },
+   {
+    "problem": "message uses backticks and overstates test coverage",
+    "severity": "Low",
+    "type": "Commit Message Quality / Unsupported Claims",
+    "preexisting": false,
+    "explanation": "Commit message hygiene. The body quotes code with backticks (the attribute, [project], Default::default()), which the repository forbids. It claims the test battery now validates every Settings.toml property, but the diff adds no tests. It says 'panic parser errors' although Settings::from_file returns a ConfigError. It also does not state that deployments with stray or misspelled keys will now refuse to start.",
+    "locations": [
+     {
+      "code_snippet": "Adding `#[serde(deny_unknown_fields)]` to configuration structures",
+      "file": "src/settings.rs",
+      "function_or_symbol": "commit message",
+      "line": "None",
+      "why_this_location_matters": "Backticks are disallowed and the breaking nature of the change is not documented."
+     }
+    ]
+   },
+   {
+    "problem": "no tests cover new strict parsing or example configs",
+    "severity": "Medium",
+    "type": "Missing Test Coverage / Commit Message Accuracy",
+    "preexisting": false,
+    "explanation": "The diff only adds attributes and no tests. The existing test_production_settings_is_valid is skipped when Settings.toml is absent from the cwd. It parses only the full Settings struct, so it does not cover LocalReviewSettings, docs/examples/*.toml, or the embedded DEFAULT_SETTINGS. There is also no negative test that a typo such as [pproject] is rejected. This is why the LocalReviewSettings regression is uncaught, and stale keys in example configs would surface only when users copy them.",
+    "locations": [
+     {
+      "code_snippet": "if Path::new(path).exists() {\n            let _ = Settings::from_file(\"Settings\")",
+      "file": "src/settings.rs",
+      "function_or_symbol": "tests::test_production_settings_is_valid",
+      "line": "585",
+      "why_this_location_matters": "Only config test, conditional on file existence and limited to the full Settings struct."
+     }
+    ]
+   },
+   {
+    "problem": "deny_unknown_fields rejects feature-gated [ai.vertex]/[ai.bedrock]",
+    "severity": "Low",
+    "type": "Regression / feature-gated config",
+    "preexisting": false,
+    "explanation": "Reasoning: the default build is not broken, and the impact is limited to a misleading config-load error for operators on non-default feature builds. Cargo.toml line 28 has default = [\"bedrock\"] and line 30 defines vertex as a non-default feature. AiSettings declares bedrock and vertex only under #[cfg(feature = ...)] (src/settings.rs:332-335). With deny_unknown_fields now on AiSettings, a config containing an [ai.vertex] section fails to load on a default build, and [ai.bedrock] fails on a --no-default-features build, where the section used to be silently ignored. Default-build paths are unaffected: Settings.toml has [ai.vertex] only as a commented-out line (line 115), and the bedrock example works because bedrock is a default feature. The affected input is docs/examples/Settings.claude-vertex.toml, which is intended for vertex builds. Rejecting the section is the stated goal of the commit, so the strictness is intended. What remains is that serde's error says unknown field `vertex` and lists the expected fields, without saying that the vertex feature is not compiled in. An operator who copies the shipped vertex example into a default build will not be pointed at the cause. I did not verify what create_provider does for provider = \"vertex\" when the feature is off, so I cannot say whether the failure was already reported at provider creation before this commit. That is why this is capped at Low as a speculative UX regression.",
+    "locations": [
+     {
+      "code_snippet": "#[cfg(feature = \"bedrock\")]\n    pub bedrock: Option<BedrockSettings>,\n    #[cfg(feature = \"vertex\")]\n    pub vertex: Option<VertexSettings>,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings",
+      "line": "332",
+      "why_this_location_matters": "These fields are absent when their features are off, so with deny_unknown_fields the corresponding TOML sections are rejected with a generic unknown-field error that does not name the missing feature."
+     },
+     {
+      "code_snippet": "[ai.vertex]\nprompt_caching = true\nmax_tokens = 8192",
+      "file": "docs/examples/Settings.claude-vertex.toml",
+      "function_or_symbol": "[ai.vertex]",
+      "line": "6",
+      "why_this_location_matters": "The shipped example hits this error when copied into a default build, where vertex is not a default feature."
+     }
+    ]
+   },
+   {
+    "problem": "deny_unknown_fields on LocalReviewSettings rejects real config files",
+    "severity": "High",
+    "type": "Regression / Configuration Parsing",
+    "preexisting": false,
+    "explanation": "Reasoning: the commit adds deny_unknown_fields to LocalReviewSettings and LocalReviewReviewSettings. These two structs are deliberately partial projections of the full config file, so any real configuration file with other sections now fails to parse. A local review resolves its config via Settings::local_review_path_in, which prefers ./Settings.toml, and that file is the daemon's full config. Parsing it as LocalReviewSettings (via Settings::local_review_from_file, local_review_settings, and ai_from_file) now fails on the root keys log_level, project, forge, subsystems, database, nntp, mailing_lists, server and git. Even a trimmed file fails on the [review] keys worktree_dir, timeout_seconds and max_retries. I checked the shipped Settings.toml key by key. Every key maps to a field of the full Settings tree, so the daemon path and Settings::from_file are fine. All docs/examples/*.toml files also use only known keys. The only failure is the local-review projection. The other examples are AI-only or forge-only fragments. The rest of the commit is sound: the feature-gated [ai.bedrock] and [ai.vertex] examples were already unusable without those features. The subsystem guide (settings.md section 4) says a diff must never re-add deny_unknown_fields to either local-review struct. Its history is commit 2afd5c82f37b, which removed the attribute because local review rejected log_level, worktree_dir and the other real keys in the daemon's file. This commit re-introduces exactly that regression. Impact: sashiko review, and any worker-run review that loads settings through these functions, fails to start for anyone with a normal Settings.toml in the working directory. The shipped docs/examples/Settings.example.toml still parses because it contains only [ai], so test_init_template_satisfies_local_review would not catch this. The only production-file test, test_production_settings_is_valid, parses with Settings::from_file, not the projection. Settings.toml is otherwise valid, so this is a config break without a compatibility path rather than a daemon crash, hence High rather than Critical. This is a regression introduced by the patch.",
+    "locations": [
+     {
+      "code_snippet": "#[derive(Debug, Deserialize, Clone)]\n#[serde(deny_unknown_fields)]\npub struct LocalReviewSettings {\n    pub ai: AiSettings,\n    pub review: Option<LocalReviewReviewSettings>,\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "LocalReviewSettings",
+      "line": "498",
+      "why_this_location_matters": "This struct parses the daemon's full Settings.toml for local reviews. With deny_unknown_fields, every root section other than ai and review is rejected."
+     },
+     {
+      "code_snippet": "#[derive(Debug, Deserialize, Clone)]\n#[serde(deny_unknown_fields)]\npub struct LocalReviewReviewSettings {\n    pub concurrency: Option<usize>,\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "LocalReviewReviewSettings",
+      "line": "493",
+      "why_this_location_matters": "The shipped [review] section sets worktree_dir, timeout_seconds, max_retries and ignore_files. These are now rejected when [review] is read through this projection."
+     },
+     {
+      "code_snippet": "[review]\nconcurrency = 16\nworktree_dir = \"review_trees\"\ntimeout_seconds = 7200\nmax_retries = 3",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review] and root sections",
+      "line": "139",
+      "why_this_location_matters": "These keys are valid for the full Settings but unknown to LocalReviewReviewSettings. The file is what local_review_path_in prefers, so local review now fails on it."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "The shipped root Settings.toml could be rejected by Settings::from_file because of the new deny_unknown_fields on the full Settings structs.",
+    "reasoning": "I compared every key in the repo's Settings.toml against the struct fields. Top-level: log_level, project{name,description}, forge{enabled}, subsystems, database{url,token}, mailing_lists{track}, nntp{server,port}, ai{provider,model,max_input_tokens,max_interactions,temperature}, ai.claude{prompt_caching}, server{host,port}, git{repository_path}, review{concurrency,worktree_dir,timeout_seconds,max_retries,ignore_files}. All of these exist as fields on the corresponding structs, so the full Settings parse is not broken by this file. Commented-out examples are not parsed. The docs/examples files I read (codex-cli, copilot-cli, claude-bedrock) also use only known keys, with bedrock fields present under the `bedrock` feature. Not every example file was read, so examples under docs/examples that I did not open remain unverified.",
+    "locations": [
+     {
+      "code_snippet": "concurrency = 16\nworktree_dir = \"review_trees\"\ntimeout_seconds = 7200\nmax_retries = 3\nignore_files = [\"MAINTAINERS\", \".mailmap\", \".gitignore\", \"LICENSES/\"]",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review]",
+      "line": "139",
+      "why_this_location_matters": "Every key here is a declared field of ReviewSettings, so the strict full-Settings parse of the shipped file succeeds."
+     }
+    ]
+   },
+   {
+    "description": "The repository's shipped Settings.toml might be rejected by the full Settings struct now that deny_unknown_fields is applied to every nested struct.",
+    "reasoning": "I compared every key in the shipped Settings.toml against the Settings structs. Top-level keys are log_level, project, forge, subsystems, database, mailing_lists, nntp, ai, server, git and review, and all are fields of Settings. [ai] keys provider, model, max_input_tokens, max_interactions and temperature exist on AiSettings. [ai.claude] prompt_caching exists on ClaudeSettings. [review] keys concurrency, worktree_dir, timeout_seconds, max_retries and ignore_files exist on ReviewSettings. [server], [git] and [database] keys also match. The commented-out sections (kiro_cli, vertex, claude_cli, openai_compat, custom_remotes) also use field names that exist. So the full Settings parse is unaffected for the shipped file. The remaining hazard is the narrower LocalReviewSettings struct reported above.",
+    "locations": [
+     {
+      "code_snippet": "pub review: ReviewSettings,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "Settings",
+      "line": "None",
+      "why_this_location_matters": "Settings declares every top-level section used by the shipped Settings.toml, so the full-config parse remains valid."
+     },
+     {
+      "code_snippet": "prompt_caching = true",
+      "file": "Settings.toml",
+      "function_or_symbol": "[ai.claude]",
+      "line": "None",
+      "why_this_location_matters": "The only active provider subsection in the shipped config, and its key matches ClaudeSettings.prompt_caching."
+     }
+    ]
+   },
+   {
+    "description": "The shipped Settings.toml or docs/examples/Settings.example.toml contains a key not present in the structs, which would now break startup or sashiko init.",
+    "reasoning": "Checked every section of the shipped Settings.toml against the structs: [project] name/description, [forge] enabled, [database] url/token, [mailing_lists] track, [nntp] server/port, [ai] provider/model/max_input_tokens/max_interactions/temperature, [ai.claude] prompt_caching, [server] host/port, [git] repository_path, and [review] concurrency/worktree_dir/timeout_seconds/max_retries/ignore_files all exist as fields. Feature-gated sections (vertex, bedrock) are commented out. The example template only has [ai] provider/model/max_input_tokens/temperature and [ai.gemini] explicit_prompt_caching, all declared and with no [review] section required, so it still parses as both Settings-shaped AI settings and LocalReviewSettings.",
+    "locations": [
+     {
+      "code_snippet": "[review]\nconcurrency = 16\nworktree_dir = \"review_trees\"\ntimeout_seconds = 7200\nmax_retries = 3",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review]",
+      "line": "None",
+      "why_this_location_matters": "Every key maps to a ReviewSettings field, so the full Settings struct accepts the shipped file."
+     },
+     {
+      "code_snippet": "[ai.gemini]\nexplicit_prompt_caching = false",
+      "file": "docs/examples/Settings.example.toml",
+      "function_or_symbol": "[ai.gemini]",
+      "line": "7",
+      "why_this_location_matters": "Matches GeminiSettings::explicit_prompt_caching, so the init template remains valid."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change adds the serde attribute deny_unknown_fields to every\nconfiguration struct in src/settings.rs. That covers the top-level\nSettings struct and all its nested sections: project, forge, database,\nnntp, smtp, mailing lists, ai and each provider, server, git, review\nand the local-review settings. The goal is for a misspelled or\nunsupported key to fail loudly at load time, rather than being ignored\nwhile the code falls back to default values.\n\nThe diff touches only src/settings.rs. It adds the attribute and\nnothing else, and it does not add or change any tests. The commit\nmessage says the test battery now checks Settings.toml against the Rust\ndefinitions, but this diff contains no such test.\n\nBefore:\n  A Settings.toml containing a typo such as [pproject] instead of\n  [project], or a misspelled key like concurency under [review],\n  loaded without error. The unknown section or key was dropped, and\n  any field with a serde default or a Default impl silently took its\n  default value.\n\nAfter:\n  The same file fails to parse at startup with a serde error naming\n  the unknown field and listing the expected ones, for example:\n  unknown field \"pproject\", expected one of ...\n  Any key in an existing config file that no longer matches a struct\n  field will now also stop the program from loading its settings.",
+  "inline_review": "- [HIGH] In src/settings.rs (LocalReviewSettings and\n  LocalReviewReviewSettings, read via Settings::local_review_from_file and\n  ai_from_file), deny_unknown_fields was added to partial views of the\n  shared config file. LocalReviewSettings declares only ai and review, and\n  LocalReviewReviewSettings declares only concurrency. A normal\n  Settings.toml (log_level, project, forge, database, server, git, and\n  review keys such as worktree_dir) and SASHIKO__ environment overrides for\n  other sections are now rejected with an unknown field error. run_worker in\n  src/local_review.rs propagates this and aborts local review at startup,\n  including with the minimal config documented in docs/sashiko-cli.md. Same\n  on Windows. Remove deny_unknown_fields from these two partial structs and\n  keep it only on structs that model a whole section.\n\n- [MEDIUM] In src/bin/sashiko-cli.rs (handle_local), the guard 'if\n  !force_local && let Ok(settings) = Settings::new()' discards any parse\n  error. When --server is given, the panic in the base_url resolution\n  closure is skipped, so this is the only parse of the config. A config\n  now rejected by deny_unknown_fields (typo, stale or renamed key) silently\n  falls through to the local cold-start review instead of submitting to the\n  server, with no message. The commit message promises typos surface as\n  errors, but this call site turns them into a quiet behaviour switch. The\n  code after the review subprocess invocation was not read, so a later\n  error report may soften this.\n\n- [MEDIUM] In src/settings.rs (tests::test_production_settings_is_valid),\n  the commit message claims the test battery validates every property in\n  Settings.toml, but the diff adds only attributes and no test. The only\n  config test is unchanged, parses only Settings, and passes vacuously when\n  ./Settings.toml is absent. It would pass with every deny_unknown_fields\n  attribute removed, has no negative test showing a [pproject] typo now\n  returns an error, and never parses LocalReviewSettings, so it could not\n  catch the regression above. The message also omits that previously\n  accepted configs are now rejected.\n\n- [MEDIUM] In src/settings.rs (Settings) and src/main.rs (DEFAULT_SETTINGS),\n  deny_unknown_fields was added with no test that can fail. No test feeds an\n  unknown section or nested key and asserts an error. The embedded default\n  config written out by src/main.rs is only compared to itself and never\n  parsed under the strict schema, nor are the docs/examples/Settings.*.toml\n  files, so a later struct field rename would turn the shipped default into\n  a startup error unnoticed. All current keys were checked and parse today.\n\n- [LOW] In src/settings.rs (AiSettings, with Cargo.toml features and\n  docs/examples/Settings.claude-vertex.toml), the bedrock and vertex fields\n  are cfg-gated, so under deny_unknown_fields their tables become unknown\n  field errors in builds without the feature. Default features include only\n  bedrock, so the shipped [ai.vertex] example is rejected by a default\n  build, and [ai.bedrock] by a no-default-features build. The failure is\n  loud, but the generic message never says the section needs a Cargo\n  feature.",
+  "findings": [
+   {
+    "problem": "strict partial local-review structs reject a normal Settings.toml",
+    "severity": "High",
+    "type": "Regression / Contract Break",
+    "preexisting": false,
+    "explanation": "Local review fails at startup whenever it reads a full daemon Settings.toml, and also when SASHIKO__ overrides for other sections are exported. Local review is a primary user-facing path, and the failure is a contract break against the documented config, so High. The failure is loud rather than silent. Proof: LocalReviewSettings declares only ai and review, and LocalReviewReviewSettings declares only concurrency. local_review_path_in returns ./Settings.toml whenever it exists. At the target revision that file has top-level log_level, [project], [forge], [subsystems], [database], [mailing_lists], [nntp], [server], [git] and [review], none of which LocalReviewSettings declares. local_review_from_file and ai_from_file feed the file plus the SASHIKO__ environment source into try_deserialize for LocalReviewSettings. Before this commit the extra keys were ignored. With deny_unknown_fields, serde's standard behaviour is an unknown field ConfigError. run_worker propagates it with a context error at src/local_review.rs:276 (--settings path) and :285 (repo override). docs/sashiko-cli.md documents a minimal local-review config with [git] and [review] worktree_dir, and that is rejected too. The same applies on Windows, where ./Settings.toml is the usual source. Assumption: the config crate hands every merged key to serde, which is its normal behaviour. Fix: remove deny_unknown_fields from LocalReviewSettings and LocalReviewReviewSettings, keeping it only on structs that model a whole section.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(deny_unknown_fields)] pub struct LocalReviewSettings { pub ai: AiSettings, pub review: Option<LocalReviewReviewSettings>, }",
+      "file": "src/settings.rs",
+      "function_or_symbol": "LocalReviewSettings",
+      "line": "500",
+      "why_this_location_matters": "Partial view of the shared config file; every other top-level section is now an error."
+     },
+     {
+      "code_snippet": "#[serde(deny_unknown_fields)] pub struct LocalReviewReviewSettings { pub concurrency: Option<usize>, }",
+      "file": "src/settings.rs",
+      "function_or_symbol": "LocalReviewReviewSettings",
+      "line": "494",
+      "why_this_location_matters": "Rejects worktree_dir, timeout_seconds, max_retries and ignore_files from the real [review] table."
+     },
+     {
+      "code_snippet": "s.try_deserialize()",
+      "file": "src/settings.rs",
+      "function_or_symbol": "Settings::local_review_from_file / ai_from_file",
+      "line": "554",
+      "why_this_location_matters": "The full file and the environment are deserialized into the strict partial struct here."
+     },
+     {
+      "code_snippet": "Settings::local_review_from_file(path).with_context(...)?",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker",
+      "line": "276",
+      "why_this_location_matters": "Consumer that aborts the review; line 285 calls local_review_settings() the same way."
+     }
+    ]
+   },
+   {
+    "problem": "commit claims test validation but adds no test that can fail",
+    "severity": "Medium",
+    "type": "Unsupported Claim / Test Gap",
+    "preexisting": false,
+    "explanation": "The commit message claims the test battery validates every property in Settings.toml, but the diff only adds attributes and no test. The only config test, test_production_settings_is_valid, is unchanged. It parses Settings only, and only if ./Settings.toml exists, so it passes vacuously otherwise. It would pass with or without deny_unknown_fields, since unknown keys used to be dropped. There is no negative test showing that a [pproject] typo now returns Err. It never parses LocalReviewSettings, so it could not catch the regression in the first finding. The message also omits that previously accepted configs and env overrides are now rejected. Its 'panic' wording is loose: Settings::from_file returns ConfigError, though sashiko-cli.rs:228 does panic on a non-not-found parse error.",
+    "locations": [
+     {
+      "code_snippet": "if Path::new(path).exists() { let _ = Settings::from_file(\"Settings\").expect(...); }",
+      "file": "src/settings.rs",
+      "function_or_symbol": "tests::test_production_settings_is_valid",
+      "line": "588",
+      "why_this_location_matters": "Only config test; unchanged, conditional on the file, and blind to the partial-view structs and to typo rejection."
+     }
+    ]
+   },
+   {
+    "problem": "handle_local drops Settings parse error, silently runs local review",
+    "severity": "Medium",
+    "type": "Silent Failure",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: when the user runs `sashiko-cli local ... --server <url>` (without --force-local) and Settings.toml now fails to parse, no config error is shown. The parse error is discarded at the `let Ok(settings) = Settings::new()` guard, and the code falls straight into the 'Cold start path' that runs a local review subprocess, instead of submitting to the running server. The user asked for a server and silently gets a local review, with no message that the config was rejected. Why --server is needed: without it, main() evaluates Settings::new() at line 228 and panics with 'Failed to parse Settings.toml' for any error not containing 'not found', so that route is covered. With an explicit --server, `cli.server.unwrap_or_else(...)` never runs the closure, so line 228 never sees the error, and line 1450 is the only place the config is parsed in the CLI. A not-found config is also silently treated as 'no server' here. The commit makes this more likely: `deny_unknown_fields` on every struct adds new Err cases (typos, stale or renamed keys, keys from a newer or older Settings.toml, and unknown top-level keys). The commit message promises that such typos 'trigger panic parser errors', but this call site turns them into a quiet behaviour switch. I did not read the code after the review-binary invocation, so I do not know whether the sashiko-review subprocess or the local review path (src/local_review.rs:292 uses `.context(\"Failed to load settings\")?`) reports the parse error later. If it does, the user gets a late error rather than a silent success, and the finding is weaker; if not, it is silent. The unseen later path is what would confirm or lower this, hence the Medium cap. The original candidate's claim about line 228 is wrong (it panics), but the real bug is the line-1450 path with --server. Severity is not higher because no money, credentials, or public surface is involved, and the result is a local review instead of a server queue.",
+    "locations": [
+     {
+      "code_snippet": "if !force_local && let Ok(settings) = Settings::new() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "1450",
+      "why_this_location_matters": "Any Err from Settings::new(), including the new unknown-field errors, skips the server check with no message and falls through to the local cold-start review."
+     },
+     {
+      "code_snippet": "let base_url = cli.server.unwrap_or_else(|| match Settings::new() {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main base_url resolution",
+      "line": "228",
+      "why_this_location_matters": "The panic on a parse error lives inside this closure, which is skipped when --server is given, so line 1450 is the only parse of the config in that case."
+     },
+     {
+      "code_snippet": "#[serde(deny_unknown_fields)]\n#[allow(unused)]\npub struct Settings {",
+      "file": "src/settings.rs",
+      "function_or_symbol": "Settings",
+      "line": "454",
+      "why_this_location_matters": "The strictness this commit adds widens the set of configs that make Settings::new() fail at the swallowing call site."
+     }
+    ]
+   },
+   {
+    "problem": "deny_unknown_fields rejects feature-gated [ai.vertex]/[ai.bedrock]",
+    "severity": "Low",
+    "type": "Behavior Change / Feature-gated Config",
+    "preexisting": false,
+    "explanation": "Consequence: a config that names a provider section whose Cargo feature is not compiled in now fails to load with a generic serde 'unknown field' error instead of loading. Reachability: Cargo.toml line 28 sets default = [\"bedrock\"] and line 30 defines vertex = [\"google-cloud-auth\"] outside the defaults. In AiSettings the fields are `#[cfg(feature = \"bedrock\")] pub bedrock: Option<BedrockSettings>` and `#[cfg(feature = \"vertex\")] pub vertex: Option<VertexSettings>`, and the struct now carries `#[serde(deny_unknown_fields)]`. A default build therefore rejects `[ai.vertex]`, and a `--no-default-features` build rejects `[ai.bedrock]`. docs/examples/Settings.claude-vertex.toml line 6 contains `[ai.vertex]` and docs/examples/Settings.claude-bedrock.toml line 6 contains `[ai.bedrock]`, so copying the vertex example into a default build hits this. The failure is loud, which is better than silently running on defaults, so this is not a silent-failure bug. The defect is that the message ('unknown field `vertex`, expected one of ...') never says the section exists but needs the `vertex` feature, and the vertex example gives no hint. Neighbouring risk: Settings.toml only has the vertex table commented out (`# [ai.vertex]`, line 115), so any test that checks Settings.toml against the Rust definitions cannot exercise the gated fields. The diff itself adds no test, so the commit message's claim that the test battery validates every Settings.toml property is not backed by anything in the diff. Capped at Low: the impact is a confusing startup error on an operator-run path, not data, money or live-state risk. Confirmation: build with default features and load docs/examples/Settings.claude-vertex.toml.",
+    "locations": [
+     {
+      "code_snippet": "#[cfg(feature = \"bedrock\")]\n    pub bedrock: Option<BedrockSettings>,\n    #[cfg(feature = \"vertex\")]\n    pub vertex: Option<VertexSettings>,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings",
+      "line": "332",
+      "why_this_location_matters": "Gated fields do not exist in builds without the feature, so under deny_unknown_fields their tables become unknown-field errors."
+     },
+     {
+      "code_snippet": "default = [\"bedrock\"]\nvertex = [\"google-cloud-auth\"]",
+      "file": "Cargo.toml",
+      "function_or_symbol": "[features]",
+      "line": "28",
+      "why_this_location_matters": "vertex is not a default feature, so the shipped vertex example is rejected by a default build."
+     },
+     {
+      "code_snippet": "[ai.vertex]",
+      "file": "docs/examples/Settings.claude-vertex.toml",
+      "function_or_symbol": "[ai.vertex]",
+      "line": "6",
+      "why_this_location_matters": "The shipped example config contains the gated table that a default build now refuses with a generic error."
+     }
+    ]
+   },
+   {
+    "problem": "deny_unknown_fields added with no test that can fail",
+    "severity": "Medium",
+    "type": "Test Coverage Gap",
+    "preexisting": false,
+    "explanation": "Reachability and consequence first: this is a test-coverage and commit-claim defect, not a runtime break. I checked every key in Settings.toml, including its commented sections ([ai.claude_cli], [ai.vertex], [ai.kiro_cli], [ai.openai_compat], [smtp], [[git.custom_remotes]]), docs/examples/Settings.example.toml (the DEFAULT_SETTINGS embedded at src/main.rs:36 and written out at src/main.rs:880 and :904), and all 15 docs/examples/Settings.*.toml files against the structs in src/settings.rs. No key is unknown to its struct, so none of the shipped files fails to parse today. The candidate's premise, a stale key that breaks startup now, is not supported. The real defect on this path is that nothing guards that property. (1) The only config-parsing test is test_production_settings_is_valid (src/settings.rs:586). It reads only ./Settings.toml and silently passes if the file is absent. It covers only the uncommented keys. If every deny_unknown_fields line in this commit were reverted, that test would still pass, so the change is unprotected by any test. (2) No test feeds a misspelled section such as [pproject] to the parser and asserts an error. That is the exact behaviour the commit exists to add. (3) src/main.rs:2367 only asserts that the written file equals DEFAULT_SETTINGS. It never parses it, so a future rename of a struct field would turn the embedded default into a startup error unnoticed. (4) The commit message says 'Now our test battery explicitly validates that every single property listed in Settings.toml strictly maps to our Rust definitions', but the diff touches only attributes in src/settings.rs and adds no test. That is a claim of evidence the diff does not contain. Cap at Medium: no runtime misbehaviour was found, and the example files are partial (several lack the required database, nntp and server sections), so parsing them would need a purpose-built test. What would confirm or close it: a negative test with an unknown top-level section and an unknown nested key that asserts from_file returns an error, plus a test that deserializes DEFAULT_SETTINGS and each docs/examples/Settings.*.toml through the matching struct, merged with the required sections where a file is partial.",
+    "locations": [
+     {
+      "code_snippet": "fn test_production_settings_is_valid() {",
+      "file": "src/settings.rs",
+      "function_or_symbol": "test_production_settings_is_valid",
+      "line": "586",
+      "why_this_location_matters": "The only config-parsing test. It reads just Settings.toml and would still pass with every deny_unknown_fields attribute removed, so it cannot fail on this change."
+     },
+     {
+      "code_snippet": "const DEFAULT_SETTINGS: &str = include_str!(\"../docs/examples/Settings.example.toml\");",
+      "file": "src/main.rs",
+      "function_or_symbol": "DEFAULT_SETTINGS",
+      "line": "36",
+      "why_this_location_matters": "The shipped default config is written to users at src/main.rs:880 and :904 but never parsed under the strict schema by any test. Its keys are all valid today, but a later struct rename would break it silently."
+     },
+     {
+      "code_snippet": "#[serde(deny_unknown_fields)]",
+      "file": "src/settings.rs",
+      "function_or_symbol": "Settings",
+      "line": "457",
+      "why_this_location_matters": "The behaviour introduced by the commit. Nothing in the diff or the existing tests asserts that an unknown section or key is rejected."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "deny_unknown_fields is incompatible with serde flatten.",
+    "reasoning": "The diff adds the attribute to plain named-field structs, and the only other serde attributes visible are default, skip and deserialize_with. No struct in the touched file uses flatten, so the incompatibility does not apply.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(skip, default)] pub no_ai: bool,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings",
+      "line": "313",
+      "why_this_location_matters": "Only skip and default attributes appear, no flatten."
+     }
+    ]
+   }
+  ]
+ }
+}

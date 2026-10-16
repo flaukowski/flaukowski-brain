@@ -1,0 +1,971 @@
+{
+ "commit": "313bdbe",
+ "label": "U8",
+ "A": {
+  "summary": "This commit replaces the prototype Linux bug pipeline with a staged,\nasynchronous workflow. Submitting a candidate bug now only stores it as a\nraw database row, and a new background BugWorker later runs it through the\npipeline. The goal is to exit early on false positives and duplicates, keep\nthe slow LLM stages concurrent, and keep full traceability of each bug.\n\nThe worker runs these stages in order. Verification checks the bug against\nmainline top-of-trunk. Normalization sets a canonical title and subsystem\nusing git tools and MAINTAINERS hints. Deduplication runs under a global\nlock. For novel bugs only, enrichment then traces the origin commit,\nestimates severity, and writes a plain-text LKML-style report.\n\nThe commit also adds the raw_input and verified_on_sha columns to the bugs\ntable, so the original request payload is kept as a JSON blob. It extends\nupdate_bug_outcome to carry the normalized fields, and adds a design\ndocument and unit tests.\n\nUser-visible effect: bugs found during patch review are no longer fully\nprocessed inline. They are queued with status \"raw\" and finalized later by\nthe worker. Stored bug records now carry a normalized title, a single\ncanonical subsystem, a calibrated severity, a standalone report, and an\norigin commit. False positives and processing errors are recorded as\n\"dismissed\" or \"failed\".\n\nBefore:\n  A candidate bug was processed during the call and was stored as a\n  finished record with its original problem text.\n\nAfter:\n  A candidate bug is stored at once with status \"raw\" and its original\n  request JSON. The bug worker later updates it to \"open\" (with canonical\n  title, subsystem, severity, report, and origin commit), \"dismissed\"\n  (false positive), or \"failed\" (processing error), or marks it as a\n  duplicate of an existing bug.",
+  "inline_review": "- [HIGH] Commit message adds the Linux bug-discovery stage prompts in\n  src/workflows/linux_bug.rs (VerifySession::system_prompt and the\n  normalization and severity prompts) with no benchmark or local re-review\n  evidence. The anti-charity validation filter decides which candidates\n  are dismissed as false positives, and the other prompts shape every\n  stored bug, so detection rate and precision may regress unnoticed.\n\n- [MEDIUM] In src/worker/bug_worker.rs (BugWorker::run) and\n  src/workflows/linux_bug.rs (process_issue), BugInput.reasoning is rebuilt\n  from bug.severity_explanation, which process_issue always inserts as\n  None. Every queued bug runs verification, normalization and tracing with\n  the placeholder 'No reasoning provided.'. The reporter's reasoning\n  survives only in raw_input, which is written but never deserialized.\n  Tests pass the original input and miss this.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (process_issue_worker),\n  BUG_DEDUP_LOCK is released at the end of the Stage 3 block, but\n  vector_json and status open are written only in Stage 7, after the\n  unlocked tracing, severity and report stages.\n  list_all_bugs_for_vector_search returns only open, fixed and verified\n  rows, so two concurrent identical candidates can both pass deduplication\n  and be registered as separate bugs.\n\n- [MEDIUM] In src/worker/bug_worker.rs (BugWorker::run), a detached\n  tokio::spawn is created per claimed raw bug with no semaphore or\n  JoinSet, and the loop sleeps only when the queue is empty. A backlog\n  starts one multi-stage pipeline (up to 50 turns per stage) per bug at\n  once, risking provider rate-limit storms, runaway token spend and git\n  and database contention.\n\n- [MEDIUM] The new pipeline is not wired up. BugWorker is never\n  constructed or spawned (no use in src/main.rs or src/reviewer.rs), and\n  process_issue in src/workflows/linux_bug.rs has no non-test caller.\n  link_review_to_bug is never called by the new flow, so the deferred\n  review linking promised by the design is not implemented. process_issue\n  also returns NewlyDiscovered for a bug that is only queued with status\n  raw, which would mislabel dismissed or duplicate bugs for a future\n  caller.\n\n- [MEDIUM] In src/db.rs (Database::mark_bug_as_duplicate), the INSERT OR\n  IGNORE INTO review_bugs omits is_newly_discovered, so the schema default\n  of 1 applies and reviews migrated to the canonical bug are marked as\n  newly discovered. The design requires 0 for duplicates, and\n  migrate_review_bugs already inserts 0 in the same situation.\n\n- [MEDIUM] In src/db.rs (Database::lock_raw_bug), the claim is a SELECT of\n  a raw row followed by an UPDATE to processing with no status = raw guard\n  and no rows-affected check, so two workers sharing a database can claim\n  the same row. Nothing resets stale processing rows after a restart, a\n  task panic or cancellation. In src/worker/bug_worker.rs\n  (BugWorker::run), the failed-status write is 'let _ =' and unlogged, so\n  a failed write also leaves the row in processing. Such bugs silently\n  never reach a terminal state.\n\n- [MEDIUM] In src/db.rs (Database::mark_bug_as_duplicate), the transaction\n  is opened with self.conn.transaction() on the connection shared by all\n  tasks, with no tx_lock or guard. Concurrent BugWorker tasks, and\n  update_bug_outcome calls made outside BUG_DEDUP_LOCK, can hit a\n  nested-transaction error, which marks the bug failed and loses the\n  duplicate link, or can have their autocommit statements absorbed into\n  and rolled back with this transaction.\n\n- [MEDIUM] In src/db.rs (Database::lock_raw_bug), the poll 'WHERE status =\n  raw ORDER BY created_at LIMIT 1' has no supporting index on\n  bugs(status, created_at), so each poll scans and sorts the table.\n  Database::list_all_bugs_for_vector_search has no LIMIT and no status\n  index, and parse_bug_row decompresses inline_review and logs for every\n  row. This runs inside BUG_DEDUP_LOCK, so cost grows with the total bug\n  count and serializes all workers.\n\n- [LOW] In src/db.rs (Database::update_bug_outcome), only problem,\n  subsystems, source_files and locations use COALESCE. Severity,\n  severity_explanation, inline_review, logs, vector_json,\n  introduced_in_commit, verified_on_sha, is_fixed and fixed_in_commit are\n  assigned unconditionally, and the UPDATE has no status guard. The\n  BugWorker failure path passes Default params, which resets severity to\n  Unknown, nulls logs and vector_json, and replaces severity_explanation\n  with the error text. A stale or duplicate task can also overwrite a\n  finished bug.\n\n- [LOW] In src/workflows/linux_bug.rs (TracingSession::validate), git\n  cat-file runs through blocking std::process::Command inside an async\n  session, stalling a Tokio worker thread on each validation and retry.\n  The design document says spawn_blocking is used.\n\n- [LOW] In src/workflows/linux_bug.rs (SeveritySession::validate), the\n  result of Severity::from_str is discarded, so a misspelled or\n  hallucinated severity never triggers a format-violation retry. It is\n  silently stored as Unknown, indistinguishable from the model's explicit\n  Unknown, and an empty severity_explanation is also accepted.\n\n- [LOW] In src/workflows/linux_bug.rs (get_master_sha), a failed git\n  rev-parse or join error silently returns the literal string master with\n  no log. That value is injected into prompts and persisted to\n  bugs.verified_on_sha, which then holds a moving ref instead of a\n  reproducible SHA.\n\n- [LOW] In src/workflows/linux_bug.rs (TracingSession::validate and\n  format_commit), the SHA check only proves the string resolves to some\n  commit-ish, so branch names, tags, HEAD~N and abbreviated SHAs pass.\n  format_commit stores the model's raw string, not the resolved full SHA,\n  in introduced_in_commit, so records can hold an unstable ref although\n  the prompt and design require a 40-character SHA.\n\n- [LOW] In src/workflows/linux_bug.rs (process_issue_worker),\n  MaintainersIndex::from_repo synchronously reads and parses the whole\n  MAINTAINERS file on a Tokio worker thread for every bug, with no\n  spawn_blocking and no caching. Concurrent bug tasks multiply the\n  blocking.\n\n- [LOW] In src/workflows/linux_bug.rs (VerifySession, NormalizeSession and\n  TracingSession), call_tool runs every call without the duplicate\n  tool-call guard that StageSession has in src/workflow/stage.rs. A model\n  repeating the same git_grep or git_read_files call can consume the whole\n  turn budget (up to 50 provider calls per bug) with no corrective error.\n\n- [LOW] Test coverage is missing for key guards. The design-listed\n  test_dedup_session_invalid_id_rejected and test_origin_tracing_session\n  are absent, DedupSession::validate rejection branches are untested, and\n  every test passes tools None, so the cat-file SHA check, format_commit\n  and the MAINTAINERS hint never run. The duplicate-path test asserts only\n  the returned outcome and not DB state. BugWorker claim and failed-status\n  lifecycle, the new columns with shifted indices, and invalid severity\n  handling have no tests.\n\n- [LOW] Commit message does not mention that Database::update_bug_outcome\n  changes from 11 positional arguments to UpdateBugOutcomeParams, that\n  verified_on_sha is now persisted and read, that a status column\n  migration is added, or that Severity gains Default. The verified_on_sha\n  persistence fix and the status migration are separable from the\n  workflow feature.",
+  "findings": [
+   {
+    "problem": "bug worker loses reporter reasoning and ignores raw_input",
+    "severity": "Medium",
+    "type": "Data Integrity / Silent Quality Failure",
+    "preexisting": false,
+    "explanation": "Verification, normalization and tracing silently run with the placeholder 'No reasoning provided.' instead of the reporter's reasoning, which degrades verification quality with no error. process_issue inserts the row with severity_explanation None and keeps the reasoning only inside the raw_input JSON. BugWorker::run rebuilds BugInput.reasoning from bug.severity_explanation, so every queued bug gets the placeholder. baseline_sha is only a copy of discovered_in_commit. raw_input is written and selected but never deserialized, so the immutable-ingestion goal is unused. Tests call process_issue_worker with the original input and do not catch it. Capped at Medium because nothing in this diff starts BugWorker.",
+    "locations": [
+     {
+      "code_snippet": "reasoning: bug.severity_explanation.clone().unwrap_or_else(...)",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "None",
+      "why_this_location_matters": "Reasoning is read from a column that is always NULL for queued bugs."
+     },
+     {
+      "code_snippet": "severity_explanation: None,",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue",
+      "line": "None",
+      "why_this_location_matters": "Reasoning is dropped from the structured columns at ingestion."
+     }
+    ]
+   },
+   {
+    "problem": "BUG_DEDUP_LOCK released before novel bug is dedup-visible",
+    "severity": "Medium",
+    "type": "Race Condition / Defeated Invariant",
+    "preexisting": false,
+    "explanation": "Two concurrent identical candidates can both pass deduplication and both be registered as separate open bugs, leaving duplicate canonical rows. The guard lives only in the Stage 3 block. vector_json and status open are written only in Stage 7, after the unlocked tracing, severity and report LLM stages. list_all_bugs_for_vector_search returns only open, fixed and verified rows and the current row is filtered out, so an in-flight bug is invisible to a concurrent Stage 3. The lock serializes comparisons but not the check-then-register gap, contradicting design section 1.1 item 4. Likelihood depends on concurrent finds of the same defect, hence Medium.",
+    "locations": [
+     {
+      "code_snippet": "let _dedup_guard = BUG_DEDUP_LOCK.lock().await;",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "None",
+      "why_this_location_matters": "Guard is dropped at block end, long before Stage 7 makes the bug visible."
+     },
+     {
+      "code_snippet": "WHERE status IN ('open', 'fixed', 'verified')",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::list_all_bugs_for_vector_search",
+      "line": "1719",
+      "why_this_location_matters": "In-flight bugs are excluded from dedup candidates."
+     }
+    ]
+   },
+   {
+    "problem": "BugWorker spawns unbounded concurrent LLM pipelines",
+    "severity": "Medium",
+    "type": "Resource Limits / Runaway Spend",
+    "preexisting": false,
+    "explanation": "BugWorker::run claims a raw bug, calls tokio::spawn and loops again immediately with no semaphore or JoinSet; it sleeps only when the queue is empty. A backlog of raw bugs starts one multi-stage pipeline per bug at once, each with up to 50 turns per stage plus git tool calls on the shared repository. Consequences are provider rate-limit storms, runaway token spend and database and git contention, contrary to resource-limits.md. Capped at Medium because nothing in this diff starts the worker yet.",
+    "locations": [
+     {
+      "code_snippet": "tokio::spawn(async move {",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "33",
+      "why_this_location_matters": "One detached task per raw bug with no concurrency cap."
+     }
+    ]
+   },
+   {
+    "problem": "update_bug_outcome overwrites columns unconditionally on failure paths",
+    "severity": "Low",
+    "type": "Data Integrity",
+    "preexisting": false,
+    "explanation": "Only problem, subsystems, source_files and locations use COALESCE. severity, severity_explanation, inline_review, logs, vector_json, introduced_in_commit, verified_on_sha, is_fixed and fixed_in_commit are assigned directly. The BugWorker failure arm passes Default params, so severity becomes Unknown, logs and vector_json become NULL, and severity_explanation (the only structured copy of the reasoning) is replaced by the error text. The UPDATE has no status guard, so a stale or duplicate task can overwrite a finished bug. Rows are mostly empty before Stage 7, so immediate loss is small, but partial history is not kept on failure.",
+    "locations": [
+     {
+      "code_snippet": "severity = ?, severity_explanation = ?, inline_review = ?,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_outcome",
+      "line": "None",
+      "why_this_location_matters": "No COALESCE or status guard, so Default params clobber stored values."
+     },
+     {
+      "code_snippet": "..Default::default()",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "78",
+      "why_this_location_matters": "Failure path resets every unspecified column."
+     }
+    ]
+   },
+   {
+    "problem": "TracingSession::validate runs blocking git on async runtime",
+    "severity": "Low",
+    "type": "Design/Implementation Mismatch",
+    "preexisting": false,
+    "explanation": "validate() runs std::process::Command git cat-file synchronously, called from SessionRunner::run inside an async task, so a Tokio worker thread blocks on each call and on every validation retry. This contradicts rust-async.md invariant 1 and design section 3.5, which says spawn_blocking is used. A single cat-file is normally fast, but it runs concurrently across unbounded BugWorker tasks on a large kernel repository.",
+    "locations": [
+     {
+      "code_snippet": "let output = std::process::Command::new(",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "TracingSession::validate",
+      "line": "None",
+      "why_this_location_matters": "Synchronous subprocess wait on an async path."
+     }
+    ]
+   },
+   {
+    "problem": "SeveritySession::validate never rejects an invalid severity",
+    "severity": "Low",
+    "type": "Silent Failure / Validation Gap",
+    "preexisting": false,
+    "explanation": "validate discards the result of Severity::from_str, so a misspelled or hallucinated severity never triggers a FormatViolation retry. It is later mapped to Unknown and stored and rendered as a legitimate severity, indistinguishable from the model's explicit Unknown escape hatch. severity_explanation is also not checked for being empty.",
+    "locations": [
+     {
+      "code_snippet": "let _ = Severity::from_str(&parsed.severity);",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "SeveritySession::validate",
+      "line": "None",
+      "why_this_location_matters": "The validation step is a no-op."
+     }
+    ]
+   },
+   {
+    "problem": "get_master_sha silently falls back to the literal master",
+    "severity": "Low",
+    "type": "Silent Failure / Validation Gap",
+    "preexisting": false,
+    "explanation": "If git rev-parse master fails or the blocking task join fails, get_master_sha returns the string master with no log. That value is injected into prompts as a SHA and persisted to bugs.verified_on_sha in both the dismissed and final update_bug_outcome calls. The column then holds a moving ref name, so the verified-against-top-of-trunk provenance is not reproducible and the failure is invisible.",
+    "locations": [
+     {
+      "code_snippet": ".unwrap_or_else(|_| fallback to master)",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "get_master_sha",
+      "line": "None",
+      "why_this_location_matters": "Errors become a plausible value stored as ground truth."
+     }
+    ]
+   },
+   {
+    "problem": "new bug pipeline lacks tests for key guards and worker lifecycle",
+    "severity": "Low",
+    "type": "Missing Test Coverage",
+    "preexisting": false,
+    "explanation": "Design-listed tests test_dedup_session_invalid_id_rejected and test_origin_tracing_session are missing. DedupSession::validate rejection branches (id outside candidates, is_duplicate true with null id) are untested. Every test passes tools None, so the cat-file SHA check, format_commit and the MAINTAINERS hint never run. The duplicate-path test asserts only the returned outcome, not DB state or that enrichment was skipped. BugWorker has no tests for claim and failed-status lifecycle. The new columns and shifted column indices have no round-trip test, and invalid severity handling is untested.",
+    "locations": [
+     {
+      "code_snippet": "if !self.known_candidates.iter().any(|b| b.id == dup_id) {",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "DedupSession::validate",
+      "line": "None",
+      "why_this_location_matters": "Anti-hallucination guard with no negative test."
+     },
+     {
+      "code_snippet": "match self.db.lock_raw_bug().await {",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "None",
+      "why_this_location_matters": "No test module for the worker lifecycle."
+     }
+    ]
+   },
+   {
+    "problem": "linux_bug verification prompts added without validation evidence",
+    "severity": "High",
+    "type": "Missing Validation Evidence",
+    "preexisting": false,
+    "explanation": "Reasoning: the commit introduces the Linux bug-discovery stage instructions in src/workflows/linux_bug.rs. These decide which candidate bugs are dismissed as false positives, how they are titled and classified, and how severity is assigned. That affects the detection rate and precision of Linux bug discovery across the board, so review-core priority 5 and severity.md (High) require benchmark or re-review results in the commit message. The full commit message is a bullet list of features (Verification with anti-charity validation, Normalization, Deduplication, enrichment, raw_input persistence, bug worker). It contains no benchmark results, no local re-review results, and no comparison of false-positive or detection rates. The Deduplication exemption (DedupSession, BUG_DEDUP_LOCK) covers only Stage 3 and does not extend to the other stages. VerifySession::system_prompt (the CRITICAL VALIDATION FILTER telling the model not to give the code the benefit of the doubt) and the Stage 1 early exit that marks candidates 'dismissed' are Linux bug-discovery stage instructions and are not exempt. The Normalization and Severity prompts shape the stored title, subsystem and severity of every bug. This is not post-triage maintenance on already-triaged bugs: the pipeline is the triage of newly discovered candidates. Not a benchmarks/ file demand: the finding is only that the commit message lacks validation evidence, and it does not ask for any change to benchmarks/. The defect is in the commit message, so it is not preexisting.",
+    "locations": [
+     {
+      "code_snippet": "CRITICAL VALIDATION FILTER: You must assess if the bug is genuine. Do not give the code the benefit of the doubt.",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "VerifySession::system_prompt",
+      "line": "None",
+      "why_this_location_matters": "Global Linux bug-discovery prompt that decides which candidates are dismissed as false positives. The commit message gives no benchmark or re-review evidence for its effect on detection rate or precision."
+     },
+     {
+      "code_snippet": "Add Verification stage with anti-charity validation against Linus's mainline top-of-trunk.",
+      "file": "commit_message",
+      "function_or_symbol": "commit_message",
+      "line": "None",
+      "why_this_location_matters": "The message lists features only and contains no validation results."
+     }
+    ]
+   },
+   {
+    "problem": "bug pipeline (BugWorker, process_issue) is never wired up",
+    "severity": "Medium",
+    "type": "Incomplete Wiring / Premature Review Linking",
+    "preexisting": false,
+    "explanation": "Reasoning: the new pipeline is dead code at the series end. Nothing breaks for existing reviews, and the cost is a feature that silently never runs plus a design/commit-message promise that is not met, so this is Medium. Greps at 313bdbe: BugWorker appears only in src/worker/bug_worker.rs and the 'pub mod bug_worker;' line in src/worker/mod.rs. There is no construction or spawn in src/main.rs (no matches for linux_bug|BugWorker|bug_worker|create_bug). src/reviewer.rs has no matches for linux_bug::|create_bug(|bug_worker, so it was not touched. process_issue (the only code that inserts a 'raw' bug) is called only from #[cfg(test)] tests in linux_bug.rs. db.link_review_to_bug is called only from a db.rs test (about line 10258), never by the new flow. The design doc says it fixes premature linking in src/reviewer.rs, and the commit message says 'Add asynchronous bug worker', but nothing is hooked up. Also, process_issue returns BugOutcome::NewlyDiscovered for a bug that is only queued with status 'raw', so any future caller that links on that variant would mark dismissed or duplicate bugs as newly discovered. Nothing in the diff defers the link until BugWorker finishes, as the design requires. If a caller is added later and starts only BugWorker, rows would be processed but never linked to reviews.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn run(&self) {",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "25",
+      "why_this_location_matters": "No code in src/main.rs or src/reviewer.rs constructs or spawns BugWorker, so the loop never runs."
+     },
+     {
+      "code_snippet": "Ok(BugOutcome::NewlyDiscovered { bug })",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue",
+      "line": "685",
+      "why_this_location_matters": "It has no non-test caller. It reports a merely queued, unverified bug as NewlyDiscovered, and no review linking is deferred to the worker."
+     }
+    ]
+   },
+   {
+    "problem": "mark_bug_as_duplicate links migrated reviews as newly discovered",
+    "severity": "Medium",
+    "type": "Incomplete Wiring / Premature Review Linking",
+    "preexisting": false,
+    "explanation": "Reasoning: this is a concrete state bug in the new duplicate path. It affects review/bug linkage metadata for individual bugs, with no crash or data loss, so Medium. mark_bug_as_duplicate, called from process_issue_worker on a duplicate verdict, runs 'INSERT OR IGNORE INTO review_bugs (review_id, bug_id) SELECT review_id, ?1 FROM review_bugs WHERE bug_id = ?2' without setting is_newly_discovered. The schema default is 'is_newly_discovered INTEGER NOT NULL DEFAULT 1', so the review gets linked to the canonical bug as newly discovered, which contradicts the design (duplicates linked with is_newly_discovered = 0). The existing migrate_review_bugs helper in the same file explicitly inserts 0, so the correct behaviour was available. Because INSERT OR IGNORE keeps any existing row, a review already linked to the canonical bug keeps its old value. Readers (get_reviews_bugs paths using row.get(21).unwrap_or(1)) will report the duplicate as newly discovered once any review is linked to the ephemeral bug.",
+    "locations": [
+     {
+      "code_snippet": "INSERT OR IGNORE INTO review_bugs (review_id, bug_id) SELECT review_id, ?1 FROM review_bugs WHERE bug_id = ?2",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_bug_as_duplicate",
+      "line": "1535",
+      "why_this_location_matters": "It omits is_newly_discovered, so the schema default of 1 applies to the migrated link. migrate_review_bugs sets 0 in the same situation."
+     }
+    ]
+   },
+   {
+    "problem": "raw bug claim is non-atomic and stale processing rows are never recovered",
+    "severity": "Medium",
+    "type": "State Lifecycle / Non-atomic Claim",
+    "preexisting": false,
+    "explanation": "Reasoning: the effect is confined to individual bug rows, which get stuck. The failure needs a daemon restart, a task panic, or a failed status write while a bug is being processed. No other data is corrupted, so this is a contained state-lifecycle bug (Medium). (1) Database::lock_raw_bug (src/db.rs:1362) runs 'SELECT id FROM bugs WHERE status = raw ... LIMIT 1' and then 'UPDATE bugs SET status = processing WHERE id = ?'. The UPDATE has no 'AND status = raw' guard, and its rows-affected count is never checked. This is the SELECT-then-unconditional-UPDATE TOCTOU pattern that patterns/concurrency.md section 1 item 4 forbids. Within a single BugWorker loop the claim is effectively serialized, because the loop awaits lock_raw_bug before spawning and the claimed row is no longer raw on the next iteration. Two BugWorkers or daemons sharing one database could claim the same row, though. The concurrency guide says the in-process model is the only supported one, so I treat double-claim as a latent risk and not the main defect. (2) Stale rows: git_grep over src/ for processing and locked_by finds only the claim UPDATE at src/db.rs:1374. No startup sweep, lease, timeout, or locked_by column exists to reset processing rows, even though the concurrency guide says locked_by is recorded for crash recovery. A bug claimed by a task that is interrupted stays in processing forever, since lock_raw_bug selects only raw rows. The interrupting events are a daemon restart or shutdown (tokio::spawn tasks are cancelled), or a panic inside the spawned task; the JoinHandle is dropped in BugWorker::run, so a panic is unobserved. (3) The Err arm in BugWorker::run writes the failed status with 'let _ = db.update_bug_outcome(...)'. If that write fails (for example SQLITE_BUSY), the row also stays in processing with no log, which is the swallowed-error pattern in patterns/error-handling.md section 2. (4) Supervision: git_grep for BugWorker and spawn_supervised_worker across src/ finds BugWorker only in src/worker/bug_worker.rs, with no spawn_supervised_worker call and no construction site. At this commit nothing visibly wires or supervises the worker, so a panic in run() would not be restarted. I could not confirm whether wiring arrives later, because only this single commit was available. The get_bug question: get_bug returns Ok(None) only if the row is missing, and rows are never deleted here, so the expect in process_issue_worker is not a real hazard. Net effect: affected bugs silently never reach open, dismissed, or duplicate, and they look identical to bugs still in progress. Not Low, because the loss is silent.",
+    "locations": [
+     {
+      "code_snippet": "UPDATE bugs SET status = 'processing' WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_raw_bug",
+      "line": "1374",
+      "why_this_location_matters": "Claim is not conditioned on status = 'raw', rows affected are not checked, and no code anywhere resets processing rows."
+     },
+     {
+      "code_snippet": "let _ = db.update_bug_outcome(bug.id, crate::db::UpdateBugOutcomeParams { status: \"failed\", ... }).await;",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "75",
+      "why_this_location_matters": "The only terminal-state write on error is best-effort and unlogged; the spawned JoinHandle is dropped, so panics and cancellation also leave the row in processing."
+     }
+    ]
+   },
+   {
+    "problem": "mark_bug_as_duplicate opens a transaction on the shared connection",
+    "severity": "Medium",
+    "type": "Concurrency Hazard / Transaction Handling",
+    "preexisting": false,
+    "explanation": "Reasoning: the failure is a localized concurrency defect. It affects individual bugs being deduplicated, needs overlapping DB activity on the shared libsql handle, and is not a daemon-wide outage or data-destroying bug, so Medium. Verification: at revision 313bdbe6 git_grep finds no tx_lock and no DatabaseTransaction in src/db.rs. begin_transaction exists at src/db.rs:2083, but it is a bare async fn that runs BEGIN IMMEDIATE on self.conn with no lock and no guard. mark_bug_as_duplicate (src/db.rs:1535) calls self.conn.transaction().await? directly at line 1547, so the transaction runs on the connection every other task shares. Its only caller is process_issue_worker (src/workflows/linux_bug.rs:972), which this commit adds. BugWorker::run in the new src/worker/bug_worker.rs spawns one tokio task per raw bug with no concurrency cap, and those tasks share Arc<Database> with the ingestor, email and patchwork workers and the HTTP handlers. BUG_DEDUP_LOCK serializes only the dedup stage among BugWorker tasks. It does not exclude other components, and it does not exclude update_bug_outcome, which the same tasks call outside the lock. On a single sqlite3 handle, a second BEGIN while another task's transaction is open fails with a nested-transaction error. That error propagates through ? and BugWorker marks the bug failed, so the duplicate link is lost and the bug is left in status failed. Autocommit statements from other tasks can also be absorbed into this transaction and be rolled back with it. Caveat: the guideline's DatabaseTransaction / tx_lock mechanism does not exist at this revision, so the fix cannot simply be to switch to begin_transaction. The shared-handle hazard is the same, and the transaction needs to be serialized by a lock or a dedicated connection. Preexisting is false because the commit introduces the concurrent BugWorker call path that relies on this function; the function body itself is unchanged.",
+    "locations": [
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_bug_as_duplicate",
+      "line": "1547",
+      "why_this_location_matters": "Opens a transaction directly on the connection shared by all concurrent tasks, with no tx_lock or DatabaseTransaction guard."
+     },
+     {
+      "code_snippet": "db.mark_bug_as_duplicate(bug_row.id, existing.id, &dup_meta_str, Some(&logs))",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "972",
+      "why_this_location_matters": "Only caller, newly reachable from concurrently spawned BugWorker tasks, which also run update_bug_outcome outside BUG_DEDUP_LOCK."
+     },
+     {
+      "code_snippet": "pub async fn begin_transaction(&self) -> Result<()> { self.conn.execute(\"BEGIN IMMEDIATE\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::begin_transaction",
+      "line": "2083",
+      "why_this_location_matters": "The only begin_transaction at this revision is an unguarded BEGIN IMMEDIATE on the same shared handle, so it would collide with mark_bug_as_duplicate."
+     }
+    ]
+   },
+   {
+    "problem": "unindexed raw-bug poll and unbounded bug load under dedup lock",
+    "severity": "Medium",
+    "type": "Scalability / Missing Index",
+    "preexisting": false,
+    "explanation": "Reasoning: this is a scalability defect on a continuously growing table. It causes no immediate failure, data loss, or wrong output, and it degrades throughput as the bugs table grows, so Medium fits. (1) Database::lock_raw_bug (src/db.rs:1362-1382) runs 'SELECT id FROM bugs WHERE status = 'raw' ORDER BY created_at ASC LIMIT 1'. The only bugs indexes at this commit are idx_bugs_slug, idx_bugs_severity and idx_bugs_is_fixed (src/db.rs:889-895, src/schema.sql:311-313). Nothing covers status or created_at, so every poll is a full scan of bugs plus a sort. BugWorker::run polls every 5 seconds when idle and immediately again after each claimed bug. The cost grows with every bug ever stored, even though almost all rows are no longer 'raw'. The db-migrations guide requires an explicit index on any column used in WHERE or ORDER BY on the bugs table, and this commit introduces the status='raw' queue pattern without one. (2) Database::list_all_bugs_for_vector_search (src/db.rs:1709-1730) selects every row with status IN ('open','fixed','verified') and has no LIMIT. It also has no status index, so it scans the whole table. For every returned row, parse_bug_row (src/db.rs:1732+) calls get_compressed_string_opt on column 9 (inline_review) and column 10 (logs). Both are stored through compress_string_if_needed and can be large, since logs is the serialized full multi-stage turn history, so each is decompressed and materialized as a String. The query also loads raw_input and locations even though only the sparse vector and a few fields are needed for candidate retrieval. process_issue_worker calls this inside the BUG_DEDUP_LOCK critical section (Stage 3), once per bug, and holds the lock through the LLM dedup call. The load is therefore O(total bugs x size of logs and reviews) in time and memory, per processed bug, and it serializes all concurrent bug workers behind it. This violates the resource-limits invariant that queries on growing tables must be bounded or paginated. The patch adds both the new polling query and the new per-bug call pattern: the extra SELECT columns, the new 'raw'/'processing' states, and the per-bug invocation under the global lock. Hence preexisting is false. Fix: add an index on bugs(status, created_at), and make the vector-search loader select only the id, slug, severity, subsystems, source_files, problem, and vector_json columns it needs without decompressing inline_review and logs.",
+    "locations": [
+     {
+      "code_snippet": "SELECT id FROM bugs WHERE status = 'raw' ORDER BY created_at ASC LIMIT 1",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_raw_bug",
+      "line": "1366",
+      "why_this_location_matters": "Polled continuously by BugWorker::run; no index on bugs.status or created_at exists (only idx_bugs_slug, idx_bugs_severity, idx_bugs_is_fixed), so each poll scans and sorts the table."
+     },
+     {
+      "code_snippet": "FROM bugs WHERE status IN ('open', 'fixed', 'verified')",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::list_all_bugs_for_vector_search",
+      "line": "1718",
+      "why_this_location_matters": "No LIMIT and no status index; every row is parsed via parse_bug_row, which decompresses inline_review (col 9) and logs (col 10), and the call runs under BUG_DEDUP_LOCK in process_issue_worker."
+     },
+     {
+      "code_snippet": "let inline_review: String = crate::compression::get_compressed_string_opt(row, 9)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::parse_bug_row",
+      "line": "1756",
+      "why_this_location_matters": "Decompresses large blobs (inline_review, then logs at line 1759) for every candidate row even though vector search needs neither."
+     }
+    ]
+   },
+   {
+    "problem": "tracing SHA validated as any commit-ish, not a full SHA",
+    "severity": "Low",
+    "type": "Git Argument Injection / Unvalidated Model Output",
+    "preexisting": false,
+    "explanation": "Reasoning: the option-injection part of the concern does not hold, but a narrower real defect remains with limited blast radius. TracingSession::validate runs git cat-file -e with a single argv element, format!(\"{}^{{commit}}\", sha). A model-supplied value starting with '-' becomes an unknown option such as '-x^{commit}', so git exits non-zero and validation rejects it. Since Command::new('git').args([...]) uses no shell, no flag injection reaches format_commit. The remaining problem is that the check only proves the string resolves to a commit-ish. Branch names, tags, HEAD, HEAD~N and abbreviated SHAs all pass. The stage prompt and the design document both require an exact 40-character SHA, and nothing enforces it. The model output is steerable by the reported patch text. format_commit then stores the raw string, not the resolved SHA, in introduced_in_commit, so the bug record can hold a moving ref such as 'master' or a short hash. That ref changes meaning over time and is shown as 'Introduced in commit' in the LKML report. The check also runs only if tools is Some. bug_worker always passes Some, so in production the gap is limited to the weak check. Impact is incorrect or unstable origin attribution on individual bug records, not a security boundary breach. Fix: require a 40-hex (or 64-hex) string before cat-file, add '--end-of-options' or use 'git rev-parse --verify', and store the resolved full SHA. Also, validate uses blocking std::process::Command inside an async session.",
+    "locations": [
+     {
+      "code_snippet": ".args([\"cat-file\", \"-e\", &format!(\"{}^{{commit}}\", sha)])",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "TracingSession::validate",
+      "line": "None",
+      "why_this_location_matters": "Accepts any rev-expression resolving to a commit, with no 40-hex check, so non-SHA refs pass validation."
+     },
+     {
+      "code_snippet": "format!(\"{} ({}){}\", sha, subject, tag_part)",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "format_commit",
+      "line": "None",
+      "why_this_location_matters": "Persists the model's raw string instead of the resolved full SHA into introduced_in_commit."
+     }
+    ]
+   },
+   {
+    "problem": "sync MAINTAINERS parse on async path in process_issue_worker",
+    "severity": "Low",
+    "type": "Blocking I/O on Tokio worker",
+    "preexisting": false,
+    "explanation": "Reasoning: the blocking is real but short and bounded. It stalls one Tokio worker thread for roughly the time it takes to read and parse MAINTAINERS, once per bug. It does not corrupt data, lose work, or break review output, and it only applies to bug-worker tasks, so Low fits. Proof: process_issue_worker is an async fn spawned via tokio::spawn from BugWorker::run. At src/workflows/linux_bug.rs:879 it calls crate::maintainers::MaintainersIndex::from_repo(tb.get_worktree_path()) directly, with no spawn_blocking. In src/maintainers.rs, from_repo calls from_file, which does File::open(path) and wraps it in BufReader. It then runs from_reader, which iterates reader.lines() synchronously over the whole Linux MAINTAINERS file and calls CompiledPattern::compile on every F:, X: and N: entry. A grep for OnceLock, LazyLock, Mutex and spawn_blocking in src/maintainers.rs found none, so the index is never cached and is rebuilt from disk for every bug. match_files is pure in-memory matching and is not the issue. patterns/rust-async.md section 1 requires synchronous filesystem and CPU-heavy parsing in async code to be wrapped in tokio::task::spawn_blocking. The same file already follows this convention for get_master_sha and format_commit, so this call is inconsistent. Each bug costs one blocked runtime thread for the full read, parse and pattern compile, and concurrent bug tasks multiply it. Fix: build the index inside spawn_blocking, or cache one MaintainersIndex per worktree or SHA. I did not measure the actual parse time, so I did not rate it higher than Low. The code is introduced by this commit, so it is not preexisting.",
+    "locations": [
+     {
+      "code_snippet": ".and_then(|tb| crate::maintainers::MaintainersIndex::from_repo(tb.get_worktree_path()).ok())",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "879",
+      "why_this_location_matters": "Synchronous file read and full MAINTAINERS parse executed directly on a Tokio worker thread, once per bug, with no spawn_blocking and no caching."
+     },
+     {
+      "code_snippet": "let file = File::open(path)...; let reader = BufReader::new(file); Self::from_reader(reader)",
+      "file": "src/maintainers.rs",
+      "function_or_symbol": "MaintainersIndex::from_file",
+      "line": "196",
+      "why_this_location_matters": "Uses std::fs::File and a blocking BufReader, then parses the whole file line by line with CompiledPattern::compile per entry."
+     }
+    ]
+   },
+   {
+    "problem": "linux_bug sessions lack the duplicate tool-call guard",
+    "severity": "Low",
+    "type": "Engine Contract",
+    "preexisting": false,
+    "explanation": "Reasoning: the cost is wasted provider calls and tokens, bounded by max_turns, with no crash, data loss or wrong output, so Low. VerifySession, NormalizeSession and TracingSession in src/workflows/linux_bug.rs each implement call_tool as a bare tools.call(name, args) and do not override call_tools. They therefore inherit the LlmSession::call_tools default in src/ai/session.rs, which loops over the calls and invokes call_tool. That default has no duplicate check and no last_tool_call state. The only guard in the tree is StageSession::call_tool and StageSession::call_tools in src/workflow/stage.rs, backed by the last_tool_call field, which returns \"Duplicate tool call blocked. Please change parameters or use a different tool.\" workflow-engine.md section 6 requires every new LlmSession that runs tools to carry this guard. The only bound left is max_turns: process_issue_worker uses with_max_turns(50) for verification, normalization and dedup, and 30 for tracing. A model that keeps re-issuing the same git_grep or git_read_files call gets a real result each time instead of the corrective error, and can use the whole budget. That is up to 50 provider calls per bug with ever-growing history, and the daemon-side BugWorker spawns a task per raw bug with no concurrency cap. Error handling is fine, since the default call_tools turns tool errors into {\"error\": ...}. The last turn is tool-free, so the loop terminates. The cost is wasted tokens and latency only. This is code the patch adds, so it is not preexisting.",
+    "locations": [
+     {
+      "code_snippet": "async fn call_tool(&mut self, name: &str, args: Value) -> Result<Value> {\n        if let Some(ref tools) = self.tools {\n            tools.call(name, args).await",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "VerifySession::call_tool",
+      "line": "None",
+      "why_this_location_matters": "Runs every call without comparing it to the previous one. NormalizeSession and TracingSession use the same pattern."
+     },
+     {
+      "code_snippet": "let res = match self.call_tool(&call.function_name, call.arguments).await {",
+      "file": "src/ai/session.rs",
+      "function_or_symbol": "LlmSession::call_tools (default)",
+      "line": "106",
+      "why_this_location_matters": "The inherited default has no duplicate check. Only StageSession::call_tool and call_tools in src/workflow/stage.rs, via last_tool_call, block repeats."
+     }
+    ]
+   },
+   {
+    "problem": "commit omits update_bug_outcome and verified_on_sha changes",
+    "severity": "Low",
+    "type": "Commit Message / Single Responsibility",
+    "preexisting": false,
+    "explanation": "Reasoning: this is commit hygiene and single-responsibility discipline with no runtime effect, so Low. The commit body lists pipeline stages but not the reason the prototype is replaced. It also does not mention several src/db.rs changes: Database::update_bug_outcome changes from 11 positional arguments to UpdateBugOutcomeParams (a public API change touching every caller); create_bug and the SELECT/parse_bug_row column lists now persist and read verified_on_sha, which was previously dropped; a try_add_column migration for status and verified_on_sha is added; and Severity gains Default. The params struct is coupled to the new COALESCE columns, but the verified_on_sha persistence fix and the status migration stand alone as separate fixes. The design doc under designs/ explains the pipeline, but the commit message does not tell reviewers about the DB API change or the bundled fix. The first two rule-2 dismissals do not apply: this is not a trivial commit, and no benchmarks/ files are demanded.",
+    "locations": [
+     {
+      "code_snippet": "params: UpdateBugOutcomeParams<'_>,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_outcome",
+      "line": "None",
+      "why_this_location_matters": "Public signature change plus verified_on_sha persistence, neither mentioned in the commit message, bundled with the workflow feature."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Column index shift after adding verified_on_sha and raw_input could misalign Bug row parsing and the is_newly_discovered index.",
+    "reasoning": "Every bugs SELECT lists the same 21 columns ending with verified_on_sha(16), is_fixed(17), fixed_in_commit(18), raw_input(19), created_at(20). parse_bug_row and get_bugs_list read those indices, and the review join queries append is_newly_discovered as column 21, read at index 21.",
+    "locations": [
+     {
+      "code_snippet": "let created_at: i64 = row.get(20)?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::parse_bug_row",
+      "line": "1771",
+      "why_this_location_matters": "Last of 21 columns matches index 20."
+     }
+    ]
+   },
+   {
+    "description": "Severity::from_str on model-supplied text could panic on multi-byte input.",
+    "reasoning": "from_str only uses trim, eq_ignore_ascii_case, to_lowercase and starts_with; there is no byte slicing, so non-ASCII input cannot hit a char-boundary panic.",
+    "locations": [
+     {
+      "code_snippet": "let s = s.trim();",
+      "file": "src/db.rs",
+      "function_or_symbol": "Severity::from_str",
+      "line": "193",
+      "why_this_location_matters": "Body performs only string comparisons."
+     }
+    ]
+   },
+   {
+    "description": "dup_outcome.unwrap() in process_issue_worker could panic on None.",
+    "reasoning": "is_dup is true only in the single branch that returns (true, Some(Duplicate)); every other branch yields (false, None), and the unwrap is guarded by if is_dup.",
+    "locations": [
+     {
+      "code_snippet": "return Ok(dup_outcome.unwrap());",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "None",
+      "why_this_location_matters": "Reachable only when is_dup is true, which pairs with Some."
+     }
+    ]
+   },
+   {
+    "description": "A std::sync::Mutex guard may be held across await in QueuedMockAiProvider::generate_content.",
+    "reasoning": "The guard is a temporary dropped at the end of the single statement that binds next_resp, before any await. It is also test-only code.",
+    "locations": [
+     {
+      "code_snippet": "let next_resp = self.responses.lock().unwrap().pop_front().unwrap_or_else(...);",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "QueuedMockAiProvider::generate_content",
+      "line": "None",
+      "why_this_location_matters": "Guard is a statement-scoped temporary."
+     }
+    ]
+   },
+   {
+    "description": "get_master_sha and format_commit run synchronous git commands in async fns.",
+    "reasoning": "Both wrap the std::process::Command calls in tokio::task::spawn_blocking and await the JoinHandle, so runtime threads are not blocked.",
+    "locations": [
+     {
+      "code_snippet": "tokio::task::spawn_blocking(move || {",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "get_master_sha",
+      "line": "None",
+      "why_this_location_matters": "Synchronous git call is offloaded to the blocking pool."
+     }
+    ]
+   },
+   {
+    "description": "BUG_DEDUP_LOCK held across the dedup LLM call might look like a DB write transaction held across network I/O.",
+    "reasoning": "BUG_DEDUP_LOCK is an in-process tokio Mutex, not a SQL transaction. The only DB access under it is a plain read on the autocommit connection, so no SQLite write lock is held during the LLM call.",
+    "locations": [
+     {
+      "code_snippet": "let mut known_bugs = db.list_all_bugs_for_vector_search().await?;",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "None",
+      "why_this_location_matters": "Only a read happens under the lock."
+     }
+    ]
+   },
+   {
+    "description": "The standalone bug worker might expose read_prompt to the model.",
+    "reasoning": "BugWorker builds ToolBox::new with prompts_path None, and ToolBox::new registers ReadPromptTool only when prompts_path.is_some().",
+    "locations": [
+     {
+      "code_snippet": "if context.prompts_path.is_some() {",
+      "file": "src/toolbox/mod.rs",
+      "function_or_symbol": "ToolBox::new",
+      "line": "95",
+      "why_this_location_matters": "read_prompt is registered only with a prompts path."
+     }
+    ]
+   },
+   {
+    "description": "try_add_column('bugs', 'status', 'TEXT DEFAULT raw') could backfill every historical bug row as 'raw' on a deployed database that lacks the status column, so BugWorker would reprocess and overwrite them.",
+    "reasoning": "1. The baseline (parent) revision already defines the column. src/schema.sql at the parent commit has CREATE TABLE IF NOT EXISTS bugs with the line status TEXT DEFAULT 'raw', at line 288. The patch's schema.sql hunk only adds verified_on_sha and raw_input and leaves status untouched.\n2. The baseline code already depends on the column. At the parent revision, Database::create_bug does INSERT INTO bugs (slug, status, problem, ...). The get_bug and get_bug_by_slug SELECT lists include status. lock_raw_bug runs SELECT id FROM bugs WHERE status = 'raw'. A database without status could not have accepted any bug INSERT at baseline, so no historical rows could exist in that state.\n3. This leaves nothing for the DEFAULT to backfill. On a database that already has the column, try_add_column fails with a duplicate-column error, which is swallowed, and the existing statuses are untouched. A database lacking the column could not contain bugs rows, and rows created later get an explicit status from create_bug.\n4. The patch's additions to the db.rs CREATE TABLE and to try_add_column for status and verified_on_sha only bring the db.rs fallback path in line with the schema.sql definition and the queries that already existed. They add no new semantics and no retroactive default for existing populated rows.\n5. The swallowed errors and the lack of a user_version migration follow the existing try_add_column pattern used for the neighbouring bugs columns (subsystems, logs, introduced_in_commit, is_fixed). They do not create the backfill hazard described.",
+    "locations": [
+     {
+      "code_snippet": "    status TEXT DEFAULT 'raw',",
+      "file": "src/schema.sql",
+      "function_or_symbol": "CREATE TABLE IF NOT EXISTS bugs",
+      "line": "288",
+      "why_this_location_matters": "The status column with default 'raw' already existed in the schema at the baseline revision, before this patch."
+     },
+     {
+      "code_snippet": "SELECT id FROM bugs WHERE status = 'raw' ORDER BY created_at ASC LIMIT 1",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_raw_bug",
+      "line": "1336",
+      "why_this_location_matters": "The baseline code already queried bugs.status, so deployed databases must already have the column."
+     },
+     {
+      "code_snippet": "INSERT INTO bugs (\n slug, status, problem, severity, severity_explanation, locations,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::create_bug",
+      "line": "1251",
+      "why_this_location_matters": "Baseline inserts already wrote status explicitly, so no pre-existing row could depend on the column default."
+     }
+    ]
+   },
+   {
+    "description": "BugWorker::run persists the raw pipeline error (format!(\"Error during async processing: {}\", e)) into bugs.severity_explanation, which could disclose backend error strings (paths, prompts, provider responses) to callers.",
+    "reasoning": "The candidate depends on some read endpoint serializing bugs.severity_explanation. At this revision none does. (1) The router in build_router registers only /health, /api/config, /api/lists, /api/patchsets, /api/messages, /api/patch, /api/patchset, /api/message, /api/review, /api/review_log, /api/stats*, /api/submit, /api/patchset/rerun, /api/patchset/cancel, /api/patch/rerun and /api/webhook/{provider}. The /api/bug, /api/bugs and /api/bug/* routes described in api-auth.md do not exist here. (2) git_grep for severity_explanation scoped to src/api.rs returns no matches, and a repo-wide grep for Bug, list_bugs, get_bug, list_bugs_for_review, list_bugs_for_patchset and get_bugs_list lists no src/api.rs hits, so the HTTP layer never handles a Bug struct or serializes it wholesale. (3) The only paths that expose bugs over HTTP are Database::get_patchset_details and Database::get_review_details, which back /api/patch, /api/patchset, /api/review and /api/review_log. Both build bugs_json from an explicit field list: id, slug, problem, severity, subsystems, subsystem, inline_review, is_newly_discovered and created_at. That list omits severity_explanation, logs and raw_input. (4) Failed bugs have status 'failed'. list_bugs_for_review and list_bugs_for_patchset join through review_bugs, and the new pipeline only links reviews after completion, so a failed row is not attached to a review payload. The stored string is therefore reachable only by direct database access or by the server-side log line, and the same text is already emitted by error!(\"Failed to process raw bug {}: {}\"). Caveat: the Bug struct derives Serialize with a public severity_explanation field, so a future bug-read endpoint must not serialize it to callers without access checks. That is a hypothetical about code not present in this commit, not a defect in it.",
+    "locations": [
+     {
+      "code_snippet": "let error_msg = format!(\"Error during async processing: {}\", e);",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "73",
+      "why_this_location_matters": "The candidate's storage site; the value goes only to the severity_explanation column of a status='failed' row."
+     },
+     {
+      "code_snippet": "serde_json::json!({ \"id\": bug.id, \"slug\": bug.slug, \"problem\": bug.problem, \"severity\": bug.severity.as_str(), \"subsystems\": bug.subsystems, \"subsystem\": bug.subsystems.first().cloned(), \"inline_review\": bug.inline_review, \"is_newly_discovered\": is_new, \"created_at\": bug.created_at })",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_review_details / get_patchset_details (bugs_json)",
+      "line": "4091",
+      "why_this_location_matters": "The only HTTP-reachable bug serialization uses an explicit allow-list of fields that excludes severity_explanation."
+     },
+     {
+      "code_snippet": ".route(\"/api/webhook/{provider}\", post(forge_webhook))",
+      "file": "src/api.rs",
+      "function_or_symbol": "build_router",
+      "line": "309",
+      "why_this_location_matters": "The route list ends here with no /api/bug* routes, and api.rs contains no reference to severity_explanation or Bug, so no endpoint exposes the column."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change replaces the prototype Linux kernel bug pipeline in Sashiko\nwith a staged, asynchronous one. Candidate bugs are first stored as raw\nrows with the original request kept as JSON. A new background BugWorker\nthen runs them through verification, normalization, deduplication and\nenrichment. This keeps the input traceable, drops false positives and\nduplicates early, and spends git tracing and report generation only on\nconfirmed novel bugs.\n\nBefore:\n  process_issue ran the whole analysis inline for a candidate bug.\n  There was no raw_input column, and review_bugs links could be created\n  before the bug was confirmed. update_bug_outcome took eleven\n  positional arguments and never rewrote the title, subsystems, source\n  files or locations.\n\nAfter:\n  process_issue only inserts a bug row with status \"raw\", storing the\n  request as raw_input JSON, and returns NewlyDiscovered with that\n  queued row. BugWorker polls lock_raw_bug every 5 seconds and spawns a\n  task per bug that calls process_issue_worker. That function runs\n  these stages:\n    1. Verification against the mainline master SHA. A proven false\n       positive sets status \"dismissed\" and the pipeline stops.\n    2. Normalization to a canonical title, subsystem and source files,\n       with a MAINTAINERS subsystem hint.\n    3. Deduplication under a global BUG_DEDUP_LOCK mutex. It does a\n       vector top-20 search at a 0.65 threshold, then an LLM check. A\n       duplicate is recorded through mark_bug_as_duplicate and the\n       pipeline stops.\n    4. Origin tracing, which validates the introducing commit SHA with\n       git cat-file.\n    5. Severity estimation (Low, Medium, High, Critical or Unknown).\n    6. A plain-text LKML-style report, generated without tools.\n    7. A final write that sets status \"open\", the canonical fields, the\n       vector, the report, the origin commit, verified_on_sha and logs.\n  If processing errors out, the worker marks the bug \"failed\" and\n  stores the error message in severity_explanation.\n\nSupporting changes:\n  - The bugs table gains status, verified_on_sha and raw_input columns,\n    in both the schema and the migrations. The Bug and NewBug structs\n    carry raw_input.\n  - Every bug SELECT and row parser is updated for the new column\n    order.\n  - update_bug_outcome now takes an UpdateBugOutcomeParams struct. Its\n    optional fields use COALESCE, so unset values keep existing data.\n  - Severity gains a Default of Unknown.\n  - A design document describing the pipeline is added.\n  - Unit tests cover the verification, normalization, dedup, report and\n    end-to-end flows using mock AI providers.",
+  "inline_review": "- [HIGH] In src/worker/bug_worker.rs (BugWorker::run) and\n  src/workflows/linux_bug.rs (process_issue), the candidate reasoning is\n  lost. process_issue stores severity_explanation as None and keeps the\n  reasoning only in raw_input, which nothing reads. BugWorker::run\n  rebuilds BugInput.reasoning from severity_explanation, so every queued\n  bug is verified with the placeholder No reasoning provided. Stage 1,\n  which can permanently dismiss a bug, never sees the reporter's\n  argument. The tests pass the in-memory input straight to\n  process_issue_worker, so they cannot detect this.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (process_issue_worker, Stage 3),\n  BUG_DEDUP_LOCK is released before the novel bug is visible to dedup.\n  list_all_bugs_for_vector_search returns only open, fixed and verified\n  rows, and the vector and open status are written only in Stage 7,\n  outside the lock. Two concurrent candidates for the same defect can\n  both pass as novel and both be stored as open. The lock is also\n  process-local, so a second process is not covered.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (process_issue_worker, Stage 3),\n  BUG_DEDUP_LOCK is held across the dedup LLM call with no overall\n  timeout. SessionRunner::run bounds only turns and retries, and\n  ClaudeClient and VertexClient use Client::new() with no request\n  timeout. One stalled call blocks Stage 3 for every queued bug.\n\n- [MEDIUM] In src/worker/bug_worker.rs (BugWorker::run) and\n  src/workflows/linux_bug.rs (process_issue), the new pipeline is never\n  wired in. Nothing outside tests constructs or spawns BugWorker or\n  calls process_issue, and link_review_to_bug is never called once an\n  outcome is known, so the deferred review linking in the design is not\n  implemented. process_issue also returns NewlyDiscovered for a row\n  still in status raw, and its get_bug(id).await?.unwrap() panics\n  instead of returning an error. A future caller that links on that\n  outcome would mark dismissed or duplicate bugs as newly discovered.\n\n- [MEDIUM] In src/db.rs (Database::lock_raw_bug) and\n  src/worker/bug_worker.rs (BugWorker::run), raw bugs can be stuck in\n  processing forever. The claim is a SELECT followed by an unguarded\n  UPDATE to processing, and nothing resets or expires processing rows.\n  If the process stops, the task panics, or the failed-status write\n  (let _ =) errors, the row is never retried or marked failed and looks\n  like in-progress work. The claim is also not atomic, so a second\n  claimer could take the same row, though none exists in this tree.\n\n- [MEDIUM] In src/db.rs (Database::mark_bug_as_duplicate), the\n  transaction is opened on the single shared libsql connection. While it\n  is open, writes from other tasks on that connection, such as\n  update_bug_outcome from the unbounded tasks spawned by\n  BugWorker::run, join the transaction and are silently rolled back if\n  it fails. A nested transaction call fails on BEGIN. This assumes\n  Connection::transaction issues BEGIN on the shared handle, which was\n  not confirmed in libsql.\n\n- [MEDIUM] In src/worker/bug_worker.rs (BugWorker::run), one detached\n  multi-turn LLM and git pipeline is spawned per raw row with no\n  concurrency bound, so a backlog floods the provider. Rate-limit errors\n  become terminal failed rows with no retry and no transient versus\n  permanent classification, and the failure write ignores its result.\n  In src/db.rs (Database::update_bug_outcome) only four columns use\n  COALESCE, so the failure write with defaulted params overwrites\n  severity, inline_review, logs, vector_json, introduced_in_commit and\n  verified_on_sha, and replaces severity_explanation with the error text.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (get_master_sha), a failed git\n  rev-parse master, spawn error or missing toolbox silently returns the\n  literal master. It is given to the model as the exact SHA and\n  persisted in verified_on_sha on both the dismissed and open paths. The\n  database then claims a verification against a SHA that was never\n  resolved, which is unreproducible and looks like a real one.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (SeveritySession::validate),\n  the result of Severity::from_str is discarded, so an invalid severity\n  never triggers the retry and is silently coerced. In\n  process_issue_worker, a reply with is_false_positive true and no\n  refutation_evidence permanently dismisses the bug with a generic\n  reason substituted. The module docs still describe Low and Medium\n  discarding that is not implemented.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (TracingSession::validate),\n  std::process::Command::output() runs synchronously on a Tokio worker\n  thread with no timeout, contrary to the design (spawn_blocking), and\n  each validation retry repeats it. The model-supplied SHA is not\n  checked as 40 hex characters, so any revision git resolves (a short\n  SHA, a tag, HEAD) is accepted and stored as introduced_in_commit. A\n  value starting with a dash is passed as a bare git argument, and a git\n  spawn error is reported to the model as a FormatViolation, causing\n  needless LLM retries.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (VerifySession::\n  initial_user_prompt and process_issue_worker), problem and reasoning\n  are interpolated with no delimiter or data label, and a single model\n  reply with is_false_positive true permanently sets status dismissed.\n  Nothing corroborates that refutation_evidence cites a real file or\n  symbol at master_sha. The model's claim is stored as the system's own\n  record, and dismissed rows are never re-queued. This assumes the\n  future reviewer producer copies patch-author text into the input,\n  which is not in this diff.\n\n- [MEDIUM] In src/workflows/linux_bug.rs (tests module), the design\n  lists tests that are absent from the diff:\n  test_dedup_session_invalid_id_rejected, test_origin_tracing_session,\n  the early-exit tests and test_process_issue_flow_complete. Every\n  pipeline test passes tools as None, so get_master_sha, format_commit,\n  the MAINTAINERS hint and the SHA check never run. The duplicate test\n  asserts only the returned outcome, not the persisted state, and its\n  claim that stages 4 to 6 are skipped is only a comment, since the mock\n  returns an empty object when exhausted. The Stage 1 and Stage 5 mocks\n  both return Critical, so the severity assertion cannot show which\n  stage supplied it. Removing the SHA check, the duplicate-ID check or\n  mark_bug_as_duplicate would fail no test.\n\n- [LOW] The commit message omits that process_issue changed from\n  synchronous processing to queue-only, ignoring provider, tools and\n  context_tag. It also omits the update_bug_outcome signature change,\n  the new status column migration and the verified_on_sha persistence\n  fix. src/workflows/linux_bug.rs also has a duplicated Verification\n  Session banner.",
+  "findings": [
+   {
+    "problem": "BUG_DEDUP_LOCK released before bug is visible to dedup",
+    "severity": "Medium",
+    "type": "Concurrency Hazard / False Safety Claim",
+    "preexisting": false,
+    "explanation": "Consequence: two concurrent candidates for the same defect both pass Stage 3 as novel and are both stored as 'open', which is the race the commit and design say the lock prevents. Reachability: BugWorker processes bugs concurrently and Stages 4-6 take many LLM turns, so the overlap window is wide. Proof from the diff: the guard is scoped to the Stage 3 block and dropped at its end. Candidates come from list_all_bugs_for_vector_search, which selects only status IN ('open','fixed','verified'). The in-flight bug's vector_json and status='open' are written only in Stage 7 via update_bug_outcome, outside the lock. The lock is also a process-local static, so a second process is not covered. The result is duplicate bug records and duplicate reports, not data loss.",
+    "locations": [
+     {
+      "code_snippet": "let _dedup_guard = BUG_DEDUP_LOCK.lock().await;\n\nlet mut known_bugs = db.list_all_bugs_for_vector_search().await?;",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "None",
+      "why_this_location_matters": "The guard ends before the novel bug is registered, so check and register are not atomic."
+     },
+     {
+      "code_snippet": "WHERE status IN ('open', 'fixed', 'verified')",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::list_all_bugs_for_vector_search",
+      "line": "None",
+      "why_this_location_matters": "In-flight bugs are invisible to dedup."
+     },
+     {
+      "code_snippet": "vector_json: Some(&query_vector.to_json()),",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker (Stage 7)",
+      "line": "None",
+      "why_this_location_matters": "The vector becomes searchable only here."
+     }
+    ]
+   },
+   {
+    "problem": "worker loses candidate reasoning, verifies with placeholder",
+    "severity": "High",
+    "type": "Data Loss / Contract Mismatch",
+    "preexisting": false,
+    "explanation": "Consequence: every bug processed by BugWorker is verified, normalized and traced with reasoning = 'No reasoning provided.', so Stage 1, which can permanently dismiss a bug, never sees the reporter's argument. This can systematically mis-dismiss real bugs and confirm weak ones, and the result looks like a normal verdict. Reachability: this is the only path from a queued row to the pipeline. Proof: process_issue inserts severity_explanation: None and puts the reasoning only in raw_input. BugWorker::run rebuilds BugInput.reasoning from bug.severity_explanation with unwrap_or_else('No reasoning provided.'), and baseline_sha is copied from discovered_in_commit. Nothing deserializes raw_input, so it is write-only. The tests pass the in-memory input straight to process_issue_worker, so they cannot detect this.",
+    "locations": [
+     {
+      "code_snippet": "reasoning: bug\n    .severity_explanation\n    .clone()\n    .unwrap_or_else(|| \"No reasoning provided.\".to_string()),",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "None",
+      "why_this_location_matters": "Reasoning is read from a column that is always NULL for queued bugs."
+     },
+     {
+      "code_snippet": "severity_explanation: None,\n...\nraw_input: raw_input_json,",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue",
+      "line": "None",
+      "why_this_location_matters": "The reasoning is stored only in raw_input, which nothing reads."
+     }
+    ]
+   },
+   {
+    "problem": "worker spawns unbounded tasks, swallows failure write",
+    "severity": "Medium",
+    "type": "Error Handling / Lifecycle",
+    "preexisting": false,
+    "explanation": "Consequence: a backlog of raw bugs starts one detached multi-turn LLM and git pipeline per row with no cap, which floods the provider. Rate-limit errors then become terminal 'failed' rows with no retry. The failure write is `let _ =`, so a DB error is silently dropped, and when it succeeds, ..Default::default() overwrites severity, inline_review, logs, vector_json, introduced_in_commit and verified_on_sha, and replaces severity_explanation with the raw error text. Proof: BugWorker::run loops immediately after tokio::spawn with no semaphore. It sleeps only on None or Err. The failed-status update_bug_outcome sets all non-COALESCE columns directly from params. A panic inside the task (unwrap in process_issue, expect in process_issue_worker) skips the Err arm entirely.",
+    "locations": [
+     {
+      "code_snippet": "tokio::spawn(async move {\n...\nlet _ = db\n    .update_bug_outcome(",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "None",
+      "why_this_location_matters": "There is no concurrency bound, no transient/permanent classification, and the terminal-state write result is ignored."
+     },
+     {
+      "code_snippet": "severity = ?,\n                severity_explanation = ?,\n                inline_review = ?,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_outcome",
+      "line": "None",
+      "why_this_location_matters": "Only four columns use COALESCE, so defaulted params clobber the rest."
+     }
+    ]
+   },
+   {
+    "problem": "failed master lookup stored as verified_on_sha",
+    "severity": "Medium",
+    "type": "Fabricated Provenance",
+    "preexisting": false,
+    "explanation": "Consequence: when `git rev-parse master` fails (trunk not named master, spawn error, spawn_blocking error, or tools=None), get_master_sha returns the literal \"master\" with no log. The prompt tells the model to use it as the 'exact SHA', and it is persisted in verified_on_sha on both the dismissed and open paths, so the DB claims a verification against a SHA that was never resolved. The verification is unreproducible and indistinguishable from a real one. Proof: .unwrap_or_else(|| \"master\".to_string()) at both the inner Option and the outer join result; Stage 1 and Stage 7 write Some(&master_sha). Verified-against-moving-ref also means a stale local master gives wrong ground truth.",
+    "locations": [
+     {
+      "code_snippet": ".unwrap_or_else(|| \"master\".to_string())",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "get_master_sha",
+      "line": "None",
+      "why_this_location_matters": "The failure is mapped to a plausible value and persisted as provenance."
+     }
+    ]
+   },
+   {
+    "problem": "severity validation is a no-op, evidence-free dismissal accepted",
+    "severity": "Medium",
+    "type": "Silent Failure / Weak Validation",
+    "preexisting": false,
+    "explanation": "Consequence: an invalid severity string from the model never triggers the FormatViolation retry and is coerced silently by Severity::from_str, so the stored value cannot be told apart from a deliberate 'Unknown'. A verification reply with is_false_positive=true and no refutation_evidence permanently dismisses the bug with a generic reason substituted, and the model's reason is stored in the severity_explanation column. Proof: `let _ = Severity::from_str(&parsed.severity);` discards the result, so validate cannot fail on severity. process_issue_worker uses refutation_evidence.unwrap_or_else(generic) and then writes status 'dismissed'. The module docs still describe Low/Medium discarding and High/Critical calibration, which is not implemented.",
+    "locations": [
+     {
+      "code_snippet": "let _ = Severity::from_str(&parsed.severity);",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "SeveritySession::validate",
+      "line": "None",
+      "why_this_location_matters": "The validation result is discarded."
+     },
+     {
+      "code_snippet": "let reason = verification.refutation_evidence.unwrap_or_else(|| {\n    \"Discarded as a hallucinated or disproved false positive\".to_string()\n});",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "None",
+      "why_this_location_matters": "A dismissal without evidence is accepted and made permanent."
+     }
+    ]
+   },
+   {
+    "problem": "blocking git call in async validate, SHA not checked as 40-hex",
+    "severity": "Medium",
+    "type": "Input Validation / Blocking Call",
+    "preexisting": false,
+    "explanation": "Consequence: TracingSession::validate runs std::process::Command::output() synchronously on a Tokio worker thread with no timeout, contrary to the design (spawn_blocking), so a slow git (repo lock, WSL/Windows filesystem) pins a runtime thread and each validation retry repeats it. It also accepts any rev expression git resolves (short SHA, tag, 'HEAD', 'master~3'), which format_commit then stores as introduced_in_commit. A value starting with '-' is passed as a bare git argument. A git spawn error is reported to the model as a FormatViolation, causing LLM retries for an environment fault. Proof: the call is `.args([\"cat-file\",\"-e\",&format!(\"{}^{{commit}}\",sha)]).output()` with no format check; the other git helpers in the file use spawn_blocking.",
+    "locations": [
+     {
+      "code_snippet": ".args([\"cat-file\", \"-e\", &format!(\"{}^{{commit}}\", sha)])\n                    .output()",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "TracingSession::validate",
+      "line": "None",
+      "why_this_location_matters": "Blocking call in async context with an unvalidated model-supplied argument."
+     }
+    ]
+   },
+   {
+    "problem": "design-listed tests absent, existing tests cannot fail",
+    "severity": "Medium",
+    "type": "Claimed Evidence Does Not Match Diff / Weak Tests",
+    "preexisting": false,
+    "explanation": "Consequence: the design promises test_dedup_session_invalid_id_rejected, test_origin_tracing_session, early-exit tests and test_process_issue_flow_complete; none are in the diff. Proof from the diff: every pipeline test passes tools=None, so get_master_sha, format_commit, the MAINTAINERS hint and the cat-file SHA check never run, and the flow test asserts the bare SHA, which is the no-toolbox fallback. The duplicate test asserts only the returned BugOutcome, not the persisted duplicate status or review_bugs state, and its 'stages 4-6 skipped' claim is only a comment because the mock returns '{}' when exhausted. Stage 1 and Stage 5 mocks both return Critical, so the severity assertion cannot show which stage supplied it. The tests feed in-memory input to process_issue_worker, so BugWorker, lock_raw_bug, the failed path and the shifted column indexes are untested. Deleting the SHA check, the dup-ID check or mark_bug_as_duplicate would not fail any test.",
+    "locations": [
+     {
+      "code_snippet": "assert_eq!(existing_bug.id, existing_id);\n                assert_eq!(existing_bug.slug, \"pb-existing1\");",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "tests::test_process_issue_duplicate_after_verification_aborts_db_write",
+      "line": "None",
+      "why_this_location_matters": "Asserts only the in-memory outcome."
+     },
+     {
+      "code_snippet": "process_issue_worker(&provider, None, &db, bug, input.clone(), None)",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "tests::test_process_issue_flow",
+      "line": "None",
+      "why_this_location_matters": "No toolbox and no DB round trip, so git paths and worker reconstruction are bypassed."
+     },
+     {
+      "code_snippet": "`test_dedup_session_invalid_id_rejected`: Ensures hallucinated candidate ID triggers format violation retry.",
+      "file": "designs/DESIGN_STANDALONE_LINUX_BUG_PIPELINE.md",
+      "function_or_symbol": "6. Testing Strategy",
+      "line": "None",
+      "why_this_location_matters": "The doc lists tests the diff does not contain."
+     }
+    ]
+   },
+   {
+    "problem": "commit message omits process_issue contract change",
+    "severity": "Low",
+    "type": "Single Responsibility / Commit Message",
+    "preexisting": false,
+    "explanation": "Consequence: reviewers and callers are not told that process_issue changed from synchronous processing to queue-only (it ignores provider, tools and context_tag, and returns NewlyDiscovered for a 'raw' row), nor about the update_bug_outcome signature change, the new status column migration or the verified_on_sha persistence fix. Proof: all are in the diff and none in the message. The file also has a duplicated '1. Verification Session' banner. Documentation hygiene only.",
+    "locations": [
+     {
+      "code_snippet": "params: UpdateBugOutcomeParams<'_>,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_outcome",
+      "line": "None",
+      "why_this_location_matters": "A public API refactor is bundled with the feature and not mentioned."
+     }
+    ]
+   },
+   {
+    "problem": "BugWorker and process_issue are never wired in",
+    "severity": "Medium",
+    "type": "Incomplete Change / Dead Worker / Premature Success",
+    "preexisting": false,
+    "explanation": "Consequence: at this commit the new Linux bug pipeline cannot run, and the design's deferred review linking is not implemented. Nothing constructs or spawns BugWorker, nothing outside tests calls process_issue, and nothing calls link_review_to_bug once the outcome is known. Reachability: git_grep over src/ at 313bdbe finds BugWorker or bug_worker only in src/worker/bug_worker.rs (the struct, its impl and the context tag string) and the pub mod line in src/worker/mod.rs. Neither src/main.rs nor any other startup path constructs it. process_issue appears only in its own definition (src/workflows/linux_bug.rs:685) and in the unit tests there. The only non-test reference to process_issue_worker is inside BugWorker::run. link_review_to_bug is defined at src/db.rs:1516 and called only from a db.rs test (line 10258). It is not called from reviewer.rs or from the worker, and the design (section 5) says it should be called after the worker finishes: true for a novel bug, false for a duplicate. Since the series after this commit is unknown, this is capped at Medium. The commit message claims the pipeline and an asynchronous bug worker are implemented, but the diff contains no code path that runs them. Caveat on the premature-linking claim: reviewer.rs is untouched and does not call process_issue, so no wrong 'newly discovered' link is created today. The real defect is incomplete wiring, plus a contract hazard for the future. process_issue returns BugOutcome::NewlyDiscovered for a row that is still status 'raw' and unverified. Any future caller that links on that outcome, as the old reviewer path did, would mark dismissed or duplicate bugs as newly discovered. Both worker outcomes (a failed worker, or a dismissed or duplicate result) then skip linking entirely, because the worker never links. Also in process_issue, db.get_bug(id).await?.unwrap() panics if the row is not found, instead of returning an error. What would confirm or refute: a later commit in the series adding BugWorker::new(...).run() to main.rs and the deferred link_review_to_bug calls in reviewer.rs or the worker.",
+    "locations": [
+     {
+      "code_snippet": "match self.db.lock_raw_bug().await {",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "None",
+      "why_this_location_matters": "This is the only consumer of raw rows, and nothing in src/ constructs BugWorker or spawns run(). Rows stay 'raw' forever."
+     },
+     {
+      "code_snippet": "let bug = db.get_bug(id).await?.unwrap();\n    Ok(BugOutcome::NewlyDiscovered { bug })",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue",
+      "line": "685",
+      "why_this_location_matters": "It has no non-test caller. It reports NewlyDiscovered for an unprocessed raw row, and the unwrap can panic. The design's deferred review linking is nowhere implemented."
+     },
+     {
+      "code_snippet": "pub async fn link_review_to_bug(",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::link_review_to_bug",
+      "line": "1516",
+      "why_this_location_matters": "It is called only from a db.rs test, never after BugWorker or process_issue_worker completes, so the novel vs duplicate vs dismissed linking in the design does not happen."
+     }
+    ]
+   },
+   {
+    "problem": "raw bugs stuck in processing forever after restart or failed write",
+    "severity": "Medium",
+    "type": "Lifecycle / Non-atomic Claim",
+    "preexisting": false,
+    "explanation": "Consequence: a candidate bug claimed by BugWorker::run is silently lost, with no retry, no failed status and no log line, whenever the process stops or the task panics between the claim and the final status write. Reachability: this is every restart, deploy or crash while a bug is in flight, and each pipeline run is long (up to 50 LLM turns in Stage 1, plus Stages 2 to 6). Database::lock_raw_bug (src/db.rs:1362-1377) selects only status = 'raw' and moves the row to 'processing' with a separate UPDATE. A grep of src at 313bdbe for 'processing' finds no code that resets, leases or times out processing rows: the only matches are that UPDATE and an unrelated comment about duplicate patchset messages. BugWorker is also only defined in src/worker/bug_worker.rs, so nothing else touches the state. The recovery path in BugWorker::run writes the failed status with let _ = db.update_bug_outcome(...), so if that write errors (database unavailable, which is also the likeliest reason the pipeline failed) the row stays in processing. A panic inside the spawned tokio task also skips it entirely. Rows in processing are never selected again, so the bug is neither retried nor marked failed, and anyone reading the bugs table sees an in-progress item. This is a silent failure per patterns/silent-failure.md (error mapped to nothing, state indistinguishable from real progress). Double claim (the first half of the candidate) is not proven: the SELECT and the UPDATE are separate statements with no status guard and no rows-affected check, so a second claimer (another process on the same libsql URL, or a second BugWorker) could take the same row. I found no second claimer in this tree, so that part is unconfirmed and depends on how the service is deployed; the stuck-row part stands independently of it. Fix: claim with a single UPDATE ... WHERE id = (SELECT ... status = 'raw' ...) AND status = 'raw' RETURNING, and reset or lease-expire processing rows on startup.",
+    "locations": [
+     {
+      "code_snippet": "UPDATE bugs SET status = 'processing' WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_raw_bug",
+      "line": "1374",
+      "why_this_location_matters": "The claim is a SELECT followed by an unguarded UPDATE with no rows-affected check, and nothing anywhere returns processing rows to raw."
+     },
+     {
+      "code_snippet": "let _ = db\n    .update_bug_outcome(",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "74",
+      "why_this_location_matters": "The only transition out of processing on error ignores its own failure, and a panic in the spawned task bypasses it."
+     }
+    ]
+   },
+   {
+    "problem": "BUG_DEDUP_LOCK held across LLM call with no overall timeout",
+    "severity": "Medium",
+    "type": "Lock held across LLM call",
+    "preexisting": false,
+    "explanation": "Consequence: one hung or slow dedup LLM call stalls Stage 3 for every queued bug, so no bug can reach 'open' or be marked duplicate until it returns. Reachability: process_issue_worker takes BUG_DEDUP_LOCK, then runs a DB scan (list_all_bugs_for_vector_search) and 'runner.run(&mut dedup_session).await?' while the guard is held. BugWorker::run spawns one task per raw bug with no concurrency bound, so every other task waits on that lock after Stage 2. The lock is intentional per the design doc, but the hold time is not bounded by the code. Verification: SessionRunner::run (src/ai/session.rs) has no timeout of its own. It only caps turns, validation attempts (3), and transient retries (5), each retry sleeping for retry_after. Per-request timeouts depend on the provider. Present: gemini (600s), ollama, openai and vllm (api_timeout_secs), and the claude/codex/copilot/devin CLI wrappers (600s) and kiro (timeout_secs). Absent: ClaudeClient (src/ai/claude.rs) and the Vertex client (src/ai/vertex.rs) both use 'client: Client::new()', which has no request timeout, so a stalled connection there holds the guard indefinitely. I found no timeout in bedrock.rs and did not confirm one. Even where timeouts exist, the worst case is roughly 600s per attempt across up to 3 validation and 5 transient attempts, with every other bug waiting. Mitigation: wrap the dedup run in tokio::time::timeout inside the critical section, and give the Claude/Vertex clients a request timeout. Capped at Medium because the unbounded case depends on which provider is configured, and I did not check the BackoffProvider wiring for those providers.",
+    "locations": [
+     {
+      "code_snippet": "let _dedup_guard = BUG_DEDUP_LOCK.lock().await;\n...\nlet dedup_result = runner.run(&mut dedup_session).await?;",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker (Stage 3 block)",
+      "line": "920",
+      "why_this_location_matters": "The LLM round trip happens while the global dedup guard is held, and nothing at this call site bounds its duration."
+     },
+     {
+      "code_snippet": "client: Client::new(),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeClient::new",
+      "line": "209",
+      "why_this_location_matters": "The default reqwest client has no request timeout, so a hung Claude call never returns and never releases the lock."
+     },
+     {
+      "code_snippet": "client: Client::new(),",
+      "file": "src/ai/vertex.rs",
+      "function_or_symbol": "VertexClient::new",
+      "line": "160",
+      "why_this_location_matters": "Same as Claude: no per-request timeout on the Vertex path."
+     },
+     {
+      "code_snippet": "let resp = match self.provider.generate_content(request).await {",
+      "file": "src/ai/session.rs",
+      "function_or_symbol": "SessionRunner::run",
+      "line": "None",
+      "why_this_location_matters": "The provider call is awaited with no timeout wrapper. Only turn and retry counts are bounded, not wall-clock time."
+     }
+    ]
+   },
+   {
+    "problem": "mark_bug_as_duplicate transaction shares one libsql connection",
+    "severity": "Medium",
+    "type": "Shared Connection Transaction",
+    "preexisting": false,
+    "explanation": "Consequence: while mark_bug_as_duplicate has a transaction open, writes from other tasks on the same connection become part of it. They commit with it, or are silently rolled back if any statement in it fails and the transaction is dropped. A concurrent transaction() call fails on a nested BEGIN. Reachability: Database holds one libsql::Connection (pub conn: libsql::Connection). Database::new builds it once with db.connect() and returns Self { conn }, with no pool and no mutex. Every user shares it through Arc<Database>: api.rs, ingestor.rs, reviewer.rs, worker/patchwork.rs, worker/compressor.rs and main.rs. mark_bug_as_duplicate calls self.conn.transaction() on this connection and then runs tx.execute for the UPDATE, INSERT OR IGNORE and DELETE, so nothing excludes other statements on it. This commit adds BugWorker::run, which tokio::spawns an unbounded task per raw bug. Each task calls update_bug_outcome (stage 1 dismissal, stage 7 'open' write, the failure handler), get_bug and others on the same connection. BUG_DEDUP_LOCK is held only inside process_issue_worker stage 3, so it serializes dedup writers against each other but not against these other statements, the lock_raw_bug polling, the API handlers or the reviewer. Concretely, while task A is between BEGIN and COMMIT, task B's UPDATE bugs ... status='dismissed' or 'open' executes on the same sqlite handle inside A's transaction. If A's later tx.execute returns Err, the ? drops tx and rolls back, and B's write vanishes with no error. B's task logs success, and the bug stays in 'processing' with no worker left to retry it. Limits on severity: the window is a few statements wide, so the race is occasional, and a failed transaction is the rarer trigger. The transaction semantics are documented by the code, but I did not read libsql's internals; I assumed Connection::transaction issues BEGIN on the shared handle, which is the standard behaviour. Reading libsql's transaction implementation would confirm that.",
+    "locations": [
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_bug_as_duplicate",
+      "line": "1547",
+      "why_this_location_matters": "Opens a transaction on the single shared connection, so concurrent statements from other tasks are not excluded."
+     },
+     {
+      "code_snippet": "let conn = db.connect()?;\n...\nOk(Self { conn })",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "561",
+      "why_this_location_matters": "Shows Database wraps exactly one libsql Connection with no pool or serialization."
+     },
+     {
+      "code_snippet": "tokio::spawn(async move {\n    ... crate::workflows::linux_bug::process_issue_worker(provider.as_ref(), tools, &db, &bug, input, Some(\"bug_worker\"))",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "28",
+      "why_this_location_matters": "Adds unbounded concurrent tasks that write through the same Arc<Database> while a dedup transaction may be open."
+     }
+    ]
+   },
+   {
+    "problem": "unlabelled patch-derived text drives unverified bug dismissal",
+    "severity": "Medium",
+    "type": "Prompt Injection",
+    "preexisting": false,
+    "explanation": "Consequence: a candidate bug can be permanently set to status 'dismissed' on a single model reply, and nothing independently checks the stored refutation. Reachability: BugInput.problem and reasoning reach VerifySession::initial_user_prompt through process_issue and bug_worker (BugWorker::run rebuilds BugInput from the bugs row). In this commit, process_issue is called only from tests. The design doc says reviewer.rs will queue findings from patch review, and those findings are model output that can quote patch or commit text, which anonymous mailing-list authors control. That producer is not in this diff, so this is an assumption: if the reviewer copies patch-author text into problem or reasoning, attacker-chosen text lands in the Stage 1 prompt. The prompt interpolates 'Problem: {problem}\\nReasoning: {reasoning}' with no quoted-content delimiters, and the system prompt never says these fields are data. The prompt does require concrete code proof, and the toolbox lets the model check mainline, which limits the risk. However, process_issue_worker takes verification.is_false_positive on trust. It does no corroboration, such as checking that refutation_evidence cites a file, symbol or line that exists at master_sha. It then calls update_bug_outcome with status 'dismissed', writes the model's refutation_evidence into severity_explanation as the system's own record, and returns Discarded. Nothing re-queues a dismissed row, because lock_raw_bug only selects status = 'raw'. Net effect: a real bug can be silently dropped, and the model's unverified claim is stored as fact. This is Medium rather than higher because it rests on an unverified assumption about the producer, and it needs the model to be steered despite the proof requirement. Confirming evidence would be reviewer.rs passing patch text verbatim into BugInput. Suggested fix: wrap problem and reasoning as quoted data and say so in the system prompt, and require refutation_evidence to cite a checkable location (or send high-severity dismissals to review) before setting 'dismissed'.",
+    "locations": [
+     {
+      "code_snippet": "Candidate Vulnerability:\\nProblem: {problem}\\nReasoning: {reasoning}",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "VerifySession::initial_user_prompt",
+      "line": "None",
+      "why_this_location_matters": "Outside-derived text enters the dismissal decision with no delimiter or data label."
+     },
+     {
+      "code_snippet": "if verification.is_false_positive {\\n    let reason = verification.refutation_evidence.unwrap_or_else(|| {...});\\n    ... status: \\\"dismissed\\\", severity_explanation: Some(&reason),",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "process_issue_worker",
+      "line": "844",
+      "why_this_location_matters": "The model's claim is stored as the bug's record and the pipeline exits with no corroboration."
+     },
+     {
+      "code_snippet": "let input = BugInput { problem: bug.problem.clone(), reasoning: bug.severity_explanation.clone()...",
+      "file": "src/worker/bug_worker.rs",
+      "function_or_symbol": "BugWorker::run",
+      "line": "37",
+      "why_this_location_matters": "Shows the text comes from the stored bugs row, so its origin is whatever queued it."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "A std mutex guard held across .await in the dedup critical section.",
+    "reasoning": "BUG_DEDUP_LOCK is declared as tokio::sync::Mutex, whose guard may be held across .await without blocking executor threads, so the std-mutex hazard does not apply. Scope and duration of the lock are tracked separately.",
+    "locations": [
+     {
+      "code_snippet": "static BUG_DEDUP_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "BUG_DEDUP_LOCK",
+      "line": "None",
+      "why_this_location_matters": "Shows the lock is async-aware."
+     }
+    ]
+   },
+   {
+    "description": "New verified_on_sha and raw_input columns could misalign positional row.get indices.",
+    "reasoning": "The diff updates every bug SELECT to the same 21-column order and parse_bug_row to indices 16=verified_on_sha, 17=is_fixed, 18=fixed_in_commit, 19=raw_input, 20=created_at; the joined readers append is_newly_discovered at index 21 and read it there. get_bugs_list's inline parse is updated identically.",
+    "locations": [
+     {
+      "code_snippet": "let verified_on_sha: Option<String> = row.get(16).ok().flatten();\n        let is_fixed: bool = row.get::<i64>(17).unwrap_or(0) != 0;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::parse_bug_row",
+      "line": "1732",
+      "why_this_location_matters": "Indices match the updated SELECT lists."
+     }
+    ]
+   },
+   {
+    "description": "CRLF or whitespace in git stdout could corrupt the SHA in get_master_sha and format_commit on Windows.",
+    "reasoning": "Every git stdout is passed through .trim() before use, which strips both \\n and \\r\\n. Arguments are passed via Command argv without a shell, so there is no quoting difference, and format_commit trims describe output before splitting on '~' and '^'.",
+    "locations": [
+     {
+      "code_snippet": "Some(String::from_utf8_lossy(&output.stdout).trim().to_string())",
+      "file": "src/workflows/linux_bug.rs",
+      "function_or_symbol": "get_master_sha",
+      "line": "None",
+      "why_this_location_matters": "trim() removes CRLF."
+     }
+    ]
+   },
+   {
+    "description": "Adding bugs.status with DEFAULT 'raw' through the ignored try_add_column ALTER could backfill every historical bugs row as 'raw', so BugWorker would reprocess and overwrite it.",
+    "reasoning": "The backfill needs pre-existing bugs rows in a table that lacks the status column. No such rows can exist, for these reasons. 1) The bugs table has two creation paths before this commit. Fresh databases get it from src/schema.sql through execute_batch(include_str!(schema.sql)), and that DDL already declares status TEXT DEFAULT 'raw' at the parent revision (added in 6259b73), so the ALTER is a duplicate-column no-op there. 2) The other path is the CREATE TABLE IF NOT EXISTS bugs statement in db.rs (legacy or already-versioned databases). At the parent revision it has no status column. But Database::create_bug, introduced in the same commit 6259b73 (db: add kernel bugs and review association tables), always INSERTs the status column. On a table created via the db.rs path that INSERT fails with no such column, so no row could ever be written there. The ALTER therefore runs against an empty table and backfills nothing. 3) Every reader, get_bug, get_bug_by_slug and list_all_bugs_for_vector_search, also SELECTs status, so a status-less table was already unusable. This commit only repairs that path by adding status to the CREATE and the ALTER. 4) The bugs feature landed in commits dated 2026-08-27 and is not in the 0.3.4 release notes, so no released schema stored bugs rows without status. 5) The only non-fresh path that could carry rows is a schema.sql-created table, and it already has status with real values (open/dismissed/etc.), which ALTER does not touch. Residual note: the swallowed ALTER error is the file's existing try_add_column pattern. It does not create a backfill risk here, because the table is empty on the path where the ALTER succeeds.",
+    "locations": [
+     {
+      "code_snippet": "status TEXT DEFAULT 'raw',",
+      "file": "src/schema.sql",
+      "function_or_symbol": "CREATE TABLE IF NOT EXISTS bugs",
+      "line": "288",
+      "why_this_location_matters": "Databases built from schema.sql already had the status column at the parent revision, so the ALTER is a no-op and existing rows keep their real status values."
+     },
+     {
+      "code_snippet": "slug, status, problem, severity, severity_explanation, locations,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::create_bug",
+      "line": "1280",
+      "why_this_location_matters": "create_bug always inserts status. On a bugs table made by the db.rs CREATE, which lacked the column at the parent revision, every insert failed, so that table never held rows to backfill."
+     },
+     {
+      "code_snippet": "slug TEXT NOT NULL UNIQUE, problem TEXT NOT NULL, severity INTEGER NOT NULL,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate (bugs table creation, parent revision)",
+      "line": "829",
+      "why_this_location_matters": "The parent db.rs DDL has no status column between slug and problem, which confirms that table could not be written by create_bug."
+     }
+    ]
+   },
+   {
+    "description": "get_bugs_list, list_bugs_for_review and list_bugs_for_patchset have no status filter, so raw, processing, failed, dismissed and duplicate bugs (whose inline_review holds duplicate-metadata JSON) are exposed to readers.",
+    "reasoning": "1) get_bugs_list has no caller in this repository. git_grep over src for get_bugs_list, /api/bugs and list_bugs_for_ returned matches only in src/db.rs, and those are the definitions, the two internal callers described below, and tests. There is no HTTP route, CLI command or UI that reads it. 2) The review and patchset readers only return bugs joined through review_bugs. Their only non-test consumers are the two JSON builders in src/db.rs (the patchset detail at line 3701 and the review detail at line 4091). 3) Nothing in this commit's code puts raw, processing, failed, dismissed or duplicate bugs into review_bugs. The only definition of link_review_to_bug is src/db.rs:1516, and its only call is a unit test at src/db.rs:10258. process_issue inserts a status 'raw' row and creates no link. The dismissed and failed paths in process_issue_worker and bug_worker.rs only call update_bug_outcome and create no link. The duplicate path calls mark_bug_as_duplicate, whose transaction deletes the duplicate's review_bugs rows (DELETE FROM review_bugs WHERE bug_id = ?1) after migrating them to the canonical bug. So a duplicate row, whose inline_review is the JSON blob, is never reachable through the review or patchset readers. 4) The duplicate-metadata-in-inline_review convention is in mark_bug_as_duplicate, which this commit did not change. Only the caller that supplies the JSON string is new. Because that row is unlinked and get_bugs_list has no callers, the JSON is not exposed. Remaining assumption: an out-of-tree consumer, or a reviewer.rs that links bugs outside the grep results (none matched at this revision), could call get_bugs_list directly. That would be a future caller, not a defect reachable in this change. A reader that adds a status filter later would address it. Note, separate from H7: mark_bug_as_duplicate migrates links with INSERT OR IGNORE and no is_newly_discovered column, so migrated links take the column default of 1 (newly discovered). The design doc says duplicates should be 0. This is unrelated to reader exposure.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn get_bugs_list(",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_bugs_list",
+      "line": "1591",
+      "why_this_location_matters": "The unfiltered reader has no callers in src, so its unfiltered output reaches no API or UI in this repository."
+     },
+     {
+      "code_snippet": "DELETE FROM review_bugs WHERE bug_id = ?1",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_bug_as_duplicate",
+      "line": "1566",
+      "why_this_location_matters": "Removes the duplicate row's review links, so the duplicate's JSON inline_review cannot surface through list_bugs_for_review or list_bugs_for_patchset."
+     },
+     {
+      "code_snippet": "pub async fn link_review_to_bug(",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::link_review_to_bug",
+      "line": "1516",
+      "why_this_location_matters": "Its only call is a unit test (src/db.rs:10258), so no production path links raw, failed or dismissed bugs to reviews."
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,874 @@
+{
+ "commit": "81f64ea",
+ "label": "U5",
+ "A": {
+  "summary": "This change adds a new binary, benchmark_review, that scores sashiko's\nreviews against a ground-truth file, benchmark.json. For each entry it\nlooks up the patch and its latest review in the database, then asks Gemini\nwhether any recorded finding or the review summary describes the known\nproblem. It also makes Gemini 429 handling honor the Retry-After header and\nraises review concurrency in Settings.toml. A design document is added, and\nseveral files get rustfmt-style reformatting with no behavior change.\n\nBefore:\n  There was no way to score reviews against benchmark.json. On a 429,\n  Gemini retries waited for the time parsed from the error body, or 30\n  seconds if none was found. Settings.toml had review concurrency = 1.\n\nAfter:\n  Running \"cargo run --bin benchmark_review\" reads benchmark.json, queries\n  the patches, reviews and findings tables, and makes one Gemini judge\n  call per entry using the model from settings. It writes\n  benchmark_results.json with one record per entry: commit,\n  problem_description, found, status, explanation and findings_count. It\n  logs totals for Detected, Partially Detected, Missed, Not Reviewed/Found\n  and Skipped. The review concurrency setting also sets how many judge\n  calls run in parallel.\n\n  On a 429, the wait now uses the Retry-After header if it parses as a\n  number of seconds, then the value from the error body, then 30 seconds.\n\n  Settings.toml now has review concurrency = 24, so the main review\n  pipeline also runs up to 24 reviews at once instead of 1.",
+  "inline_review": "- [HIGH] In src/bin/benchmark_review.rs (process_entry, main), the judge\n  verdict is the first line of free-form model text with only [, ] and **\n  stripped. It is never checked against DETECTED, PARTIALLY_DETECTED or\n  MISSED. Replies like \"DETECTED: finding 2...\", \"Detected\", a leading\n  non-text part (\"Unknown\"), or a Gemini failure (\"ERROR\", including an\n  empty LLM_API_KEY) become arbitrary status strings and read as misses.\n  The aggregation in main ends in \"_ => {}\", so these entries appear in no\n  counter, the buckets do not sum to Total Entries, nothing warns, and the\n  exit code is 0. The accuracy figure is plausible but false, and no test\n  in the diff covers the parsing. Parse into a closed enum, add a counted\n  error/unparsed status, exit non-zero when any exist, and unit-test a pure\n  parse function with captured replies.\n\n- [HIGH] In src/bin/benchmark_review.rs (process_entry), infrastructure\n  failures are recorded as benchmark outcomes. The reviews query uses\n  ORDER BY id DESC LIMIT 1 with no status filter, so a newer failed,\n  FailedToApply or pending review with no findings is judged against\n  \"(No structured findings recorded in DB)\" and scored MISSED. The reviews\n  query maps Err(_) to None with no log, which reports NOT_REVIEWED. The\n  findings query uses \"if let Ok\" and \"while let Ok(Some(row))\", so a query\n  or row error becomes zero or truncated findings, then MISSED. The\n  row.get(..).unwrap_or_default() calls turn decode errors into id 0 or\n  empty text. main merges NOT_FOUND_IN_DB and NOT_REVIEWED, hiding DB\n  errors as never-ingested patches. Filter on a completed review status,\n  log or propagate every DB error, and report a distinct not-evaluable\n  status. No test covers these paths.\n\n- [MEDIUM] In Settings.toml ([review] concurrency), the shared key was\n  raised from 1 to 24 to serve the new benchmark, but Reviewer::new in\n  src/reviewer.rs sizes its Semaphore from the same value. The live\n  reviewer service now runs 24 simultaneous reviews, each with its own git\n  worktree of third_party/linux and its own Gemini tool-calling session,\n  multiplying disk, CPU and API quota load and the chance of 429 storms.\n  The commit gives no rationale. The benchmark also builds its own\n  GeminiClient, bypassing the shared QuotaManager. Give the benchmark its\n  own setting or CLI flag. A value of 0 makes buffer_unordered(0) poll\n  nothing, writing an empty result file and exiting 0.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (main), arguments are never read.\n  Running with --help or a mistyped flag opens the live DB, spends Gemini\n  quota on the full run, and then File::create truncates the existing\n  benchmark_results.json with no backup. Paths are hard-coded to the\n  working directory and there is no dry-run or limit option.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (main), results are held in\n  memory until every LLM call finishes, then streamed into a freshly\n  truncated benchmark_results.json via serde_json::to_writer_pretty. A\n  crash, panic or Ctrl-C loses the whole run, and a failure mid-write\n  leaves invalid JSON with the previous good results already gone. Write a\n  temp file and rename it. buffer_unordered also makes output order\n  non-deterministic, so runs are hard to diff.\n\n- [MEDIUM] In src/ai/gemini.rs (GeminiClient::post_request), the new\n  Retry-After handling parses the header with parse::<f64>() and uses it\n  unvalidated. Rust accepts NaN, inf, negative and exponent values.\n  Duration::from_secs_f64(retry_seconds + 1.0) panics on NaN, infinity,\n  values below -1 and overflow. A large finite value such as 1e9 makes\n  GenAiClient::generate_content sleep with no upper bound. In\n  benchmark_review a panic unwinds main and loses all results, since the\n  output file is written only after collect(). The old body regex could not\n  match these inputs, so this class is new. Triggering needs an unusual\n  upstream or intercepting proxy value, which was not confirmed. Accept the\n  header only if finite and non-negative, clamp it, else fall back to the\n  body hint or 30s. No test covers the header path.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry) and src/ai/gemini.rs\n  (GenAiClient::generate_content), a Gemini 429 is retried forever with no\n  attempt cap or deadline, and process_entry wraps the call in no timeout.\n  A persistent 429, such as daily quota exhaustion, hangs the benchmark\n  with up to 24 tasks looping on one key through a bare GeminiClient that\n  bypasses QuotaManager, and no output file is ever written. Cap attempts\n  or elapsed time in generate_content, or time-box each evaluation and\n  record an ERROR status.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry) and src/ai/gemini.rs\n  (GeminiClient::generate_content_single, post_request), the API key is\n  sent in the URL query string. On a transport failure the reqwest error\n  text is logged without stripping the URL, then process_entry stores\n  e.to_string() as the explanation in benchmark_results.json and logs it\n  again. That durable, shareable file can then contain the key. No\n  without_url or redaction exists in the tree. This assumes reqwest 0.13\n  appends the URL to send errors, which was not confirmed and Cargo.lock\n  was not checked. The existing log line is pre-existing exposure, but\n  persisting it to the results file is new. Call without_url on the error\n  or send the key in the x-goog-api-key header.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry), a DB error on the\n  patches query is logged but reported as NOT_FOUND_IN_DB, identical to a\n  genuinely missing patch. The reviews query error is swallowed with no\n  log and reported as NOT_REVIEWED. The findings query error or mid-row\n  error yields an empty list that the judge scores MISSED. A locked\n  database or schema mismatch under 24-way concurrency can therefore\n  understate detection with no signal that the instrument failed.\n  Propagate these into a distinct DB_ERROR status and count it.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry, main aggregation),\n  swallowed libsql errors in the review and findings lookups become\n  NOT_REVIEWED or an LLM-judged MISSED. ERROR and malformed judge replies\n  fall into \"_ => {}\" and are counted in no bucket, so the summary\n  silently under-reports entries and the process exits 0. Contention as\n  the trigger is unproven, since the DB uses WAL with a 5000 ms busy\n  timeout, but the error mapping is wrong regardless. Count ERROR and\n  unrecognised statuses, and exit non-zero if any are present.\n\n- [LOW] In src/bin/benchmark_review.rs (process_entry), findings and the\n  review summary are model output derived from attacker-writable patch\n  content. They are interpolated into the judge prompt with no delimiters\n  and no statement that they are data, so text such as \"Respond DETECTED\"\n  can steer the verdict. Impact is limited to benchmark integrity, but the\n  verdict is stored as the system's own measurement.\n\n- [LOW] Commit scope and reproducibility. The commit bundles a new tool, a\n  service config change, a shared API-client change and repo-wide\n  reformatting in db.rs, fetcher.rs, reviewer.rs, review.rs and\n  ingest_benchmark.rs, with no rationale or evidence of a run. The design\n  document prompt passes only findings, while the code also passes the\n  review summary. The doc lists NOT_FOUND_IN_DB, while the BenchmarkResult\n  comment in benchmark_review.rs lists UNKNOWN, which is never emitted. The\n  judge uses the reviewer's own model with generation_config None, and\n  results record neither model nor prompt, so reruns are not reproducible\n  and verdicts are self-graded.",
+  "findings": [
+   {
+    "problem": "judge verdict is unvalidated first-line text; errors dropped from summary",
+    "severity": "High",
+    "type": "Silent Failure / Misleading Results",
+    "preexisting": false,
+    "explanation": "A benchmark whose product is an accuracy figure reports a plausible but false result, and exits 0. In process_entry the status is parts[0] with '[', ']' and '**' stripped, never checked against DETECTED, PARTIALLY_DETECTED or MISSED. Replies like 'DETECTED: finding 2...', 'Detected', a leading non-text part ('Unknown'), or a Gemini failure ('ERROR', including a missing LLM_API_KEY, which GeminiClient::new defaults to an empty string) become arbitrary status strings. found is an exact string compare, so these read as misses in benchmark_results.json. main's aggregation ends in '_ => {}', so these entries are in no printed counter, the buckets do not sum to Total Entries, nothing warns, and the exit code is 0. The diff adds no test of the parsing, so none would fail. The fix is to parse into a closed enum, add an explicit error/unparsed status, count it, and exit non-zero when any exist. Extract a pure parse function and test it with captured replies.",
+    "locations": [
+     {
+      "code_snippet": "let status_raw = parts[0].trim().replace(\"[\", \"\").replace(\"]\", \"\").replace(\"**\", \"\");",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "Free-form model text becomes the recorded status; Err becomes 'ERROR'."
+     },
+     {
+      "code_snippet": "\"SKIPPED\" => skipped_count += 1,\n            _ => {}",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "Unrecognised statuses and ERROR vanish from the summary."
+     }
+    ]
+   },
+   {
+    "problem": "DB errors and failed reviews are scored as MISSED or NOT_REVIEWED",
+    "severity": "High",
+    "type": "Silent Failure / Wrong Ground-Truth Classification",
+    "preexisting": false,
+    "explanation": "Infrastructure failures are recorded as benchmark outcomes, which deflates the measured detection rate with no signal. The reviews query takes 'ORDER BY id DESC LIMIT 1' with no status filter, so a newer failed, FailedToApply or pending review (statuses visible in db.rs tests) with no findings is sent to the judge as '(No structured findings recorded in DB)' and scored MISSED. The review query's 'Err(_) => None' reports NOT_REVIEWED with no log. 'if let Ok(mut rows) = findings_result' and 'while let Ok(Some(row))' turn a query or row error into zero or truncated findings, then MISSED. row.get(..).unwrap_or_default() turns decode errors into patch/review id 0 or empty text. The summary also merges NOT_FOUND_IN_DB and NOT_REVIEWED, so DB errors look like never-ingested patches. The diff has no test for any of these paths. The fix is to filter on a completed status, propagate or log every DB error, and report a distinct not-evaluable status.",
+    "locations": [
+     {
+      "code_snippet": "SELECT id, summary, result_description FROM reviews WHERE patch_id = ? ORDER BY id DESC LIMIT 1",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "No status filter; the newest row may be a failed or pending review."
+     },
+     {
+      "code_snippet": "Err(_) => None,",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "DB error reported as NOT_REVIEWED with no log."
+     },
+     {
+      "code_snippet": "if let Ok(mut rows) = findings_result {\n        while let Ok(Some(row)) = rows.next().await {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "Findings query and row errors become 'no findings', then MISSED."
+     }
+    ]
+   },
+   {
+    "problem": "shared review.concurrency raised 1 to 24 for the live service",
+    "severity": "Medium",
+    "type": "Live Service Config / Single Responsibility",
+    "preexisting": false,
+    "explanation": "The reviewer service reads the same key as the benchmark (Reviewer::new, src/reviewer.rs:85/122 sizes its Semaphore from it), so the committed default makes the live reviewer run 24 simultaneous reviews, each with its own git worktree of third_party/linux and its own Gemini tool-calling session. That is 24x the disk, CPU and API-quota load, and it is much more likely to hit 429 retry storms. The benchmark also builds its own GeminiClient and so bypasses the shared QuotaManager the daemon uses, so 24 callers hit one key uncoordinated. It is a behaviour change to a running service, justified only by a benchmark tool, and the commit gives no rationale. The benchmark should get its own setting or CLI flag. Also, buffer_unordered(0) polls nothing, so a zero value would write an empty result file and exit 0.",
+    "locations": [
+     {
+      "code_snippet": "concurrency = 24",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review]",
+      "line": "30",
+      "why_this_location_matters": "Shared default for service and benchmark."
+     },
+     {
+      "code_snippet": "semaphore: Arc::new(Semaphore::new(concurrency)),",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer::new",
+      "line": "122",
+      "why_this_location_matters": "Production parallelism comes from this value."
+     },
+     {
+      "code_snippet": ".buffer_unordered(concurrency)",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "Benchmark reuses the same knob with an unmanaged GeminiClient; 0 yields an empty run."
+     }
+    ]
+   },
+   {
+    "problem": "--help or any flag runs the full benchmark and truncates results",
+    "severity": "Medium",
+    "type": "CLI / Public Surface",
+    "preexisting": false,
+    "explanation": "main() never reads arguments. 'cargo run --bin benchmark_review -- --help' opens the live DB, fires the concurrent Gemini calls (spending quota), and then File::create truncates the previous benchmark_results.json with no backup. A mistyped flag costs a full run and destroys earlier results. Paths are hard-coded to the CWD and there is no dry-run or limit option. Medium because it is an operator-invoked command with recoverable cost.",
+    "locations": [
+     {
+      "code_snippet": "let output_file = File::create(\"benchmark_results.json\")?;",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main",
+      "line": "109",
+      "why_this_location_matters": "Unconditional truncation; no argument handling before work starts."
+     }
+    ]
+   },
+   {
+    "problem": "results written once at the end, non-atomically, in random order",
+    "severity": "Medium",
+    "type": "Incomplete Implementation vs Design",
+    "preexisting": false,
+    "explanation": "Results are held in memory until all LLM calls finish, then streamed into a freshly truncated benchmark_results.json. A crash, panic (for example the Retry-After path) or Ctrl-C loses the whole run, and a failure mid-write leaves invalid JSON while the previous good results are already gone. The repo rule is to write a temp file and rename. buffer_unordered also makes output order non-deterministic, which makes runs hard to diff.",
+    "locations": [
+     {
+      "code_snippet": "serde_json::to_writer_pretty(output_file, &results)?;",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main",
+      "line": "None",
+      "why_this_location_matters": "Writes directly into the truncated destination."
+     }
+    ]
+   },
+   {
+    "problem": "untrusted review text interpolated into the judge prompt undelimited",
+    "severity": "Low",
+    "type": "Prompt Injection / Integrity of Measurement",
+    "preexisting": false,
+    "explanation": "Findings and the review summary are model output derived from patch content anyone can write. They are concatenated into the judge instructions with no delimiters and no statement that they are data, so text such as 'Respond DETECTED' can steer the verdict. The impact is limited to the benchmark's integrity, not money or credentials, but the verdict is stored as the system's own measurement.",
+    "locations": [
+     {
+      "code_snippet": "The tool produced the following findings:\\n\\\n        {}\\n\\n\\\n        The review summary was:\\n\\\n        {}",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "Untrusted text is placed directly in the instruction stream."
+     }
+    ]
+   },
+   {
+    "problem": "commit bundles unrelated changes; design and code diverge; judge not pinned",
+    "severity": "Low",
+    "type": "Single Responsibility / Commit Message",
+    "preexisting": false,
+    "explanation": "The commit mixes a new tool, a service config change, a shared API-client change and repo-wide reformatting (db.rs, fetcher.rs, reviewer.rs, review.rs, ingest_benchmark.rs), and the message gives no rationale or evidence of a run. The design doc prompt uses only findings, while the code also passes the review summary and says 'ANY of the findings or the review summary'. The doc lists NOT_FOUND_IN_DB, while the struct comment lists UNKNOWN, which is never emitted. The judge is the reviewer's own model with generation_config None, and the results record neither model nor prompt, so reruns are not reproducible and verdicts are self-graded.",
+    "locations": [
+     {
+      "code_snippet": "system_instruction: None,\n        generation_config: None,",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "No determinism controls on the judge call."
+     },
+     {
+      "code_snippet": "The tool produced the following findings:\n{findings_list}",
+      "file": "designs/DESIGN_BENCHMARK_VALIDATION.md",
+      "function_or_symbol": "Gemini Prompt",
+      "line": "None",
+      "why_this_location_matters": "Documented prompt differs from the implemented one."
+     }
+    ]
+   },
+   {
+    "problem": "Retry-After f64 header can panic Duration::from_secs_f64 on 429",
+    "severity": "Medium",
+    "type": "Panic on untrusted Retry-After header",
+    "preexisting": false,
+    "explanation": "A panic in the 429 handler aborts the calling task, and a huge finite value stalls it. In src/bin/benchmark_review.rs the process_entry futures run under buffer_unordered inside main, so a panic unwinds main and every result is lost, because benchmark_results.json is written only after collect(). Reachability: any 429 from the Gemini endpoint whose Retry-After header is numeric but unusual. Rust f64 parse accepts NaN, inf, infinity, -5 and 1e300. Verified at 81f64ea: line 311 only does parse::<f64>().ok(), line 314 prefers the header over the body hint, and line 327 calls Duration::from_secs_f64(retry_seconds + 1.0) with no is_finite check, no clamp and no lower bound. from_secs_f64 panics on NaN, infinity, a negative result (header below -1) and overflow of Duration. A large finite value such as 1e9 does not panic but makes the loop in GenAiClient::generate_content run sleep(*sleep_duration) with no upper bound and then retry, so the task stalls for years. Before this commit the value came only from the body regex Please retry in ([0-9.]+)s, which cannot match a sign, NaN, inf or an exponent, so this input class is new and not preexisting. The dismissal argument holds only for HTTP-date headers, which fail the f64 parse and fall back to the regex or 30s. The request goes straight to generativelanguage.googleapis.com, so triggering this needs an upstream fault or a TLS-intercepting proxy, and I could not confirm that the real producer ever emits such values. That unverified assumption about the producer caps this at Medium. A fix is to accept the header only when it is finite and non-negative, clamp it to a sane maximum, and otherwise fall back to the body hint or 30s. No test in the diff covers the header path.",
+    "locations": [
+     {
+      "code_snippet": ".and_then(|s| s.parse::<f64>().ok());",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "311",
+      "why_this_location_matters": "Accepts NaN, infinity, negative and arbitrarily large values from the response header with no validation."
+     },
+     {
+      "code_snippet": "let retry_seconds = if let Some(secs) = retry_after_header {",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "314",
+      "why_this_location_matters": "The header value overrides the body hint and passes through unchecked."
+     },
+     {
+      "code_snippet": "GeminiError::QuotaExceeded(Duration::from_secs_f64(retry_seconds + 1.0)).into(),",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "327",
+      "why_this_location_matters": "Panics on NaN, infinity, values below -1 and overflow; no finite or non-negative check or clamp precedes it."
+     },
+     {
+      "code_snippet": "sleep(*sleep_duration).await;",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GenAiClient::generate_content",
+      "line": "None",
+      "why_this_location_matters": "A huge finite duration is slept without an upper bound, stalling the task, and the loop then retries."
+     }
+    ]
+   },
+   {
+    "problem": "benchmark_review retries Gemini 429 forever with no timeout",
+    "severity": "Medium",
+    "type": "Unbounded 429 retry loop under 24-wide concurrency",
+    "preexisting": false,
+    "explanation": "Consequence: a persistent 429 (for example a daily quota exhaustion) makes src/bin/benchmark_review.rs hang indefinitely, and benchmark_results.json is only written after every entry completes, so the run produces no output at all. Reachability: every run of `cargo run --bin benchmark_review` builds a bare GeminiClient (benchmark_review.rs:64) and calls client.generate_content(req) (benchmark_review.rs:283). GenAiClient::generate_content for GeminiClient (src/ai/gemini.rs:346) is `loop { match self.generate_content_single(&request).await { Ok(resp) => return Ok(resp), Err(e) => { if let Some(GeminiError::QuotaExceeded(..)) ... { sleep(*sleep_duration).await; continue; } return Err(e); } } }`. It has no attempt counter and no deadline. This commit makes each retry sleep the Retry-After value, or the body hint, or 30s, plus 1s, and a Retry-After of 0 gives a 1s sleep. Nothing in the benchmark path wraps the call in tokio::time::timeout. buffer_unordered(settings.review.concurrency) is now 24 because Settings.toml changed concurrency from 1 to 24, so up to 24 tasks can sit in this loop against the one LLM_API_KEY. The benchmark also bypasses QuotaManager (src/ai/proxy.rs), so nothing coordinates the 24 retriers. The error is a 429, so each retry is rejected rather than billed; the cost is a stalled run and sustained request pressure on a quota-exhausted key, not lost money. The bound that exists elsewhere (see dismissed concern) does not cover this binary. Side effect: the same Settings.toml value raises production review concurrency to 24, which multiplies 429 pressure on the shared key. That is a config change and not itself a code defect. Capped at Medium because it is a developer tool with no money, credential or live-store effect. Fix: cap attempts or total elapsed time in generate_content, or wrap each process_entry evaluation in a timeout and record an ERROR status.",
+    "locations": [
+     {
+      "code_snippet": "loop { match self.generate_content_single(&request).await { Ok(resp) => return Ok(resp), Err(e) => { if let Some(GeminiError::QuotaExceeded(sleep_duration)) = e.downcast_ref::<GeminiError>() { sleep(*sleep_duration).await; continue; } return Err(e); } } }",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GenAiClient for GeminiClient::generate_content",
+      "line": "346",
+      "why_this_location_matters": "Retries QuotaExceeded forever with no attempt cap or deadline."
+     },
+     {
+      "code_snippet": "let resp = client.generate_content(req).await;",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "283",
+      "why_this_location_matters": "Direct call with no tokio::time::timeout around it, so the unbounded loop is reachable and holds a concurrency slot indefinitely."
+     },
+     {
+      "code_snippet": "let gemini_client = Arc::new(GeminiClient::new(eval_model));",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main",
+      "line": "64",
+      "why_this_location_matters": "Bare GeminiClient shared by up to 24 concurrent tasks, not routed through QuotaManager."
+     }
+    ]
+   },
+   {
+    "problem": "API key in URL leaks via reqwest error into benchmark_results.json",
+    "severity": "Medium",
+    "type": "Possible API key leak via reqwest error text",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: any transport failure (DNS, TLS, connect, timeout) in benchmark_review writes the Gemini API key in plaintext to benchmark_results.json and to the log. The file is a durable, shareable artifact whose purpose is to be inspected and passed around, and a leaked key cannot be un-leaked. Trigger path: process_entry calls client.generate_content(req), which calls generate_content_single, which builds the URL with format!(\"...:generateContent?key={}\", self.model, self.api_key) and passes it to post_request. post_request runs self.client.post(url).json(body).send().await and propagates failure with `let res = res?;`, after logging it with `tracing::error!(\"Gemini request failed (transport): {}\", e)`. generate_content in the GenAiClient impl returns non-quota errors unchanged (`return Err(e)`). process_entry then does `(\"ERROR\".to_string(), e.to_string())` and stores it as `explanation`, and also logs it via error! and info!. Evidence checked: git_grep for without_url, redact and strip_url across the tree found nothing, so no stripping happens anywhere on this path. Cargo.toml pins reqwest = 0.13.1. I could not check Cargo.lock (git_grep and git_find_files returned no match at this revision), so the exact locked version is unverified. Assumption: reqwest's Error Display for send errors appends the request URL, in the form 'error sending request for url (<url>)'. That has been reqwest's behaviour since 0.11/0.12 and I expect it in 0.13, but I did not confirm it against the 0.13 source. If the URL is present, the key is in it, because it is passed as a query parameter. Confirm by forcing a connect failure (for example a bad proxy) and inspecting the explanation field. Because this rests on that unverified assumption, severity is capped at Medium. Pre-existing part: the log line at gemini.rs post_request already exposes the key in logs, and create_cached_content, list_cached_contents and delete_cached_content propagate raw `?` errors with the same URL form. This commit's new contribution is persisting the text in benchmark_results.json and logging it again, so the finding is marked not pre-existing. Fix: call e.without_url() on the reqwest error in post_request (and the cache methods) before logging or returning, or send the key in the x-goog-api-key header instead of the URL.",
+    "locations": [
+     {
+      "code_snippet": "(\"ERROR\".to_string(), e.to_string())",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "316",
+      "why_this_location_matters": "The raw error text is stored as explanation, written to benchmark_results.json, and logged."
+     },
+     {
+      "code_snippet": "\"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}\", self.model, self.api_key",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::generate_content_single",
+      "line": "248",
+      "why_this_location_matters": "The API key is embedded in the URL query string, so any error that prints the URL carries it."
+     },
+     {
+      "code_snippet": "tracing::error!(\"Gemini request failed (transport): {}\", e);\n        }\n        let res = res?;",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "279",
+      "why_this_location_matters": "The transport error is logged and propagated without without_url(), and no stripping exists anywhere in the tree."
+     }
+    ]
+   },
+   {
+    "problem": "DB errors in benchmark_review lookups scored as MISSED or NOT_FOUND",
+    "severity": "Medium",
+    "type": "Join key between benchmark.json and patches.message_id",
+    "preexisting": false,
+    "explanation": "Consequence: a transient DB error (locked database, schema mismatch) during the patches, reviews or findings query is recorded as a benchmark outcome, so the summary can understate detection with no signal that the instrument failed. Reachability: every run of cargo run --bin benchmark_review, with 24 concurrent entries from Settings.toml against one libsql connection, so contention errors are plausible. The join key itself is sound (see dismissal), but the lookups around it fail silently. In process_entry, the patches query Err arm logs and sets patch_id to None, which becomes status NOT_FOUND_IN_DB with the explanation 'Patch not found in database.' The reviews query uses Err(_) => None, with no log at all, which becomes NOT_REVIEWED. The findings query uses if let Ok(mut rows) with no else arm, and a row-iteration error ends the loop through while let Ok(Some(..)). Either way findings_count stays 0, the prompt receives '(No structured findings recorded in DB)', and Gemini is asked to judge against an empty list, giving MISSED. That is a false negative counted as a real miss. Row decoding adds to this: row.get::<i64>(0).unwrap_or_default() turns a decode failure into patch_id 0, and the message and severity columns use unwrap_or_default. Gemini failures are labelled ERROR, which matches no counter in the summary, so those entries vanish from the printed totals. Nothing is fabricated about another program, and the severity is capped at Medium because the failure needs a DB error to trigger. A fix would propagate the errors into a distinct status such as ERROR or DB_ERROR and count it in the summary.",
+    "locations": [
+     {
+      "code_snippet": "Err(e) => { error!(\"DB Error finding patch {}: {}\", entry.commit, e); None }",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A DB error is reported as NOT_FOUND_IN_DB, which is indistinguishable from a genuinely missing patch."
+     },
+     {
+      "code_snippet": "Err(_) => None,\n    };\n\n    if review_data.is_none() {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A review query error is swallowed without a log and becomes NOT_REVIEWED."
+     },
+     {
+      "code_snippet": "if let Ok(mut rows) = findings_result {\n        while let Ok(Some(row)) = rows.next().await {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A findings query or iteration error yields an empty findings list, so Gemini grades against nothing and returns MISSED."
+     }
+    ]
+   },
+   {
+    "problem": "swallowed DB errors in benchmark_review scored as MISSED",
+    "severity": "Medium",
+    "type": "Shared libsql connection contention at 24-wide concurrency",
+    "preexisting": false,
+    "explanation": "Consequence: any libsql error during the review or findings lookup in src/bin/benchmark_review.rs process_entry is turned into a plausible benchmark verdict (NOT_REVIEWED, or MISSED via the LLM judge) instead of a refused or errored cell. The Detected/Missed figures are the output of this instrument and are read by people deciding about review quality, so they are silently skewed. Reachability: runs for every benchmark entry via buffer_unordered(settings.review.concurrency), and this commit raises concurrency from 1 to 24 in Settings.toml. All tasks share one Database.conn, and the benchmark process runs next to a sashiko server that writes to the same file. Verified code: Database::new sets PRAGMA journal_mode=WAL and PRAGMA busy_timeout = 5000 on the connection. In WAL mode plain readers normally do not get SQLITE_BUSY from a concurrent writer, so I could not prove that 24-way contention produces BUSY on these SELECTs. The candidate's contention premise is therefore unproven, and this finding is capped at Medium. The real defect on the same path does not depend on contention: (1) the review query maps Err(_) => None with no log at all, which becomes NOT_REVIEWED. (2) The patch query logs the error but maps it to None, which becomes NOT_FOUND_IN_DB, the same status as a patch that really is absent. (3) The findings query uses if let Ok(mut rows) and while let Ok(Some(row)), so a query error or a mid-iteration error leaves findings_count at 0 or truncates the list. The prompt then says '(No structured findings recorded in DB)' and the judge returns MISSED, which counts as a real miss of the reviewer. row.get(...).unwrap_or_default() similarly turns a decode error into an empty message or severity 0. (4) When Gemini fails, status is 'ERROR', found is false, and the aggregation match has a '_ => {}' arm, so ERROR (and any judge reply whose first line is not exactly a status word, for example 'DETECTED: ...' on one line) is counted in no bucket. The printed counts then do not sum to Total Entries and nothing flags it. The process exits 0 in all cases. Git worktree part of the question: benchmark_review.rs never creates worktrees (it only uses the DB and Gemini). The concurrency=24 setting does apply to Reviewer (Semaphore::new(concurrency)). In src/git_ops.rs, GitWorktree::new runs 'git worktree add --detach' with no lock; only ensure_remote takes the per-remote and global config AsyncMutex locks. I did not prove that parallel worktree adds fail, so I report no separate finding for it. What would confirm contention failures: run the benchmark at 24 against a DB with an active server writer and count error! lines. Fix: propagate DB errors into a distinct DB_ERROR status, count ERROR and unrecognised statuses in the summary, and exit non-zero if any are present.",
+    "locations": [
+     {
+      "code_snippet": "Err(e) => {\n            error!(\"DB Error finding patch {}: {}\", entry.commit, e);\n            None\n        }",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A DB error on the patch lookup becomes NOT_FOUND_IN_DB, indistinguishable from a genuinely missing patch."
+     },
+     {
+      "code_snippet": "            } else {\n                None\n            }\n        }\n        Err(_) => None,\n    };\n\n    if review_data.is_none() {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "The review query error is dropped with no log and reported as NOT_REVIEWED."
+     },
+     {
+      "code_snippet": "if let Ok(mut rows) = findings_result {\n        while let Ok(Some(row)) = rows.next().await {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A failed or truncated findings read yields zero findings, so the judge is told there are none and returns MISSED."
+     },
+     {
+      "code_snippet": "\"SKIPPED\" => skipped_count += 1,\n            _ => {}",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main (aggregation)",
+      "line": "None",
+      "why_this_location_matters": "ERROR and malformed judge statuses are counted nowhere, so the summary silently under-reports entries."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Retry-After as an HTTP-date could produce a wrong or zero wait.",
+    "reasoning": "An HTTP-date does not parse as f64, so .ok() yields None, the and_then chain is None, and the code falls through to the body regex and then the 30s default. The date form degrades to the previous behaviour. The non-finite and negative numeric cases are tracked separately.",
+    "locations": [
+     {
+      "code_snippet": ".and_then(|s| s.parse::<f64>().ok());",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "311",
+      "why_this_location_matters": "Failed parse maps to None and uses the fallback."
+     }
+    ]
+   },
+   {
+    "description": "SQL injection through the benchmark.json Commit field.",
+    "reasoning": "All new queries bind values through libsql::params!. The Commit value is never formatted into SQL text; the format! calls only build the judge prompt and findings text.",
+    "locations": [
+     {
+      "code_snippet": "\"SELECT id FROM patches WHERE message_id = ?\",\n            libsql::params![entry.commit.clone()],",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "Parameter binding prevents SQL alteration."
+     }
+    ]
+   },
+   {
+    "description": "The reformatting of ingest_benchmark.rs may have altered the JSON posted to /api/submit.",
+    "reasoning": "The diff to ingest_benchmark.rs only reorders an import and wraps lines. SubmitRequest still serialises with tag = \"type\" and rename_all = \"lowercase\" to the same {type:remote, sha, repo} body and URL.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(tag = \"type\", rename_all = \"lowercase\")]\nenum SubmitRequest {\n    Remote { sha: String, repo: String },\n}",
+      "file": "src/bin/ingest_benchmark.rs",
+      "function_or_symbol": "SubmitRequest",
+      "line": "13",
+      "why_this_location_matters": "Wire shape unchanged."
+     }
+    ]
+   },
+   {
+    "description": "The same unbounded 429 retry loop lets a stuck review hold its semaphore slot and worktree indefinitely in the production reviewer path.",
+    "reasoning": "In src/reviewer.rs the review tool interaction runs inside tokio::time::timeout(Duration::from_secs(settings.review.timeout_seconds), async { ... }). The GeminiClient and its ai_request handling are created inside that block (line 1078). On expiry the Err(_) arm logs the timeout, calls child.kill().await and records the patch application status as error. The review tool's own worker path (src/worker/mod.rs:334 client.generate_content) runs in the child process that this timeout kills. So in the reviewer the loop is bounded by timeout_seconds (3600 in Settings.toml) and the slot and worktree are released. The unbounded behaviour applies only to the benchmark binary, reported in findings. This dismissal covers the reviewer path only.",
+    "locations": [
+     {
+      "code_snippet": "tokio::time::timeout(std::time::Duration::from_secs(settings.review.timeout_seconds), async {",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "review tool interaction",
+      "line": "1069",
+      "why_this_location_matters": "Bounds the whole interaction, including Gemini retries, by timeout_seconds."
+     },
+     {
+      "code_snippet": "Review tool timed out after {} seconds. Killing process. ... let _ = child.kill().await;",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "timeout handler",
+      "line": "1347",
+      "why_this_location_matters": "Shows the stuck review is killed and marked as error, releasing its resources."
+     }
+    ]
+   },
+   {
+    "description": "The join key patches.message_id = Commit may not match what ingest_benchmark submitted, and may be non-unique, giving NOT_FOUND_IN_DB or an arbitrary patch row on re-runs.",
+    "reasoning": "Producer side: for a remote git range, fetcher.rs overwrites message_id with the full SHA from git rev-list. For a single commit, it overwrites message_id with commit_or_range, which is the submitted string. ingest_benchmark sends sha: entry.commit.clone(), and benchmark_review queries message_id = entry.commit from the same benchmark.json field. Both programs use the same string, so the key matches even for an abbreviated SHA. Uniqueness: Database::create_patch uses INSERT INTO patches ... ON CONFLICT(message_id) DO UPDATE SET patchset_id/part_index/diff. SQLite rejects an upsert target without a matching unique index, so message_id must be unique in the schema. I did not read the CREATE TABLE itself, because the UNIQUE grep in db.rs returned nothing, so the constraint is inferred from the upsert and the schema is not directly shown. Re-running ingest_benchmark therefore updates the one row and cannot create several rows for one sha, so the lack of ORDER BY cannot return an arbitrary row. The review lookup is keyed by patch_id with ORDER BY id DESC LIMIT 1, so it is deterministic. Remaining risk: ingest_benchmark has no idempotency of its own, but the upsert absorbs that. The real defect on this path is the swallowed DB errors reported in the finding above.",
+    "locations": [
+     {
+      "code_snippet": "*message_id = sha.clone();",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "FetchAgent (PatchSubmitted, range and single-commit paths)",
+      "line": "223"
+     },
+     {
+      "code_snippet": "*message_id = commit_or_range.clone();",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "FetchAgent (PatchSubmitted, single commit)",
+      "line": "249"
+     },
+     {
+      "code_snippet": "INSERT INTO patches (patchset_id, message_id, part_index, diff) VALUES (?, ?, ?, ?)\n             ON CONFLICT(message_id) DO UPDATE SET",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::create_patch",
+      "line": "1831"
+     },
+     {
+      "code_snippet": "sha: entry.commit.clone(),",
+      "file": "src/bin/ingest_benchmark.rs",
+      "function_or_symbol": "main",
+      "line": "None"
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This commit adds a standalone tool, benchmark_review, that scores\nSashiko's review output against a ground-truth corpus (benchmark.json).\nFor each entry it looks up the stored patch, its latest review and its\nfindings in the database. It then asks the configured Gemini model\nwhether any finding exactly describes the known problem, and writes the\nverdicts to benchmark_results.json.\n\nThe commit also makes Gemini 429 handling honor the Retry-After header,\nraises the shipped review concurrency in Settings.toml, adds a design\ndocument, and includes some rustfmt-style reformatting of unrelated\nfiles.\n\nUser-visible effects: a new binary, a changed default setting, and\nchanged rate-limit retry behavior.\n\nBefore:\n  No tool existed to measure detection rate against benchmark.json.\n  Settings.toml: concurrency = 1\n  On a 429 response, the retry delay came only from the error body\n  text, falling back to 30 seconds.\n\nAfter:\n  $ cargo run --bin benchmark_review\n  Progress: 10/N ...\n  Detected (Exact): N\n  Partially Detected: N\n  Missed: N\n  Not Reviewed/Found: N\n  Skipped (No Description): N\n  Detailed results written to benchmark_results.json\n  Settings.toml: concurrency = 24\n  On a 429 response, the retry delay is taken from the Retry-After\n  header if present, then from the error body, then 30 seconds.",
+  "inline_review": "- [HIGH] In src/ai/gemini.rs (GeminiClient::post_request), the reqwest\n  transport error is logged with Display, which includes the request URL\n  and therefore the ?key= API key value. The same error is propagated\n  unredacted. The new process_entry in src/bin/benchmark_review.rs logs it\n  and also stores e.to_string() in the explanation field of\n  benchmark_results.json, so the key can be written to disk. Strip the URL\n  from the error, pass the key in a header, or redact before logging.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry and the main\n  aggregation loop), the judge verdict is taken verbatim from the first\n  line of the reply with no check against DETECTED, PARTIALLY_DETECTED or\n  MISSED. A reply such as \"DETECTED: finding 2\" or an ERROR/Unknown\n  fallback yields found=false and matches no counter (the match ends in\n  _ => {}). The printed counts then do not sum to Total Entries and\n  nothing warns, so detection accuracy can be silently understated. No\n  tests cover the verdict parsing.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry), database errors\n  are turned into false results. A failed review query maps to\n  NOT_REVIEWED without logging, a failed findings query or row error\n  yields zero findings and a false MISSED, and a decode failure on the\n  patch id silently becomes 0 via unwrap_or_default. With 24 concurrent\n  tasks, SQLITE_BUSY makes this plausible, and the benchmark numbers are\n  skewed without any signal.\n\n- [MEDIUM] In src/bin/benchmark_review.rs (process_entry), the review\n  lookup selects the latest review for the patch with no status filter.\n  If the newest attempt is Failed, FailedToApply, Cancelled or still in\n  progress, it has no findings and the judge reports MISSED even when an\n  earlier successful review detected the bug.\n\n- [MEDIUM] In src/ai/gemini.rs (GeminiClient::post_request), the new\n  Retry-After header value is parsed as f64 with no validation and passed\n  to Duration::from_secs_f64, which panics on negative, NaN, infinite or\n  overflowing input. The old body-regex path could not produce such\n  values. A very large finite value instead makes the retry loop in\n  GenAiClient::generate_content sleep for that long with no cap. No test\n  covers header precedence or edge values.\n\n- [MEDIUM] Settings.toml raises review.concurrency from 1 to 24 with no\n  rationale or evidence. Each permit in Reviewer::new holds a linux\n  worktree and a worker subprocess, all writing through a database with\n  only a 5 second busy_timeout. src/bin/benchmark_review.rs main reuses\n  this daemon setting for its own parallelism instead of a tool-specific\n  option, and does not reject a value of 0, which would hang silently.\n\n- [MEDIUM] In src/db.rs (Database::begin_transaction) and src/main.rs (DB\n  worker batching loop), the ingest transaction is a raw BEGIN IMMEDIATE\n  on the connection shared by all tasks and is held across awaits.\n  Statements from reviewer and API tasks can run inside the batch and be\n  committed or lost with it, and a failed COMMIT that is only logged\n  leaves the transaction open so later batches fail. Raising concurrency\n  to 24 in this commit makes this exposure more likely.\n\n- [MEDIUM] In src/reviewer.rs (patch review loop and run_review_tool),\n  review status transitions (Applying, InReview) and terminal\n  complete_review writes are discarded with let _ = and nothing is\n  logged, and Ok(PatchResult::Success) is returned regardless. If a write\n  fails with SQLITE_BUSY, a review can stay in a non-terminal status with\n  no findings and no error until the next restart. The 24-way concurrency\n  default in this commit makes such contention more realistic.\n\n- [MEDIUM] In src/ai/gemini.rs (GenAiClient::generate_content for\n  GeminiClient and GeminiClient::new), the 429 retry loop has no attempt\n  cap or deadline, and the client is built with Client::new() which sets\n  no request or connect timeout. The new src/bin/benchmark_review.rs\n  calls this path from up to 24 tasks with no shared QuotaManager, so a\n  persistent 429 or a hung connection stalls the run indefinitely and\n  each task retries independently.\n\n- [LOW] The commit bundles a new benchmark binary and design document, a\n  Gemini Retry-After behavior change, a Settings.toml concurrency change\n  (1 to 24) and formatting-only edits in src/db.rs, src/fetcher.rs,\n  src/reviewer.rs, src/bin/review.rs and src/bin/ingest_benchmark.rs. The\n  commit message does not mention the formatting churn or justify the\n  concurrency value, which makes bisecting and partial revert harder.\n\n- [LOW] In src/bin/benchmark_review.rs (process_entry), the query on\n  reviews filtered by patch_id has no supporting index, since src/schema.sql\n  defines none on reviews(patch_id). Each benchmark entry scans the table\n  at concurrency 24. Impact is limited to slower runs of an offline tool;\n  confirm no runtime try_create_index call already covers it.",
+  "findings": [
+   {
+    "problem": "benchmark_review drops unrecognized judge verdicts from summary",
+    "severity": "Medium",
+    "type": "Silent Failure / Benchmark Result Integrity",
+    "preexisting": false,
+    "explanation": "In src/bin/benchmark_review.rs, process_entry takes the first line of the Gemini reply, strips '[', ']' and '**', and stores it as the status without checking it against DETECTED, PARTIALLY_DETECTED or MISSED. A one-line reply such as 'DETECTED: finding 2...' or 'Status: MISSED' yields a garbage status and found=false, so a true detection is recorded as not found. The fallbacks 'Unknown' and 'ERROR' (Gemini failure) behave the same way. In main(), the aggregation match ends in '_ => {}', so these entries appear in no counter, the printed counts do not sum to Total Entries, and nothing warns about it. The tool exists to measure detection accuracy, so the numbers can be silently understated. The tool is a dev binary and does not affect the daemon, hence Medium. There are also no unit tests for the verdict parsing.",
+    "locations": [
+     {
+      "code_snippet": "\"SKIPPED\" => skipped_count += 1,\n            _ => {}",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main (aggregation loop)",
+      "line": "None",
+      "why_this_location_matters": "Unrecognized statuses (ERROR, Unknown, malformed) are excluded from the summary."
+     },
+     {
+      "code_snippet": "let status_raw = parts[0]\n                .trim()\n                .replace(\"[\", \"\")",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "The verdict is taken verbatim from line 1 with no validation against the allowed set."
+     }
+    ]
+   },
+   {
+    "problem": "benchmark_review turns DB errors into false NOT_REVIEWED or MISSED",
+    "severity": "Medium",
+    "type": "Silent Failure / Benchmark Result Integrity",
+    "preexisting": false,
+    "explanation": "In process_entry, the review query's 'Err(_) => None' reports a DB error (for example SQLITE_BUSY with 24 concurrent tasks) as NOT_REVIEWED, and the error is never logged. The findings query uses 'if let Ok(mut rows)' and 'while let Ok(Some(row))', so a query or iteration error leaves findings_count at 0. The prompt then says '(No structured findings recorded in DB)' and the judge answers MISSED, which counts an infrastructure failure against Sashiko's detection rate. 'row.get::<i64>(0).unwrap_or_default()' turns a decode failure into patch_id 0, so later queries run against the wrong id. Downstream impact: the benchmark accuracy numbers are silently skewed. The code is entirely visible in the new file.",
+    "locations": [
+     {
+      "code_snippet": "Err(_) => None,",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A review query error is mapped to NOT_REVIEWED without logging."
+     },
+     {
+      "code_snippet": "if let Ok(mut rows) = findings_result {\n        while let Ok(Some(row)) = rows.next().await {",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "Query or row errors produce zero findings and a false MISSED."
+     },
+     {
+      "code_snippet": "Some(row.get::<i64>(0).unwrap_or_default())",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "A decode failure silently becomes patch_id 0."
+     }
+    ]
+   },
+   {
+    "problem": "benchmark_review judges the latest review regardless of its status",
+    "severity": "Medium",
+    "type": "Error Handling / Result Accuracy",
+    "preexisting": false,
+    "explanation": "The review lookup is 'SELECT id, summary, result_description FROM reviews WHERE patch_id = ? ORDER BY id DESC LIMIT 1' with no status predicate. If the newest attempt is Failed, FailedToApply, Cancelled or still in progress (max_retries = 3 makes this plausible), it has no findings, so the judge returns MISSED even when an earlier successful review detected the bug. The tool failure is counted as a detection miss, which skews the benchmark result.",
+    "locations": [
+     {
+      "code_snippet": "FROM reviews WHERE patch_id = ? ORDER BY id DESC LIMIT 1",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "Selects a review row regardless of terminal status."
+     }
+    ]
+   },
+   {
+    "problem": "commit mixes benchmark tool with config change and fmt churn",
+    "severity": "Low",
+    "type": "Single Responsibility / Commit Hygiene",
+    "preexisting": false,
+    "explanation": "One commit bundles a new benchmark binary and design doc, a Gemini Retry-After behavior change, a production-affecting Settings.toml default change (review.concurrency 1 to 24) and rustfmt-only edits in src/db.rs, src/fetcher.rs, src/reviewer.rs, src/bin/review.rs and src/bin/ingest_benchmark.rs. The commit message does not mention the formatting churn and gives no rationale for the concurrency value. The result is hard to bisect or revert piecemeal and hides the behavioral changes in noise. The Signed-off-by is present with a real name. This is a hygiene issue and not a functional defect, hence Low.",
+    "locations": [
+     {
+      "code_snippet": "-concurrency = 1\n+concurrency = 24",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review]",
+      "line": "30",
+      "why_this_location_matters": "A behavioral config change is buried in a benchmark-tool commit with no rationale."
+     },
+     {
+      "code_snippet": "use crate::git_ops::{GitWorktree, ensure_remote, get_commit_hash};",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "imports and formatting hunks",
+      "line": "23",
+      "why_this_location_matters": "Formatting-only change in a core module unrelated to the stated goal."
+     }
+    ]
+   },
+   {
+    "problem": "Gemini API key leaks via reqwest transport error text in logs",
+    "severity": "High",
+    "type": "Secret leakage in logs",
+    "preexisting": false,
+    "explanation": "Reasoning: the secret is the primary-provider (Gemini) API key. It ends up in daemon logs and, with this patch, in an on-disk results file. It only leaks when a transport-level failure occurs (DNS, connect, TLS, timeout). Those are intermittent but realistic, and more likely at the 24-way concurrency this commit sets. The leak does not need an attacker, and the key stays valid until rotated, so this is High rather than Medium. It is not Critical because exposure is limited to operator-readable logs and output files, with no remote trigger. Proof: GeminiClient::generate_content_single and generate_content_with_cache_single build the URL as https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={} using self.api_key (read from LLM_API_KEY). post_request sends it with self.client.post(url).json(body).send().await. On Err, it runs tracing::error!(\"Gemini request failed (transport): {}\", e). Here e is a reqwest::Error, and its Display appends the request URL (\"error sending request for url (...)\"), query string included, so the key is printed. A grep of src/ai/ for without_url and redact_secret found no matches, so nothing strips the URL. The error is also propagated unredacted with `let res = res?;`. create_cached_content and list_cached_contents use the same ?key= URLs with `.send().await?` and also propagate the raw error. The patch makes this reachable in a new place: src/bin/benchmark_review.rs process_entry calls client.generate_content(req), then does error!(\"Error calling Gemini for commit {}: {}\", entry.commit, e) and stores e.to_string() as the explanation field of BenchmarkResult. That field is serialized to benchmark_results.json, so the key can be written to a persistent file as well as the logs. The same commit also edits post_request (the 429 Retry-After handling) and raises review.concurrency to 24. Because the patch adds a caller that logs and persists this error, the finding is not marked preexisting. Fix: use e.without_url() when logging and propagating, or move the key into the x-goog-api-key header, or pass messages through crate::utils::redact_secret.",
+    "locations": [
+     {
+      "code_snippet": "tracing::error!(\"Gemini request failed (transport): {}\", e);",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "279",
+      "why_this_location_matters": "Logs reqwest::Error with Display, which includes the full request URL and therefore the ?key= query value; the error is then returned via res? with the URL still attached."
+     },
+     {
+      "code_snippet": "\"https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}\"",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::generate_content_single",
+      "line": "248",
+      "why_this_location_matters": "Places the API key in the URL query string, which is what ends up in the error text."
+     },
+     {
+      "code_snippet": "error!(\"Error calling Gemini for commit {}: {}\", entry.commit, e);\n(\"ERROR\".to_string(), e.to_string())",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "0",
+      "why_this_location_matters": "New caller added by this commit that logs the error and writes e.to_string() into benchmark_results.json, persisting any leaked key to disk. Exact line number was not retrieved."
+     }
+    ]
+   },
+   {
+    "problem": "Gemini Retry-After header reaches from_secs_f64 unchecked",
+    "severity": "Medium",
+    "type": "Panic on untrusted input / missing test",
+    "preexisting": false,
+    "explanation": "Reasoning: the failure needs a 429 response whose Retry-After header is negative, NaN, inf or very large. Real Gemini responses rarely carry such values, so this is a contained robustness defect, not a systematic break. Gemini is a primary provider, but I did not confirm every caller's handling, so this is capped at Medium. Proof from src/ai/gemini.rs at the target commit: in GeminiClient::post_request, the 429 branch parses the header with s.parse::<f64>().ok(). Rust's f64 parser accepts '-5', 'NaN', 'inf' and '1e30'. The patch gives the header priority over the body regex (`if let Some(secs) = retry_after_header { secs }`), and no is_finite, non-negative or maximum check follows. The value then goes straight into Duration::from_secs_f64(retry_seconds + 1.0) at line 327, which panics on negative, NaN, infinite or overflowing input. Before this patch only the body regex path existed, and its [0-9.]+ capture could not produce a negative, NaN or inf value. The header path is new and widens the set of values that reach the panic. A panic in this call is not mapped to a retry or a failed-review error: it unwinds the calling task. Separately, a large finite header value (for example 1e10) does not panic. It becomes a QuotaExceeded duration, and GeminiClient::generate_content (the loop around line 354) does sleep(*sleep_duration).await and continues with no cap and no attempt limit. That wedges the call for the full duration. benchmark_review (new in this patch) calls GeminiClient::generate_content directly through GenAiClient, so this loop is reached without any wrapper. I did not read the proxy.rs or reviewer.rs QuotaExceeded handlers (proxy.rs:108, reviewer.rs:1109 and 1177), so I could not confirm whether the daemon path clamps the value. Even if it does, the panic at line 327 happens before any caller sees the error. HTTP-date Retry-After values, which the HTTP spec allows, fail the f64 parse and silently fall back to the body regex or 30s. That is benign but unpinned. No test covers header precedence or the edge values.",
+    "locations": [
+     {
+      "code_snippet": ".and_then(|s| s.parse::<f64>().ok());",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "311",
+      "why_this_location_matters": "New in this patch: accepts negative, NaN, inf and huge values from an external header with no validation."
+     },
+     {
+      "code_snippet": "GeminiError::QuotaExceeded(Duration::from_secs_f64(retry_seconds + 1.0)).into(),",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "327",
+      "why_this_location_matters": "Duration::from_secs_f64 panics on negative, NaN, inf or overflowing input, and nothing sanitizes retry_seconds first."
+     },
+     {
+      "code_snippet": "sleep(*sleep_duration).await;\n                        continue;",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GenAiClient::generate_content for GeminiClient",
+      "line": "354",
+      "why_this_location_matters": "The retry loop sleeps for the server-supplied duration with no cap and no attempt limit, so a huge finite header value blocks the call for that long."
+     }
+    ]
+   },
+   {
+    "problem": "review.concurrency 1->24 in shipped Settings.toml, no rationale or guard",
+    "severity": "Medium",
+    "type": "Resource limits / config default",
+    "preexisting": false,
+    "explanation": "Speculative, capped at Medium. Reasoning: the change multiplies per-daemon parallelism 24x. Reviewer::new (src/reviewer.rs:85,122) does Semaphore::new(settings.review.concurrency), and each permit holds a detached worktree of third_party/linux plus a worker subprocess and its LLM traffic. The Reviewer semaphore at this revision is exactly the setting, with no extra bound. Everything funnels through one shared libsql connection whose only contention protection is PRAGMA busy_timeout = 5000 (src/db.rs:304). Verified: (1) Settings.toml is the file parsed by test_production_settings_is_valid and read via Settings::new() from the CWD, but a grep of deployment/ and the Dockerfile found no SASHIKO__REVIEW__CONCURRENCY or Settings.toml reference, so I could not determine whether it is the deployed production config or a dev default. (2) benchmark_review (src/bin/benchmark_review.rs:69) reuses settings.review.concurrency for buffer_unordered, so the benchmark tool's parallelism is coupled to the daemon's default, and the commit raised the global default to suit a benchmark tool. A tool-specific knob would not change daemon behavior. (3) benchmark_review does not validate concurrency >= 1. With 0, buffer_unordered(0) never polls any entry and the stream hangs silently, while Reviewer's Semaphore::new(0) would never grant a permit. Settings requires the field, so this needs a deliberate 0 and is low likelihood. I could not verify: whether 24 concurrent worktree creations and DB writes actually hit SQLITE_BUSY beyond 5s, or whether quota/429 handling absorbs the extra LLM pressure. The commit message says only 'increase concurrency to 24' with no cost or contention evidence. This is not a trivial config tweak, because the value governs daemon disk, process and model spend. Not preexisting: the commit introduces the value.",
+    "locations": [
+     {
+      "code_snippet": "concurrency = 24",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review]",
+      "line": "30",
+      "why_this_location_matters": "Raises the daemon default 24x, with no rationale and no evidence that worktree, DB and quota paths cope."
+     },
+     {
+      "code_snippet": "semaphore: Arc::new(Semaphore::new(concurrency)),",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer::new",
+      "line": "122",
+      "why_this_location_matters": "Each permit maps to a linux worktree plus a worker subprocess, so the setting is a direct resource multiplier."
+     },
+     {
+      "code_snippet": ".query(\"PRAGMA busy_timeout = 5000;\", ())",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "304",
+      "why_this_location_matters": "The only write-contention mitigation on the shared connection when 24 reviews persist results concurrently."
+     },
+     {
+      "code_snippet": "let concurrency = settings.review.concurrency;",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "main",
+      "line": "69",
+      "why_this_location_matters": "The benchmark tool reuses the daemon setting instead of its own knob, and nothing checks concurrency >= 1, so 0 hangs silently."
+     }
+    ]
+   },
+   {
+    "problem": "batch ingest txn runs on shared connection, absorbing concurrent writes",
+    "severity": "Medium",
+    "type": "Concurrency hazard (database)",
+    "preexisting": false,
+    "explanation": "Reasoning: the candidate's literal claim (two tasks calling begin_transaction concurrently) is wrong, but a related defect is real. At 81f64eaa, Database is just `pub struct Database { pub conn: libsql::Connection }` (src/db.rs:23-25). There is no tx_lock, tx_conn or DatabaseTransaction, and begin_immediate_transaction does not exist. begin_transaction (src/db.rs:1025-1028) runs a raw `BEGIN IMMEDIATE` on self.conn, and commit_transaction (1030-1033) runs a raw `COMMIT`. A grep of src finds exactly one caller, the single DB-worker task in src/main.rs:424/445, so two concurrent BEGINs from this path cannot occur. However, that worker holds its transaction open across `.await`s while calling process_parsed_article (main.rs:431) on the same Arc<Database>. The Reviewer (main.rs:492, ctx.db = self.db.clone(), reviewer.rs:209/676), the API (main.rs:481) and the other workers share that same libsql connection, and libsql clones share one sqlite3 handle. Statements issued by those tasks while the batch is open therefore run inside the ingest transaction. Their writes are committed or lost together with the batch, and a failed COMMIT (main.rs:445 only logs it) leaves the transaction open, so the next BEGIN IMMEDIATE fails with 'cannot start a transaction within a transaction' and the loop skips every later batch. This commit raises review.concurrency from 1 to 24 in Settings.toml, so many more reviewer tasks now write through the shared connection while ingestion batches are open. That makes the exposure materially more likely, hence preexisting=false. Severity is capped at Medium: the impact is a localized state/ordering hazard that depends on timing and on libsql's shared-handle semantics (which I did not test), and reviewer writes would be lost only in the failed-commit case. This violates the patterns/concurrency.md invariant that transactions go through tx_lock/tx_conn.",
+    "locations": [
+     {
+      "code_snippet": "self.conn.execute(\"BEGIN IMMEDIATE\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::begin_transaction",
+      "line": "1026",
+      "why_this_location_matters": "Raw transaction on the connection shared by every task holding the Arc<Database>, with no serialization or RAII rollback."
+     },
+     {
+      "code_snippet": "if let Err(e) = worker_db.begin_transaction().await {",
+      "file": "src/main.rs",
+      "function_or_symbol": "DB Worker (parsed_rx batching loop)",
+      "line": "424",
+      "why_this_location_matters": "Opens the transaction and holds it across many awaits while other tasks use the same connection; a failed commit at line 445 is only logged and leaves it open."
+     },
+     {
+      "code_snippet": "concurrency = 24",
+      "file": "Settings.toml",
+      "function_or_symbol": "[review] concurrency",
+      "line": "30",
+      "why_this_location_matters": "This commit raises concurrent reviewer DB activity on the shared connection by 24x, exposing the hazard."
+     }
+    ]
+   },
+   {
+    "problem": "review status and completion DB write errors are silently dropped",
+    "severity": "Medium",
+    "type": "SQLite contention / swallowed error",
+    "preexisting": false,
+    "explanation": "Reasoning: this is a contained, per-review bookkeeping defect, not a daemon-wide failure. It is speculative on how likely contention is, because I could not show that the 5s busy_timeout is actually exceeded, so it is capped at Medium. The candidate's 'row stuck forever' premise is partly wrong. When update_review_status(Applying) or update_review_status(InReview) fails, the later complete_review call in the same flow normally overwrites the status, and the startup recovery query in src/db.rs resets rows in 'Applying' or 'In Review' to Pending after a restart. However, every one of these writes is discarded with 'let _ =' and nothing is logged. That includes the terminal complete_review calls in Database-backed review handling in src/reviewer.rs, for example the Reviewed, Failed and FailedToApply branches. They are followed by return Ok(PatchResult::Success) or ReviewFailed regardless of whether the write succeeded. Each review child process opens its own connection to the same SQLite file, and Database::new sets a fixed 'PRAGMA busy_timeout = 5000'. This commit raises review.concurrency in Settings.toml from 1 to 24, so cross-process writer contention is now a real configuration. If a write fails with SQLITE_BUSY, the failure is invisible. A completed review can then stay at 'Applying' or 'In Review' with no findings, no logs and no error message until the next daemon restart. That is the 'silence looks like a clean patch' failure mode. It is not preexisting because the 24-way concurrency change exposes it. The fix is to log or propagate these errors, and to retry complete_review on busy errors.",
+    "locations": [
+     {
+      "code_snippet": "let _ = db\n    .update_review_status(\n        review_id,\n        ReviewStatus::InReview.as_str(),",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "run_review_tool",
+      "line": "1090",
+      "why_this_location_matters": "The InReview transition result is discarded and ai_started is set to true anyway, so the transition is never retried. The same pattern appears at line 1136 for ai_request_with_cache."
+     },
+     {
+      "code_snippet": "let _ = ctx\n    .db\n    .update_review_status(review_id, ReviewStatus::Applying.as_str(), None)\n    .await;",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer patch review loop",
+      "line": "669",
+      "why_this_location_matters": "The Applying transition error is swallowed with no log."
+     },
+     {
+      "code_snippet": "let _ = ctx\n    .db\n    .complete_review(\n        review_id,\n        ReviewStatus::Reviewed.as_str(),",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer patch review loop",
+      "line": "855",
+      "why_this_location_matters": "The terminal write is also discarded and Ok(PatchResult::Success) is returned, so a failed final write leaves the row in a non-terminal status. The same applies to the Failed and FailedToApply branches."
+     },
+     {
+      "code_snippet": ".query(\"PRAGMA busy_timeout = 5000;\", ())",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "304",
+      "why_this_location_matters": "A fixed 5s busy wait is shared by every review child process and the daemon, and the concurrency default is now 24."
+     }
+    ]
+   },
+   {
+    "problem": "unbounded 429 retry and no HTTP timeout used by benchmark_review",
+    "severity": "Medium",
+    "type": "Unbounded retry / missing timeout",
+    "preexisting": false,
+    "explanation": "Reasoning: the impact is limited to the offline benchmark_review binary, a developer-run tool and not the daemon review path, so it is capped at Medium. It can stall or run up cost, but it does not corrupt data or send mail. The code shows three things. (1) GenAiClient::generate_content for GeminiClient in src/ai/gemini.rs is a bare loop. On GeminiError::QuotaExceeded it sleeps and continues, with no attempt cap and no total deadline. A persistent 429, such as an exhausted daily quota, therefore never returns an error. (2) GeminiClient::new builds its client with reqwest::Client::new(), which sets no request or connect timeout. One hung connection in post_request blocks that task, and its buffer_unordered slot, forever. (3) The patch adds this exposure. benchmark_review::process_entry calls client.generate_content(req) on a bare GeminiClient from up to settings.review.concurrency tasks, and this commit raises that value from 1 to 24 in Settings.toml. The tasks share no QuotaManager, unlike the production paths in src/reviewer.rs (lines ~1106 and ~1174) and src/ai/proxy.rs, which call generate_content_single and report_quota_error to the shared manager. Each of the 24 tasks therefore retries independently, which multiplies 429 pressure. The new Retry-After handling in post_request feeds the same loop. A secondary hazard is that the header value is parsed with parse::<f64>() and never validated. A negative, NaN or infinite value would reach Duration::from_secs_f64(retry_seconds + 1.0), which panics; the panic would be unwinding inside a buffer_unordered task and take down the whole benchmark run. Google is unlikely to send such values, so this is low likelihood. Unanswered question: I did not confirm whether the reviewer.rs:104 client reaches generate_content (the unbounded loop) in production or only generate_content_single. The Medium cap therefore rests on the benchmark_review path alone.",
+    "locations": [
+     {
+      "code_snippet": "loop {\n    match self.generate_content_single(&request).await {\n        Ok(resp) => return Ok(resp),\n        Err(e) => {\n            if let Some(GeminiError::QuotaExceeded(sleep_duration)) = e.downcast_ref::<GeminiError>() {\n                ... sleep(*sleep_duration).await;\n                continue;",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GenAiClient::generate_content for GeminiClient",
+      "line": "351",
+      "why_this_location_matters": "The retry loop has no attempt cap or deadline, so a persistent 429 never returns an error."
+     },
+     {
+      "code_snippet": "client: Client::new(),",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::new",
+      "line": "None",
+      "why_this_location_matters": "The client has no request or connect timeout, so a hung connection stalls the task indefinitely."
+     },
+     {
+      "code_snippet": "let retry_seconds = if let Some(secs) = retry_after_header { secs } else if ... \nGeminiError::QuotaExceeded(Duration::from_secs_f64(retry_seconds + 1.0))",
+      "file": "src/ai/gemini.rs",
+      "function_or_symbol": "GeminiClient::post_request",
+      "line": "None",
+      "why_this_location_matters": "The new Retry-After value is unvalidated before from_secs_f64, which panics on negative, NaN or infinite input."
+     },
+     {
+      "code_snippet": "let resp = client.generate_content(req).await;\n...\n.buffer_unordered(concurrency)",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry / main",
+      "line": "None",
+      "why_this_location_matters": "The new binary runs up to 24 concurrent calls on a bare client with no shared QuotaManager, so it relies on the unbounded loop and the missing timeout."
+     }
+    ]
+   },
+   {
+    "problem": "benchmark_review queries reviews by patch_id with no supporting index",
+    "severity": "Low",
+    "type": "Scalability / missing index",
+    "preexisting": false,
+    "explanation": "Reasoning: the missing index only turns a lookup into a table scan. The affected query runs once per benchmark entry in an offline, operator-run binary, not in the daemon's hot path, so the impact is slower benchmark runs and not data loss or a service failure. Verified: src/schema.sql defines 'reviews' (lines 96-113) with 'patch_id INTEGER' and a foreign key to patches(id), but the only CREATE INDEX statements next to it are idx_findings_review_id and idx_findings_severity on findings. There is no index on reviews(patch_id). A grep of src/ for idx_reviews and for 'reviews.*patch_id' index definitions found none, and the src/migrations grep returned no INDEX statements. SQLite does not create an index for a foreign key. The new query 'SELECT id, summary, result_description FROM reviews WHERE patch_id = ? ORDER BY id DESC LIMIT 1' in src/bin/benchmark_review.rs:181 therefore scans reviews for each entry, run at concurrency 24. The same pattern is used by production paths in src/db.rs (count_successful_reviews at line 521 and the check at line 542, both filtering on patchset_id AND patch_id). That shows the table is already queried this way, but this commit adds another unindexed caller. Caveat (speculative, so capped at Low): src/db.rs creates indexes at runtime through try_create_index, and I could not read every call site. A multi-line call creating an index on reviews(patch_id) under a name other than idx_reviews would not have matched my greps. Please confirm no such call exists before acting. The reviews table grows by one row per patch per review attempt, so the practical cost is bounded to thousands or tens of thousands of rows.",
+    "locations": [
+     {
+      "code_snippet": "SELECT id, summary, result_description FROM reviews WHERE patch_id = ? ORDER BY id DESC LIMIT 1",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "181",
+      "why_this_location_matters": "New query filters on reviews.patch_id, which has no index in schema.sql, and is run once per benchmark entry across 24 concurrent tasks."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS reviews (\n    id INTEGER PRIMARY KEY,\n    patchset_id INTEGER NOT NULL,\n    patch_id INTEGER, -- Optional link to specific patch",
+      "file": "src/schema.sql",
+      "function_or_symbol": "reviews table definition",
+      "line": "96",
+      "why_this_location_matters": "The table definition has no CREATE INDEX on patch_id, unlike findings, which gets idx_findings_review_id immediately after its definition."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "unwrap() calls in benchmark_review::process_entry could panic.",
+    "reasoning": "Each unwrap is preceded in the same function by an is_none() check that returns early, on local values that cannot change in between.",
+    "locations": [
+     {
+      "code_snippet": "if patch_id.is_none() {\n ... let patch_id = patch_id.unwrap();",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "The None case returns before the unwrap."
+     }
+    ]
+   },
+   {
+    "description": "parts[0] indexing on the split Gemini response could panic.",
+    "reasoning": "str::splitn(2, '\\n') always yields at least one item, even for an empty string. parts[1] is guarded by parts.len() > 1.",
+    "locations": [
+     {
+      "code_snippet": "let parts: Vec<&str> = text.splitn(2, '\\n').collect();\n            let status_raw = parts[0]",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "splitn guarantees index 0."
+     }
+    ]
+   },
+   {
+    "description": "QuotaManager::wait_for_access might hold the blocked_until guard while sleeping.",
+    "reasoning": "The guard is created inside an inner block that only computes the sleep duration and is dropped before sleep().await.",
+    "locations": [
+     {
+      "code_snippet": "let sleep_duration = {\n    let guard = self.blocked_until.lock().await;",
+      "file": "src/ai/proxy.rs",
+      "function_or_symbol": "QuotaManager::wait_for_access",
+      "line": "52",
+      "why_this_location_matters": "Guard is scoped to the block."
+     }
+    ]
+   },
+   {
+    "description": "The review child's stderr pipe might fill while the parent reads only stdout.",
+    "reasoning": "stderr is taken right after spawn and drained in a dedicated tokio::spawn task for the child's lifetime, so both pipes are drained concurrently.",
+    "locations": [
+     {
+      "code_snippet": "if let Some(stderr) = child.stderr.take() {\n    tokio::spawn(async move {\n        let reader = BufReader::new(stderr);",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "run_review_tool",
+      "line": "None",
+      "why_this_location_matters": "Shows stderr is drained concurrently."
+     }
+    ]
+   },
+   {
+    "description": "The benchmark's patches lookup by message_id might be a full table scan.",
+    "reasoning": "patches.message_id is declared NOT NULL UNIQUE, which creates an implicit unique index in SQLite.",
+    "locations": [
+     {
+      "code_snippet": "message_id TEXT NOT NULL UNIQUE,",
+      "file": "src/schema.sql",
+      "function_or_symbol": "CREATE TABLE IF NOT EXISTS patches",
+      "line": "89",
+      "why_this_location_matters": "The UNIQUE constraint backs the lookup with an index."
+     }
+    ]
+   },
+   {
+    "description": "The src/db.rs changes might alter the schema or migrations non-atomically.",
+    "reasoning": "The db.rs diff is rustfmt-only reformatting: collapsed try_add_column chains, a re-indented baseline query with the same SQL and row indices, and a wrapped test call. No migration or DDL is added or edited.",
+    "locations": [
+     {
+      "code_snippet": "// Fetch baseline details if needed",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::get_patchset (baseline fetch)",
+      "line": "None",
+      "why_this_location_matters": "The hunk is whitespace-only with unchanged SQL."
+     }
+    ]
+   },
+   {
+    "description": "benchmark_review might interpolate the benchmark.json Commit value into SQL.",
+    "reasoning": "All queries use '?' placeholders with libsql::params!, so no string is concatenated into SQL. benchmark.json is also an operator-supplied local file.",
+    "locations": [
+     {
+      "code_snippet": "\"SELECT id FROM patches WHERE message_id = ?\",\n            libsql::params![entry.commit.clone()],",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "The value is bound as a parameter."
+     }
+    ]
+   },
+   {
+    "description": "The judge prompt embeds findings derived from untrusted patches, which could steer the judge LLM.",
+    "reasoning": "The judge request is built with tools: None, and its output is only split into a status and explanation written to a results file and logs. It never becomes a path, command or include, so the worst case is a skewed label.",
+    "locations": [
+     {
+      "code_snippet": "        tools: None,\n        system_instruction: None,\n        generation_config: None,",
+      "file": "src/bin/benchmark_review.rs",
+      "function_or_symbol": "process_entry",
+      "line": "None",
+      "why_this_location_matters": "No tools are exposed to the judge call."
+     }
+    ]
+   },
+   {
+    "description": "benchmark_review looks up patches via message_id = commit SHA, but the mapping from the benchmark Commit field to patches.message_id is unverified, so every entry could report NOT_FOUND_IN_DB.",
+    "reasoning": "I traced the full ingestion path for benchmark patches. (1) ingest_benchmark submits Remote{sha, repo} to /api/submit. In src/api.rs, submit_patch turns it into FetchRequest{repo_url, commit_hash: sha}. (2) In src/fetcher.rs, extract_patch returns PatchSubmitted with message_id: String::new() and the comment 'Set by caller'. The caller then overwrites it: *message_id = sha.clone() for the range path (line 223) and *message_id = commit_or_range.clone() for the single-commit path (line 249). (3) In src/main.rs, the PatchSubmitted handler copies that message_id unchanged into both PatchsetMetadata.message_id and Patch.message_id. (4) The ingest worker calls worker_db.create_patch(patchset_id, &patch.message_id, ...) at src/main.rs:796-799. db.rs create_patch inserts that string into patches.message_id, and the ON CONFLICT(message_id) clause only updates patchset_id, part_index and diff, never message_id. I found no db.rs code that rewrites patches.message_id afterwards. The cover-letter and thread ids use the separate '<article_id>@sashiko.local' form and do not touch patches.message_id. So patches.message_id equals exactly the string that ingest_benchmark submitted as sha, which is the benchmark Commit value. The lookup in benchmark_review is therefore consistent for both the single-commit and range cases. The lack of a seeded-DB test is a test-coverage gap, not a demonstrated defect, and the design doc wording ('likely corresponds') does not change the verified behavior.",
+    "locations": [
+     {
+      "code_snippet": "*message_id = sha.clone();",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "FetchAgent (range path)",
+      "line": "223",
+      "why_this_location_matters": "For ranges, each emitted patch gets message_id equal to the bare commit SHA."
+     },
+     {
+      "code_snippet": "*message_id = commit_or_range.clone();",
+      "file": "src/fetcher.rs",
+      "function_or_symbol": "FetchAgent (single-commit path)",
+      "line": "249",
+      "why_this_location_matters": "For single commits, message_id equals the submitted SHA string."
+     },
+     {
+      "code_snippet": "worker_db\n                        .create_patch(\n                            patchset_id,\n                            &patch.message_id,\n                            patch.part_index,\n                            &patch.diff,\n                        )",
+      "file": "src/main.rs",
+      "function_or_symbol": "ingest worker create_patch call",
+      "line": "796",
+      "why_this_location_matters": "The unmodified message_id is persisted into patches.message_id, which is the column benchmark_review queries."
+     }
+    ]
+   }
+  ]
+ }
+}

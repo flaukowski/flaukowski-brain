@@ -1,0 +1,694 @@
+{
+ "commit": "7ff827d",
+ "label": "U3",
+ "A": {
+  "summary": "This commit adds CachingAiProvider, a wrapper around any AiProvider that\nstores AI responses in a separate local SQLite database, response_cache.db.\nIdentical requests are then answered from disk instead of calling the model\nagain, which saves tokens, cost and time when the same prompts are replayed,\nfor example when re-reviewing the same patches.\n\nThe cache key is a SHA-256 hash of the serialized request, with fields that\nvary between runs (context_tag and thought signatures) removed. On a hit,\nthe stored response is returned immediately. The log records whether the\nentry came from this session or a previous one, and how many tokens were\nsaved. The cached_tokens usage counter is raised by the prompt token count.\nOn a miss, the request goes to the underlying provider and the response is\nstored. Entries older than a TTL are deleted at startup.\n\nA new helper, create_provider_cached(), optionally wraps the configured\nprovider with this cache. The cache file is placed next to the main\ndatabase file.\n\nThe diff only adds the wrapper, the helper and the module declaration. It\ndoes not add a settings field or call the helper from anywhere, so the\n[ai] response_cache_ttl_days option described in the commit message is not\nparsed in this change. Until a caller is wired up, the change has no\nuser-visible effect, and no Before/After example applies.",
+  "inline_review": "- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::compute_cache_key and\n  generate_content), the cache key hashes only the serialized AiRequest,\n  which has no model or provider field, and the lookup filters on\n  request_hash alone. After changing ai.model, ai.provider, base_url or\n  max_tokens, an identical request within the TTL returns the stored\n  response from the old configuration, with only an info log line. Mix the\n  model name and out-of-request settings into the hash.\n\n- [MEDIUM] In src/ai/mod.rs (create_provider_cached), database.url is\n  treated as a filesystem path with no scheme check. Database::new accepts\n  libsql://, https:// and :memory: URLs, so the derived path is bogus (and\n  Builder::new_local will likely fail), or for :memory: resolves to a bare\n  file in the CWD because the parent is an empty string, not None. Also,\n  CachingAiProvider::new logs the derived path without redact_secret, so\n  credentials embedded in a URL would reach the INFO log.\n\n- [MEDIUM] In src/ai/mod.rs (create_provider_cached) and src/settings.rs\n  (AiSettings), the cache is unreachable: create_provider_cached has no\n  callers, and AiSettings has no response_cache_ttl_days field. The key\n  documented in the commit message is silently ignored by serde, so an\n  operator who sets it believes caching is configured while every call\n  still goes uncached. No Settings.toml, example or docs update is made.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::generate_content), every\n  Ok response from the inner provider is stored before any validation,\n  including truncated and malformed ones. The full-run restart loop in\n  src/bin/review.rs and the reviewer retries rebuild byte-identical early\n  stage requests, which then replay the same bad output until the TTL\n  expires, defeating retries. Skip the insert when the response is\n  truncated, or evict the entry when validation fails.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::generate_content), a\n  cache hit sets cached_tokens to the stored cached_tokens plus\n  prompt_tokens. The stored usage may already carry a cached count, so the\n  result can exceed prompt_tokens, breaking the AiUsage contract. The whole\n  prompt was served locally, so the value should be prompt_tokens. Cached\n  token figures in ai_interactions and statistics are wrong, and consumers\n  using saturating_sub can hide budget accounting.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::generate_content and\n  new), cache read errors fail the LLM call. The SELECT path uses await?\n  on query, rows.next and row.get, so any libsql error (SQLITE_BUSY past\n  the busy timeout, a corrupt file) returns Err before the inner provider\n  runs, even though the write path is best-effort. A lookup failure should\n  degrade to a miss with a warning. A failed TTL reap is also silently\n  ignored, and init errors in new block all LLM use.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::new and\n  generate_content), the response cache grows without bound. Expiry runs\n  only once at construction, so a long-lived daemon never reaps. Every\n  miss stores the full request (system prompt, diff, tool history) in\n  request_json, which is never read back, and each tool-loop turn is a\n  distinct key. There is no row or byte cap and no index on created_at.\n  This violates the bounded disk growth rules in resource-limits.md, and\n  untrusted patch content is retained on disk.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider), 171 lines are added with\n  no test module. Key canonicalization (context_tag and thought_signature\n  stripping), TTL reaping including ttl_days of 0, the hit path skipping\n  the inner provider, miss persistence, corrupt-row fallthrough and the\n  cached_tokens adjustment are all untested. A key regression would\n  silently return wrong cached reviews. Use a mock AiProvider and a\n  tempfile::TempDir-backed path.\n\n- [MEDIUM] The commit message describes mechanics (SHA-256 key, TTL,\n  logging) but not the problem being solved, whether the cache is meant\n  for the daemon or only for local and benchmark use, or the staleness\n  hazard of replaying stored LLM output. It also advertises a\n  configuration key without saying it is not wired up.\n\n- [LOW] In src/ai/cache.rs (CachingAiProvider::generate_content), if a\n  stored row fails to deserialize into AiResponse, the code falls through\n  to the miss path with the Rows cursor still alive across the inner LLM\n  await. The unfinished statement can hold a read snapshot, stalling WAL\n  checkpoints, and the later INSERT can fail with SQLITE_BUSY_SNAPSHOT.\n  That error is discarded, so the corrupt row is never replaced. Drop the\n  rows before the inner call, or delete the corrupt row.\n\n- [LOW] In src/ai/cache.rs (CachingAiProvider::generate_content), the\n  INSERT OR REPLACE result is dropped with let _ = and nothing is logged.\n  A full disk, SQLITE_BUSY or corruption leaves the cache permanently\n  ineffective while it appears enabled, and operators cannot tell. Emit a\n  warn! on failure.\n\n- [LOW] In src/ai/cache.rs (CachingAiProvider::new), ttl_days as i64 * 86400\n  is unchecked. A value of 2^63 or more goes negative after the cast (for\n  example u64::MAX gives a cutoff of now plus 86400), so the startup DELETE\n  removes every cached row. Larger products overflow, panicking in debug\n  builds and wrapping in release. Use i64::try_from with saturating_mul.\n\n- [LOW] In src/ai/cache.rs (CachingAiProvider::generate_content), the\n  INSERT binds caps.model_name to both the provider and model columns, so\n  the provider column duplicates the model name. Anything later reading\n  provider from this table gets wrong data.",
+  "findings": [
+   {
+    "problem": "cache hit inflates cached_tokens beyond prompt_tokens",
+    "severity": "Medium",
+    "type": "Token Accounting",
+    "preexisting": false,
+    "explanation": "On a hit, CachingAiProvider::generate_content sets usage.cached_tokens = stored cached_tokens + prompt_tokens. The stored usage is the original provider usage and may already carry a cached count, so the result can exceed prompt_tokens. That breaks the AiUsage contract that cached_tokens is a breakdown of prompt_tokens. The correct value is prompt_tokens, since the whole prompt was served locally. Consequences: the tokens_cached figures recorded in ai_interactions and cache statistics are wrong. Consumers that compute prompt_tokens.saturating_sub(cached) saturate to zero, which can hide budget accounting. This is a contained accounting defect, and the cache is not wired into any entry point yet.",
+    "locations": [
+     {
+      "code_snippet": "usage.cached_tokens =\n                        Some(usage.cached_tokens.unwrap_or(0) + usage.prompt_tokens);",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "None",
+      "why_this_location_matters": "Adds to the stored cached count instead of setting it to prompt_tokens."
+     }
+    ]
+   },
+   {
+    "problem": "cache read errors fail the LLM call instead of acting as a miss",
+    "severity": "Medium",
+    "type": "Swallowed Error / Inconsistent Error Handling",
+    "preexisting": false,
+    "explanation": "In CachingAiProvider::generate_content the SELECT path uses .await? on query, rows.next() and row.get(). Any libsql error (for example SQLITE_BUSY past the 5s busy_timeout when several processes share response_cache.db, or a corrupt file) returns Err before the inner provider is called. The cache is only an optimization, and the write path is deliberately best-effort, so a lookup failure should degrade to a miss with a warning. Immediate consequence: the stage and review fail although the provider was healthy. Downstream, the failed review is retried. CachingAiProvider::new also uses ? throughout, so any cache init error blocks all LLM use. The failed reap and write are also not logged.",
+    "locations": [
+     {
+      "code_snippet": "if let Some(row) = rows.next().await? {",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "None",
+      "why_this_location_matters": "A cache read failure propagates as a call failure instead of falling through to the inner provider."
+     },
+     {
+      "code_snippet": "if let Ok(reaped) = result {",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "56",
+      "why_this_location_matters": "A failed TTL reap is silently ignored."
+     }
+    ]
+   },
+   {
+    "problem": "response cache grows without bound and stores unused request_json",
+    "severity": "Medium",
+    "type": "Resource Limits",
+    "preexisting": false,
+    "explanation": "The expiry DELETE runs only once, in CachingAiProvider::new. A long-lived daemon therefore never reaps while running. generate_content inserts a row on every miss with the full serialized request (system prompt, diff, tool history) in request_json, and the SELECT never reads that column, so it only costs disk. Each tool-loop turn is a distinct key, so rows accumulate roughly quadratically with turns per review. There is no row or byte cap, no index on created_at for the reap scan, and no compaction. Consequences: unbounded response_cache.db and WAL growth until restart, and a slow full-scan reap at startup. Untrusted patch content is also retained on disk. This violates the bounded-disk-growth guidance in patterns/resource-limits.md. Severity is Medium because the cache is not yet wired into any entry point.",
+    "locations": [
+     {
+      "code_snippet": "DELETE FROM response_cache WHERE created_at < ?",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "52",
+      "why_this_location_matters": "Expiry runs only at construction."
+     },
+     {
+      "code_snippet": "INSERT OR REPLACE INTO response_cache (request_hash, provider, model, request_json, response_json, tokens_saved, created_at)",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "148",
+      "why_this_location_matters": "Every miss persists the full request and response, with request_json never read back."
+     }
+    ]
+   },
+   {
+    "problem": "cache write failures are silently discarded without logging",
+    "severity": "Low",
+    "type": "Silent Failure / Data Integrity",
+    "preexisting": false,
+    "explanation": "The INSERT OR REPLACE result in CachingAiProvider::generate_content is dropped with let _ =, so a full disk, SQLITE_BUSY or corruption leaves the cache permanently ineffective while it appears enabled. A response_json that fails to deserialize falls through as a miss and the row is only repaired if the later insert succeeds. Best-effort writes are intentional, but no tracing::warn! is emitted. Consequence: operators cannot tell that the cache is not persisting. Low because the review itself is unaffected.",
+    "locations": [
+     {
+      "code_snippet": "let _ = self\n            .conn\n            .execute(\n                \"INSERT OR REPLACE INTO response_cache",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "150",
+      "why_this_location_matters": "The write error is discarded with no log."
+     }
+    ]
+   },
+   {
+    "problem": "cache INSERT stores model name in the provider column",
+    "severity": "Low",
+    "type": "Correctness (minor)",
+    "preexisting": false,
+    "explanation": "The INSERT binds caps.model_name.clone() for provider and caps.model_name for model, so the provider column is a duplicate of the model name. The columns are descriptive only, but anything that later reads provider from this table gets the model name. The consequence is limited to a bookkeeping discrepancy.",
+    "locations": [
+     {
+      "code_snippet": "caps.model_name.clone(),\n                    caps.model_name,",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "151",
+      "why_this_location_matters": "The same value is written to both columns."
+     }
+    ]
+   },
+   {
+    "problem": "unchecked ttl_days cast and multiply can wipe the cache",
+    "severity": "Low",
+    "type": "Numeric Cast / Overflow",
+    "preexisting": false,
+    "explanation": "In CachingAiProvider::new, ttl_days as i64 * 86400 is unchecked. A configured value of 2^63 or more becomes negative after the cast. For example u64::MAX gives -86400, so the cutoff is now + 86400 and the startup DELETE removes every cached row. Larger products can overflow, which panics in debug builds and wraps in release. The value comes from operator configuration, not untrusted input, so impact is limited to losing cache contents. Use i64::try_from with saturating_mul.",
+    "locations": [
+     {
+      "code_snippet": "- ttl_days as i64 * 86400;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "49",
+      "why_this_location_matters": "Unchecked cast and multiply on a configurable value."
+     }
+    ]
+   },
+   {
+    "problem": "CachingAiProvider added without any tests",
+    "severity": "Medium",
+    "type": "Missing Tests",
+    "preexisting": false,
+    "explanation": "src/ai/cache.rs adds 171 lines with no #[cfg(test)] module. Untested behavior includes key canonicalization (context_tag and thought_signature stripping, distinct content giving distinct keys), TTL reaping including ttl_days = 0, the hit path returning without calling the inner provider, the miss path persisting, a corrupt row falling through, and the cached_tokens adjustment. A regression in the key function would silently return wrong cached reviews. A mock AiProvider and a tempfile::TempDir-backed path would make tests deterministic.",
+    "locations": [
+     {
+      "code_snippet": "let mut val = serde_json::to_value(request).unwrap_or_default();",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "None",
+      "why_this_location_matters": "Key logic determines cache correctness and has no test."
+     }
+    ]
+   },
+   {
+    "problem": "cache commit message gives no motivation or intended scope",
+    "severity": "Medium",
+    "type": "Problem Clarity / Missing Rationale",
+    "preexisting": false,
+    "explanation": "The commit adds a non-trivial persistence layer that replays stored LLM output. The message describes mechanics (SHA-256 key, TTL, logging) but not the problem being solved (for example development or benchmark iteration cost), whether it is meant for the daemon or only local and benchmark use, or the staleness hazard. It also advertises a configuration key without saying that it is not wired up. Signed-off-by has a real name, so only the missing why is the defect.",
+    "locations": [
+     {
+      "code_snippet": "pub struct CachingAiProvider {",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider",
+      "line": "10",
+      "why_this_location_matters": "The new behavioral component whose motivation and scope the message does not explain."
+     }
+    ]
+   },
+   {
+    "problem": "response cache key ignores model and provider settings",
+    "severity": "Medium",
+    "type": "Data Integrity / Silent Wrong Output",
+    "preexisting": false,
+    "explanation": "Severity reasoning: the cache is opt-in (create_provider_cached takes enable_cache) and has no caller in src/ at this commit, so blast radius is limited to deployments that turn it on. When it is on, the consequence is silent wrong output: a review is served from a different model or setting with only an info log line, and no error appears anywhere. That is a review-quality and cost-accounting defect, not a crash or data loss, so Medium rather than High. Proof: AiRequest in src/ai/mod.rs has only system, messages, tools, temperature, response_format and context_tag. It has no model or provider field, so the model name and settings such as max_tokens, base_url and thinking reach the provider through its own configuration and are never serialized into the request. compute_cache_key hashes serde_json::to_value(request) minus context_tag and thought signatures, and generate_content looks up by request_hash only. The insert stores caps.model_name in both the provider and model columns, but the SELECT never reads them. A grep for cache_identity over src/ at the target commit and at HEAD returns no matches, and git_log for the range target..HEAD is empty, so no later patch adds a mechanism that mixes model or settings into the key. After changing ai.model, ai.provider, base_url or max_tokens, an identical request within the TTL (default 7 days) returns the stored response from the previous configuration. The defect is not resolved at the series end. The same file can also be shared by binaries configured with different models, because the path is derived from the database directory. A fix would fold the model name and any settings outside the request body into the hash (for example a cache_identity string on AiProvider, which CachingAiProvider hashes together with the request) and add a test that different configurations produce different keys.",
+    "locations": [
+     {
+      "code_snippet": "let mut val = serde_json::to_value(request).unwrap_or_default();",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "79",
+      "why_this_location_matters": "The key is derived from the serialized AiRequest alone. AiRequest has no model or provider field, so nothing identifying the model or its settings enters the hash."
+     },
+     {
+      "code_snippet": "SELECT response_json, tokens_saved, created_at FROM response_cache WHERE request_hash = ?",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "101",
+      "why_this_location_matters": "The lookup filters on request_hash only. The provider and model columns that are stored on insert are ignored, so a hit from a different model is returned as-is."
+     },
+     {
+      "code_snippet": "pub struct AiRequest { system, messages, tools, temperature, response_format, context_tag }",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "AiRequest",
+      "line": "98",
+      "why_this_location_matters": "The serialized request has no model field, which confirms that the model and provider settings are absent from the hashed material."
+     }
+    ]
+   },
+   {
+    "problem": "create_provider_cached treats database.url as a filesystem path",
+    "severity": "Medium",
+    "type": "Configuration / Path Derivation / Secret Exposure",
+    "preexisting": false,
+    "explanation": "Impact is contained to the opt-in response cache, so Medium. It does not corrupt data or send mail. Enabling the cache either fails provider creation or puts the cache file in an unintended place. A credentialed URL is also logged unredacted. I could not confirm the trigger path in this tree: at this commit create_provider_cached has no callers (git_grep finds only its definition at src/ai/mod.rs:182), and I did not check libsql's behaviour when new_local gets a missing directory. The defect is therefore structural, with the reach depending on the later wiring. Verified facts: (1) Database::new in src/db.rs:370-375 explicitly accepts remote URLs, using Builder::new_remote when url starts with libsql:// or https://, and Builder::new_local otherwise. So DatabaseSettings.url (a plain String, src/settings.rs:20) can be remote or :memory:. (2) create_provider_cached runs Path::new(&settings.database.url).parent().unwrap_or(\".\").join(\"response_cache.db\") with no scheme check. For libsql://host/db the parent is libsql://host, giving the path libsql://host/response_cache.db. That is a relative path with nonexistent directories 'libsql:' and 'host', so Builder::new_local in CachingAiProvider::new will very likely fail, and the ? aborts provider creation. For :memory: the parent is Some(\"\"), not None, so the unwrap_or(\".\") fallback does not fire. The result is the bare relative path response_cache.db in the process CWD. (3) CachingAiProvider::new logs info!(\"Response cache enabled ({})\", cache_path) with no redact_secret, while Database::new redacts the same URL via crate::utils::redact_secret. If the URL embeds credentials (https://user:pass@host/db), the parent keeps them, so they reach the INFO log and the SQLite path. The token field is separate and is not leaked. (4) Settings::local_token_path, the fallback to '.' for a remote database URL that the candidate mentions, does not exist at this commit (git_grep for local_token_path returns no matches), so no existing helper handles the remote case. The project's own guide describes the intended behaviour as 'a remote URL must never be treated as a path, since its credentials would become a directory name, and a bare filename must not resolve to an empty parent'. This code violates both halves.",
+    "locations": [
+     {
+      "code_snippet": "let cache_path = std::path::Path::new(&settings.database.url)\n            .parent()\n            .unwrap_or(std::path::Path::new(\".\"))\n            .join(\"response_cache.db\");",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "189",
+      "why_this_location_matters": "A database URL that may be libsql://, https://, or :memory: is parsed as a filesystem path with no scheme check, producing a bogus path or an empty-parent path in the CWD."
+     },
+     {
+      "code_snippet": "info!(\"Response cache enabled ({})\", cache_path);",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "71",
+      "why_this_location_matters": "The derived path is logged without redact_secret, so a URL with embedded credentials would appear in the INFO log."
+     },
+     {
+      "code_snippet": "let db = if settings.url.starts_with(\"libsql://\") || settings.url.starts_with(\"https://\") {\n            Builder::new_remote(settings.url.clone(), settings.token.clone())",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "370",
+      "why_this_location_matters": "This establishes that database.url legitimately holds remote URLs, so the path derivation in create_provider_cached is reachable with them."
+     }
+    ]
+   },
+   {
+    "problem": "response cache is unreachable and its documented TTL key does not exist",
+    "severity": "Medium",
+    "type": "Incomplete Feature / Dead Code",
+    "preexisting": false,
+    "explanation": "Medium: a contained functional and documentation defect with no data loss, mail, or security impact. The series is a single commit (git_log of 7ff827d^..HEAD returns only this commit), so no later patch wires the feature up. A tree-wide git_grep for create_provider_cached|response_cache|CachingAiProvider at HEAD matches only src/ai/cache.rs and src/ai/mod.rs, and the only mention of create_provider_cached is its definition at src/ai/mod.rs:182. Nothing calls it, so CachingAiProvider can never be constructed at runtime. The enable_cache and cache_ttl_days parameters have no source. src/settings.rs:169 shows AiSettings with only #[derive(Debug, Deserialize, Clone)] and #[allow(unused)], so it has no response_cache or response_cache_ttl_days field and no deny_unknown_fields attribute. The commit message tells operators to write '[ai] response_cache_ttl_days = 14', and serde will silently ignore that key. The operator believes caching is configured, but every call still goes through create_provider with no cache and no 7-day TTL. This is not a startup failure, and no reviews are lost. The feature is dead code that its own commit message advertises as working, and the commit message's documented configuration contradicts the code. Per the settings guide, a new key should be added with a serde default, in Settings.toml, in docs/examples/Settings.example.toml, and in docs/configuration.md; none of that is done here.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn create_provider_cached(\n    settings: &Settings,\n    enable_cache: bool,\n    cache_ttl_days: u64,",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "182",
+      "why_this_location_matters": "The wrapper entry point has no callers anywhere in the tree, and its enable_cache and cache_ttl_days parameters have no settings or CLI source."
+     },
+     {
+      "code_snippet": "#[derive(Debug, Deserialize, Clone)]\n#[allow(unused)]\npub struct AiSettings {\n    pub provider: String,\n    pub model: String,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings",
+      "line": "169",
+      "why_this_location_matters": "There is no response_cache_ttl_days field and no deny_unknown_fields, so the key documented in the commit message is silently ignored instead of configuring the cache."
+     }
+    ]
+   },
+   {
+    "problem": "response cache stores unvalidated and truncated responses",
+    "severity": "Medium",
+    "type": "Silent Failure / Retry Defeat",
+    "preexisting": false,
+    "explanation": "Medium: contained retry-defeat that only applies when the opt-in cache is enabled. It affects individual reviews, not the daemon or other data, and it is bounded by the TTL (default 7 days). CachingAiProvider::generate_content (src/ai/cache.rs:130-153) inserts every Ok response from the inner provider into response_cache. This happens before any caller validation, and it includes responses with truncated=true and malformed JSON. The key is a SHA-256 of the serialized AiRequest, and it contains the full message history. Retries that stay inside one run are mostly not affected. The validation retry in src/worker/prompts.rs (inner/outer attempts) appends a 'Previous attempt was rejected' reminder to the prompt, so those requests hash differently and get a fresh sample. Transport errors return via '?' before the insert, so they are not cached. The defect is the full-run restart: src/bin/review.rs loops 'for attempt in 1..=3' with 'Restarting AI review', and reviewer.rs retries up to review.max_retries. A restart rebuilds the same stage prompts, and the key ignores context_tag. Every stage up to and including the failing one is therefore a byte-identical request and is replayed from the cache. The default settings.ai.temperature is 1.0, so a restart would normally re-sample. The cache instead replays the same bad output, the same truncation or the same malformed JSON until the TTL expires. Restarts and re-reviews of the same patch hit the same failure, and the retry loops spend their attempts without any change. Retries are the intended recovery path, and the response is stored without knowing whether it was accepted. I could not read src/ai/session.rs at this revision, and create_provider_cached has no callers in this commit, so the exact wiring is unverified. That is why this is capped at Medium. Replay of valid answers is the intended behavior of the cache. The defect is caching answers that were not accepted, especially truncated ones. A fix is to skip the insert when resp.truncated is set, or to evict the entry when validation fails.",
+    "locations": [
+     {
+      "code_snippet": "let resp = self.inner.generate_content(request.clone()).await?;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "130",
+      "why_this_location_matters": "The response is stored without checking truncated or validity, so a bad sample is replayed on any identical request."
+     },
+     {
+      "code_snippet": "INSERT OR REPLACE INTO response_cache (request_hash, provider, model, request_json, response_json, tokens_saved, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "148",
+      "why_this_location_matters": "The insert is unconditional on the response contents, so truncated or malformed output is persisted for the TTL."
+     },
+     {
+      "code_snippet": "for attempt in 1..=3 {",
+      "file": "src/bin/review.rs",
+      "function_or_symbol": "review attempt loop",
+      "line": "368",
+      "why_this_location_matters": "A full-run restart rebuilds identical early-stage requests, which hit the cached bad responses instead of re-sampling."
+     }
+    ]
+   },
+   {
+    "problem": "cache SELECT cursor stays live across inner provider await on parse failure",
+    "severity": "Low",
+    "type": "Concurrency / Resource",
+    "preexisting": false,
+    "explanation": "Low: the trigger needs a stored row whose response_json no longer deserializes into AiResponse (for example after a schema change to AiResponse between sessions). The consequence is limited to a stalled WAL checkpoint and a possibly lost cache write, with no effect on review output. In generate_content, `rows` is a `let mut rows` at function scope and is advanced once with `rows.next().await?`. When a row is returned but `serde_json::from_str::<AiResponse>` fails, the code falls through to the miss path and `self.inner.generate_content(request.clone()).await` with the Rows still alive, because Rust drops it only at function exit. The cursor has not been stepped to SQLITE_DONE, so the prepared statement is neither reset nor finalized. In SQLite that keeps a read transaction and its WAL snapshot open on the shared connection. The inner call is an LLM request that can take minutes. During that time (1) WAL checkpoints cannot advance past that snapshot, so the WAL can grow, and (2) the later `INSERT OR REPLACE` runs on the same connection with the read snapshot still open. It can fail with SQLITE_BUSY_SNAPSHOT if another connection, such as a review worker subprocess or another task, committed in the meantime. That error is discarded by `let _ = self.conn.execute(...)`, so the corrupt row is not replaced and every later call repeats the miss and the full LLM cost. I could not check libsql's exact Rows drop behavior in this repository, so the SQLite-level consequences are from SQLite semantics, not from code I read here. This is therefore capped at Low. The same cursor lifetime also applies when the lookup finds no row, but in that case the statement has already reached DONE and holds no snapshot. The fix is to scope the query in an inner block, or drop(rows) before the inner await. A corrupt row could also be deleted explicitly.",
+    "locations": [
+     {
+      "code_snippet": "let mut rows = self.conn.query(\"SELECT response_json, tokens_saved, created_at FROM response_cache WHERE request_hash = ?\", libsql::params![hash.clone()]).await?; ... if let Ok(mut resp) = serde_json::from_str::<AiResponse>(&response_json) { ... return Ok(resp); } ... let resp = self.inner.generate_content(request.clone()).await?;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "None",
+      "why_this_location_matters": "On a parse failure `rows` is not dropped before the inner await, and the later INSERT error is swallowed with `let _ =`."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "&hash[..12] slice for the log prefix could panic.",
+    "reasoning": "hash is produced only by compute_cache_key as the hex encoding of a 32-byte SHA-256 digest via format!(\"{:02x}\"), always exactly 64 ASCII characters. The [..12] slice is in bounds and on a char boundary.",
+    "locations": [
+     {
+      "code_snippet": "hash.iter().map(|b| format!(\"{:02x}\", b)).collect()",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "88",
+      "why_this_location_matters": "Always yields 64 ASCII hex characters."
+     }
+    ]
+   },
+   {
+    "description": "A std lock guard could be held across an await in CachingAiProvider.",
+    "reasoning": "The struct holds only inner, conn and session_start. No std::sync Mutex or RwLock appears in cache.rs, so no guard can cross an await.",
+    "locations": [
+     {
+      "code_snippet": "pub struct CachingAiProvider {\n    inner: Arc<dyn AiProvider>,\n    conn: libsql::Connection,\n    session_start: i64,\n}",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider",
+      "line": "None",
+      "why_this_location_matters": "Complete shared state has no std lock."
+     }
+    ]
+   },
+   {
+    "description": "The cache connection may lack WAL mode or busy_timeout.",
+    "reasoning": "CachingAiProvider::new runs PRAGMA journal_mode=WAL and PRAGMA busy_timeout = 5000 right after connecting, so the requirement is met.",
+    "locations": [
+     {
+      "code_snippet": "PRAGMA busy_timeout = 5000;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "None",
+      "why_this_location_matters": "Confirms the busy timeout is set."
+     }
+    ]
+   },
+   {
+    "description": "The commit may change the main schema or migrations without a transaction or user_version bump.",
+    "reasoning": "The diff touches only src/ai/cache.rs and src/ai/mod.rs. The new table lives in a separate response_cache.db created with CREATE TABLE IF NOT EXISTS, so db.rs, migrations and user_version are untouched.",
+    "locations": [
+     {
+      "code_snippet": ".join(\"response_cache.db\");",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "192",
+      "why_this_location_matters": "The cache uses a separate SQLite file."
+     }
+    ]
+   },
+   {
+    "description": "Request hash and other values might be interpolated into SQL.",
+    "reasoning": "All statements use bound parameters via libsql::params!, and table and column names are constants. The hash is also a hex digest.",
+    "locations": [
+     {
+      "code_snippet": "SELECT response_json, tokens_saved, created_at FROM response_cache WHERE request_hash = ?",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "101",
+      "why_this_location_matters": "The lookup is parameterized."
+     }
+    ]
+   },
+   {
+    "description": "compute_cache_key uses unwrap_or_default on serde_json::to_value and serde_json::to_string, so a serialization failure would collapse every request to one constant cache key and replay the first cached response for unrelated requests.",
+    "reasoning": "The failure cannot occur for AiRequest. (1) AiRequest, AiMessage, ToolCall, AiTool, AiResponseFormat and AiRole all use plain #[derive(Serialize)]. A grep for 'impl.*Serialize for|serialize_with|arbitrary_precision|preserve_order' across src/ found only a deserialize_with in src/settings.rs, which is unrelated. So there are no custom Serialize impls that can return Err. (2) Every field is a String, Option<String>, Vec of derived structs, an enum, Option<f32>, or serde_json::Value. There are no maps with non-string keys, no Mutex or RefCell fields, and no unsupported types, which are the usual causes of to_value errors. Value fields (ToolCall.arguments, AiTool.parameters, the schema) are already JSON values, so re-serializing them is infallible. (3) The one value that could be problematic is temperature: Option<f32>. serde_json's Value serializer maps non-finite floats (NaN or infinity) to Value::Null rather than returning Err. The result is a distinct but valid key, not a constant one. (4) serde_json::to_string on a serde_json::Value cannot fail, because all object keys are strings and the Writer is an in-memory Vec. Cargo.toml declares serde_json = \"1.0.148\" with no features, so arbitrary_precision is not enabled. Since the Err branch is unreachable, unwrap_or_default never fires and a constant-key collision cannot happen. The only theoretical residue is a style preference for propagating the error, not a defect. Cache-key collisions from context_tag or thought signatures being stripped are intentional and out of scope for this candidate.",
+    "locations": [
+     {
+      "code_snippet": "let canonical = serde_json::to_string(&val).unwrap_or_default();",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "80",
+      "why_this_location_matters": "This is the swallowed-error site, but serializing a serde_json::Value never returns Err."
+     },
+     {
+      "code_snippet": "#[derive(Debug, Clone, Serialize, Deserialize)]\npub struct AiRequest {",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "AiRequest",
+      "line": "98",
+      "why_this_location_matters": "AiRequest and its nested types use derived Serialize with only String, Vec, Option<f32>, enum and serde_json::Value fields, so to_value cannot fail."
+     }
+    ]
+   },
+   {
+    "description": "The response cache stores request_json (which may contain embargoed patch content) in plaintext in response_cache.db and its WAL/SHM sidecars with default umask permissions, unlike LocalToken::write_to (0600). Anyone who can write the file can plant cached responses.",
+    "reasoning": "1) The cache adds no new exposure beyond what the main database already has. src/db.rs Database::create_ai_interaction inserts the full prompt (input_context) and raw model output (output_raw) into the ai_interactions table of the main sashiko.db, with no extra protection. That table holds the same patch and embargoed content that the cache's request_json would hold. 2) The main database gets no stricter filesystem permissions. A tree-wide git_grep for set_permissions, PermissionsExt, 0o600, 0o700, umask, chmod and DirBuilder finds hardening only in test helpers in src/reviewer.rs, which chmod fake binaries to 0o755. The remaining OpenOptions hits in git_ops.rs and worker/tools.rs append to files and set no mode. The only 0600 handling is the operator token, outside these matches. So no restriction is applied to sashiko.db that the cache file lacks. 3) The cache file lives in the same directory as the main database. create_provider_cached uses Path::new(&settings.database.url).parent().join(\"response_cache.db\"), so it inherits the same directory permissions and trust boundary as sashiko.db. 4) The plant-responses concern does not hold up. An attacker who can write response_cache.db in that directory can also write sashiko.db, which holds reviews, findings and the email outbox, and that is a strictly larger compromise. 5) Embargo redaction is an API-layer control (embargo_until handling in src/api.rs and src/db.rs), not a storage-layer one. Embargoed content already sits in clear text in ai_interactions, so this is not a new class of exposure. 6) At this commit the cache is not wired to any caller. git_grep at HEAD finds create_provider_cached and CachingAiProvider only in src/ai/mod.rs and src/ai/cache.rs. The real entry points src/reviewer.rs:115, src/bin/review.rs:374 and src/bin/benchmark.rs:221 still call create_provider directly, so no embargoed request is written to the cache file here. Because the same plaintext content is already stored in sashiko.db under the same permissions, the cache introduces no incremental sensitive-data-at-rest or tampering risk.",
+    "locations": [
+     {
+      "code_snippet": "let cache_path = std::path::Path::new(&settings.database.url)\n            .parent()\n            .unwrap_or(std::path::Path::new(\".\"))\n            .join(\"response_cache.db\");",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "188",
+      "why_this_location_matters": "The cache file is created next to sashiko.db and inherits the same directory permissions and trust boundary. It is only reachable through this function, which has no callers at HEAD."
+     },
+     {
+      "code_snippet": "INSERT INTO ai_interactions (id, parent_interaction_id, workflow_id, provider, model, input_context, output_raw, tokens_in, tokens_out, tokens_cached, created_at)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::create_ai_interaction",
+      "line": "768",
+      "why_this_location_matters": "The main database already persists full prompts and raw outputs in plaintext, so the cache stores nothing more sensitive than sashiko.db does."
+     },
+     {
+      "code_snippet": "let provider = create_provider(&settings).expect(\"Failed to create AI provider\");",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer::new",
+      "line": "115",
+      "why_this_location_matters": "The daemon review path calls create_provider, not create_provider_cached, so no embargoed request is routed through the cache in this commit."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change adds CachingAiProvider, a wrapper around any AiProvider that\nstores model responses in a separate local SQLite file, response_cache.db,\nand replays them when an identical request is seen again. The goal is to\nstop paying for repeated identical model calls, for example when a review\nis re-run.\n\nThe cache key is a SHA-256 hash of the serialized AiRequest, with the\nnondeterministic fields context_tag and thought_signature removed first.\nOn a hit, the stored response is returned without calling the underlying\nprovider. A log line records whether the entry came from this session or a\nprevious one, plus the tokens saved, and usage.cached_tokens is increased\nby the prompt token count. On a miss, the inner provider is called and the\nresponse is written to the cache.\n\nExpired entries are deleted at startup, using a TTL from the new config key\nresponse_cache_ttl_days (default 7 days). A new helper,\ncreate_provider_cached(), optionally wraps whatever create_provider()\nbuilds, and places the cache file next to the configured database.\n\nBefore:\n  Every call to generate_content went straight to the configured\n  provider. An identical request sent twice was billed twice, and no\n  response_cache.db file existed.\n\nAfter:\n  With caching enabled via create_provider_cached(), the second identical\n  request is answered from response_cache.db. The log shows a line like\n  \"Cache hit [a1b2c3d4e5f6] (previous session) - 5230 tokens saved\", and\n  the returned usage reports the prompt tokens as cached. Entries older\n  than response_cache_ttl_days (for example 14 under [ai]) are removed at\n  startup. Deleting response_cache.db clears the cache by hand.",
+  "inline_review": "- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::compute_cache_key and\n  generate_content), the cache key hashes only the AiRequest, and the lookup\n  filters on request_hash alone. Provider and model identity are never part\n  of the key, and the provider and model columns are written but never\n  compared on read. After ai.provider or ai.model changes, an identical\n  request returns the previous model's stored answer for up to ttl_days (7\n  by default), logged as an ordinary cache hit. Benchmark and review output\n  is then attributed to a model that never ran.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::generate_content and\n  CachingAiProvider::new), cache errors are handled inconsistently. The\n  INSERT OR REPLACE result is dropped with let _ =, the WAL and busy_timeout\n  PRAGMA results are discarded, and a failed expiry DELETE is ignored, so\n  expired rows can be served past the TTL with no log line. \"Response cache\n  enabled\" is logged regardless. An undecodable stored row silently falls\n  through to a miss. On the read side, query, rows.next and row.get abort the\n  real AI call with ?, so an optional cache can fail a request the provider\n  would have served. A cache that never persists looks identical to a\n  working one.\n\n- [MEDIUM] In src/ai/mod.rs (create_provider_cached), the commit message\n  claims a working cache and the config key [ai] response_cache_ttl_days,\n  but the diff does not contain that behaviour. create_provider_cached has\n  no caller. src/reviewer.rs, src/bin/review.rs and src/bin/benchmark.rs\n  still call create_provider directly. AiSettings in src/settings.rs has no\n  TTL or enable field. A user who sets the documented key gets nothing, and\n  the described reaping and hit logging cannot run from any binary.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider), the new persistent cache\n  has no test module. Dropping the context_tag removal or\n  scrub_thought_signatures, inverting the TTL cutoff comparison, or skipping\n  the lookup would leave the suite green. Sibling modules carry tests. The\n  cutoff arithmetic in CachingAiProvider::new (ttl_days as i64 * 86400) is\n  unchecked, so a very large configured TTL can wrap to a future cutoff and\n  delete every row. The commit also does not say what workload motivates\n  caching nondeterministic LLM output, which pins one sampled answer per\n  request. A fake AiProvider with a call counter and a temp-dir database\n  would cover this.\n\n- [MEDIUM] In src/ai/cache.rs (CachingAiProvider::generate_content), every\n  Ok response is stored without checking for empty content or tool_calls,\n  and the key drops only context_tag and thought signatures. Once the cache\n  is wired into the reviewer's provider, a retry of the same request after a\n  null or degenerate response would replay the bad answer for the whole TTL,\n  and the model would never be asked again. As committed this cannot happen,\n  because nothing constructs the cache: src/reviewer.rs still uses\n  create_provider. Reject empty or truncated responses before the INSERT.\n\n- [LOW] In src/ai/mod.rs (create_provider_cached), the cache path is built\n  by treating database.url as a filesystem path. In src/db.rs\n  (Database::new), that value can be a libsql:// or https:// URL, which\n  yields a nonexistent relative directory (and ':' is illegal on NTFS), so\n  the open fails. For ':memory:' the parent is empty, so a persistent\n  response_cache.db lands in the process working directory. A later run\n  could be answered from stale entries, and under cron or systemd the\n  working directory differs from a terminal's.\n\n- [LOW] In src/ai/cache.rs (CachingAiProvider::generate_content), a cache\n  hit sets cached_tokens to the stored cached_tokens plus the full\n  prompt_tokens. The value can exceed prompt_tokens: prompt 1000 with cached\n  200 replays as 1200. src/worker/prompts.rs sums it into the interaction\n  totals persisted as tokens_cached, and the stats query in src/db.rs\n  aggregates it, so tokens_cached can exceed tokens_in. A local replay also\n  cannot be told apart from a provider-side prompt-cache hit. The logged\n  tokens_saved (prompt plus completion) disagrees with the usage field,\n  which credits only the prompt. The review budget in src/reviewer.rs uses\n  saturating_sub, so it is not affected.\n\n- [LOW] In src/ai/cache.rs (CachingAiProvider::generate_content), when a\n  cached row exists but AiResponse deserialization fails, the rows cursor\n  stays open across the whole inner provider call. This can pin a WAL read\n  snapshot on response_cache.db and delay checkpoints. The failure is also\n  not logged, so schema drift reads as a plain cache miss. The hold lasts\n  one provider call, and this relies on standard SQLite semantics because\n  the libsql source was not read. Scope the lookup in a block or drop rows\n  before calling the inner provider.",
+  "findings": [
+   {
+    "problem": "response cache key omits provider and model",
+    "severity": "Medium",
+    "type": "Cache key correctness (stale or wrong response served)",
+    "preexisting": false,
+    "explanation": "Consequence: after ai.provider or ai.model changes, an identical request returns the previous model's stored answer for up to ttl_days (7 by default), logged as an ordinary 'Cache hit'. Benchmark and review output is then attributed to a model that never ran, which is the 'told something false' failure. Reachability: compute_cache_key hashes only the AiRequest (several stages report system, messages, tools, temperature and response_format, with no model field at src/ai/mod.rs:98). The lookup is WHERE request_hash = ? only. All configurations share one response_cache.db beside database.url. The provider and model columns are written but never compared on read, and the insert puts caps.model_name in both columns. Capped at Medium because create_provider_cached has no caller yet, so the path is latent until it is wired in.",
+    "locations": [
+     {
+      "code_snippet": "super::scrub_thought_signatures(&mut val);\n        let canonical = serde_json::to_string(&val).unwrap_or_default();\n        let hash = Sha256::digest(canonical.as_bytes());",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "85",
+      "why_this_location_matters": "The hash input is the request only. Model and provider identity never enter the key."
+     },
+     {
+      "code_snippet": "SELECT response_json, tokens_saved, created_at FROM response_cache WHERE request_hash = ?",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "101",
+      "why_this_location_matters": "The lookup ignores the model and provider columns, and the INSERT writes caps.model_name into both of them."
+     }
+    ]
+   },
+   {
+    "problem": "cache errors swallowed on write, fatal on read",
+    "severity": "Medium",
+    "type": "Silent failure / misreported usage",
+    "preexisting": false,
+    "explanation": "Consequence: a cache that never persists looks identical to a working one. The INSERT OR REPLACE result is dropped with let _ =, the PRAGMA WAL and busy_timeout results are discarded, and the TTL DELETE logs only on Ok, so a failed reap lets expired rows be served past the TTL with no log line. The startup line 'Response cache enabled' is printed regardless. An undecodable stored row (for example after an AiResponse change) silently falls through to a miss with no warning. The read side does the opposite: query(...).await?, rows.next().await? and row.get(n)? abort the AI call on a lock or corrupt row, so an optional cache can fail a request the provider would have served. Both are visible in the diff. Capped at Medium because the feature is not yet wired in.",
+    "locations": [
+     {
+      "code_snippet": "let _ = self\n            .conn\n            .execute(\n                \"INSERT OR REPLACE INTO response_cache",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "146",
+      "why_this_location_matters": "A failed cache write is dropped without a log line."
+     },
+     {
+      "code_snippet": "let mut rows = self\n            .conn\n            .query(",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "98",
+      "why_this_location_matters": "A read error propagates with ? and fails the real request instead of degrading to a miss."
+     },
+     {
+      "code_snippet": "if let Ok(reaped) = result {",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "50",
+      "why_this_location_matters": "A failed expiry DELETE is ignored, and the PRAGMA results above it are also discarded."
+     }
+    ]
+   },
+   {
+    "problem": "cache never enabled; documented TTL key not wired",
+    "severity": "Medium",
+    "type": "Dead code / claimed feature not wired",
+    "preexisting": false,
+    "explanation": "Consequence: the commit message says '[ai] response_cache_ttl_days = 14' configures the TTL and that create_provider_cached() wraps any provider. A tree-wide grep at this revision finds create_provider_cached only at its definition (src/ai/mod.rs:182). src/reviewer.rs:115, src/bin/review.rs:374 and src/bin/benchmark.rs:221 still call create_provider directly. AiSettings has no response_cache_ttl_days or enable field, and the diff touches only src/ai/cache.rs and src/ai/mod.rs. A user who sets the documented key gets nothing, and the described reaping and hit logging cannot run from any binary. This is a commit message that claims behaviour the diff does not contain, which severity.md rates Medium.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn create_provider_cached(\n    settings: &Settings,\n    enable_cache: bool,\n    cache_ttl_days: u64,",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "182",
+      "why_this_location_matters": "The only entry point to the cache has no caller, and its enable and TTL arguments have no source in settings."
+     },
+     {
+      "code_snippet": "let provider = create_provider(&settings).expect(\"Failed to create AI provider\");",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "Reviewer::new",
+      "line": "115",
+      "why_this_location_matters": "The production path still builds the uncached provider."
+     },
+     {
+      "code_snippet": "pub struct AiSettings {\n    pub provider: String,\n    pub model: String,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "AiSettings",
+      "line": "169",
+      "why_this_location_matters": "There is no field for the documented config key."
+     }
+    ]
+   },
+   {
+    "problem": "persistent cache added with no tests",
+    "severity": "Medium",
+    "type": "Evidence / test gap and design scope",
+    "preexisting": false,
+    "explanation": "Consequence: the diff adds non-trivial persistent behaviour (key normalisation, hit/miss flow, TTL cutoff, corrupt-row fallthrough, cached_tokens adjustment) and src/ai/cache.rs has no test module. Mutating any of these (dropping the context_tag removal or scrub_thought_signatures, inverting the cutoff comparison, skipping the lookup) leaves the suite green, so nothing could fail. The sibling modules mod.rs, gemini.rs, openai.rs and token_budget.rs do carry tests. The commit also never says which workload motivates caching nondeterministic LLM output, which pins one sampled answer per request. The TTL arithmetic 'ttl_days as i64 * 86400' is unchecked, and a very large configured value wraps to a future cutoff that would delete every row. A fake AiProvider with a call counter and a unique temp-dir database would cover all of this.",
+    "locations": [
+     {
+      "code_snippet": "pub struct CachingAiProvider {",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider",
+      "line": "10",
+      "why_this_location_matters": "The new type has no test module covering key derivation, TTL reaping or hit/miss behaviour."
+     },
+     {
+      "code_snippet": "- ttl_days as i64 * 86400;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::new",
+      "line": "45",
+      "why_this_location_matters": "The cutoff arithmetic is unchecked and untested."
+     }
+    ]
+   },
+   {
+    "problem": "cache path derived from database.url as if a file path",
+    "severity": "Low",
+    "type": "Path Derivation / Cross-Platform",
+    "preexisting": false,
+    "explanation": "Consequence: src/db.rs:370 treats database.url values starting with libsql:// or https:// as remote and passes everything else to Builder::new_local. create_provider_cached runs Path::new(url).parent().join(\"response_cache.db\") on any of them. For a libsql:// URL the join yields a nonexistent relative directory (':' is illegal on NTFS, so it is invalid on Windows too), and the open in CachingAiProvider::new fails loudly. For ':memory:' (used by the reviewer tests) parent() is Some(\"\"), so a persistent response_cache.db lands in the process working directory. A later run could then be answered from stale entries, and under cron or systemd the working directory differs from a terminal's. A bare filename such as 'sashiko.db' follows the main DB's cwd behaviour, so it adds nothing new. Rated Low because no caller exists yet and the remote-URL failure is loud.",
+    "locations": [
+     {
+      "code_snippet": "let cache_path = std::path::Path::new(&settings.database.url)\n            .parent()\n            .unwrap_or(std::path::Path::new(\".\"))\n            .join(\"response_cache.db\");",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "189",
+      "why_this_location_matters": "Builds a filesystem path from a value that may be a remote URL or ':memory:'."
+     },
+     {
+      "code_snippet": "let db = if settings.url.starts_with(\"libsql://\") || settings.url.starts_with(\"https://\") {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "370",
+      "why_this_location_matters": "Shows that database.url can legitimately be a remote URL."
+     }
+    ]
+   },
+   {
+    "problem": "replayed hit inflates cached_tokens, can exceed prompt_tokens",
+    "severity": "Low",
+    "type": "Misleading usage accounting and plaintext data at rest",
+    "preexisting": false,
+    "explanation": "Consequence: persisted and reported token statistics are wrong for any review that gets a local cache hit. No money, secret or live-store write is involved, and the review budget stays safe. Reachability: CachingAiProvider::generate_content runs on every hit, but the wrapper is only built by create_provider_cached(enable_cache=true), and grep finds no caller of that function in src/, so it is opt-in and unwired at this commit. Proof: on a hit, src/ai/cache.rs sets usage.cached_tokens = Some(stored cached_tokens + prompt_tokens) and leaves prompt_tokens, completion_tokens and total_tokens as recorded from the original live call. (1) If the original response already reported cached_tokens (claude, bedrock, gemini and the CLI providers do), the replayed value is original_cached + prompt_tokens, which is greater than prompt_tokens. For example, prompt 1000 with cached 200 replays as cached 1200. (2) Consumers do not subtract it. src/worker/prompts.rs:1201 and :1257 add usage.cached_tokens into t_cached and tokens.2, which become AiInteractionParams.tokens_cached (db.rs:768-780). The stats query at db.rs:1128-1135 then sums tokens_in, tokens_out and tokens_cached per provider, model and status. tokens_cached can therefore exceed tokens_in, and tokens_in and tokens_out count tokens that a replay never spent. (3) A local replay cannot be told apart from a provider-side prompt-cache hit: both land in tokens_cached. The log line's tokens_saved (prompt plus completion) also disagrees with the usage field, which credits only the prompt. What is not affected: src/reviewer.rs:1682 uses prompt_tokens.saturating_sub(cached), so the budget never underflows. On a replay uncached_input is 0 and only completion_tokens are charged, so the budget is overcounted but never exceeded wrongly. quota.rs and token_budget.rs contain no references to cached, total_tokens or prompt_tokens (grep returned nothing), so they are not affected. Unverified: I did not find the readers of the db.rs stats JSON (tokens_cached key), such as a web UI or reports. If one derives cache-hit rate or cost from it, the figure is misleading. Capped at Low for that reason.",
+    "locations": [
+     {
+      "code_snippet": "usage.cached_tokens =\n    Some(usage.cached_tokens.unwrap_or(0) + usage.prompt_tokens);",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "121",
+      "why_this_location_matters": "Adds the full prompt_tokens on top of any provider-reported cached count, so the value can exceed prompt_tokens, and it mixes local replay with provider cache."
+     },
+     {
+      "code_snippet": "tokens.2 += usage.cached_tokens.unwrap_or(0) as u32;",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "json_request::accumulate",
+      "line": "1257",
+      "why_this_location_matters": "Sums the inflated value into the interaction totals that are persisted as tokens_cached."
+     },
+     {
+      "code_snippet": "sum(COALESCE(ai.tokens_cached, 0))",
+      "file": "src/db.rs",
+      "function_or_symbol": "stats query over ai_interactions",
+      "line": "1132",
+      "why_this_location_matters": "Reports the aggregated, possibly inflated value, so tokens_cached may exceed tokens_in."
+     }
+    ]
+   },
+   {
+    "problem": "cache is never wired in, TTL setting is missing, bad Ok would replay",
+    "severity": "Medium",
+    "type": "Bad Ok response cached and replayed",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: as committed, the replay of a bad cached Ok response in H2 cannot happen, because nothing constructs the cache. A repo-wide grep at 7ff827d for create_provider_cached, CachingAiProvider, enable_cache and response_cache_ttl finds only definitions in src/ai/cache.rs and src/ai/mod.rs. Every real caller uses the uncached factory: src/reviewer.rs:115 (create_provider(&settings)), src/bin/review.rs:374 and src/bin/benchmark.rs:221. The retry paths in process_patch_review (src/reviewer.rs:1216, 1362, 1406, 1428) re-run run_review_tool, and that function's AI requests are served by ctx.provider at src/reviewer.rs:1646, which is the uncached provider. So the premise of H2 is partly wrong, but it points at two real problems in the same path. (1) The commit message promises a working cache and a config key, '[ai] response_cache_ttl_days = 14'. The diff has no Settings field for it (response_cache_ttl does not appear in src/settings.rs or anywhere else) and no call site, so the stated feature does nothing and the config line is silently ignored. This is a commit message claiming behaviour the diff does not contain. (2) Latent: when a later change wires CachingAiProvider into ctx.provider, CachingAiProvider::generate_content at src/ai/cache.rs:130 and following stores every Ok response unconditionally. That includes responses with content None and tool_calls None, which the AiResponse type permits. The key from compute_cache_key drops only context_tag and thought signatures, so a retry of the same first-turn request after 'AI returned null response' or a tool error would hit the cached bad response for the whole TTL (default 7 days) and the model would never be asked again. Errors are not cached, so transient provider failures are unaffected. I did not verify which failures in the review binary reach each retry branch, so the latent part is capped at Medium. Fix: reject empty or truncated responses before the INSERT, and wire the TTL through Settings and a caller.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn create_provider_cached(\n    settings: &Settings,\n    enable_cache: bool,\n    cache_ttl_days: u64,\n)",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "182",
+      "why_this_location_matters": "The only entry point that builds CachingAiProvider has no callers anywhere in the repository, so the cache is dead code."
+     },
+     {
+      "code_snippet": "let provider = create_provider(&settings).expect(\"Failed to create AI provider\");",
+      "file": "src/reviewer.rs",
+      "function_or_symbol": "ReviewContext construction",
+      "line": "115",
+      "why_this_location_matters": "The provider that serves review requests is built with the uncached factory, so the retry loops never reach the cache."
+     },
+     {
+      "code_snippet": "let resp = self.inner.generate_content(request.clone()).await?;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "130",
+      "why_this_location_matters": "Every Ok response is persisted with no check for empty content or tool_calls, so once wired in a degenerate response is replayed for the TTL."
+     }
+    ]
+   },
+   {
+    "problem": "cache read cursor stays open across the provider call on bad row",
+    "severity": "Low",
+    "type": "Read cursor held across provider call",
+    "preexisting": false,
+    "explanation": "Consequence: when a cached row exists but serde_json::from_str::<AiResponse> fails, the cursor stays open during the whole inner LLM call, which can pin a WAL read snapshot on response_cache.db and delay checkpoints. Reachability: CachingAiProvider::generate_content, via create_provider_cached (src/ai/mod.rs:182, the only constructor path found by git_grep). The trigger is a stored response_json that no longer deserializes, for example after AiResponse changes shape between releases, which would affect every old entry. Proof from the code: `let mut rows = self.conn.query(...)` is bound at function scope. `rows.next().await?` returned Some, so the statement was stepped once and not run to DONE. The `if let Ok(..)` fails, control falls through to `self.inner.generate_content(request.clone()).await?`, and `rows` is dropped only at function end. A SQLite statement that has returned a row and not been reset keeps its read transaction, so in WAL mode it holds its snapshot until reset or drop. The checkpointer cannot advance past that snapshot. Blast radius is small: the cache db is a separate single-process file, the later INSERT OR REPLACE runs on the same connection (no self-deadlock), and the hold lasts one provider call. The hit path is not affected because it returns while `rows` is dropped immediately. Assumption not verified: I could not read libsql 0.9.30 (Cargo.lock) source with the available tools, so I am relying on standard SQLite semantics for an un-reset statement, which libsql's local Rows wraps. Reading libsql's Rows/Statement drop and reset behaviour would confirm or refute it. Capped at Low. Fix: scope the lookup in a block, or drop(rows) before the inner call. A related silent path is that a deserialize failure is not logged, so a schema drift reads as 'Cache miss' with no warning.",
+    "locations": [
+     {
+      "code_snippet": "if let Some(row) = rows.next().await? {\n    ... if let Ok(mut resp) = serde_json::from_str::<AiResponse>(&response_json) { ... return Ok(resp); }\n}\ndebug!(\"Cache miss [{}]\", hash_prefix);\nlet resp = self.inner.generate_content(request.clone()).await?;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "107",
+      "why_this_location_matters": "On a deserialize failure the un-drained rows cursor lives through the provider await, holding the read snapshot."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "The &hash[..12] slice in generate_content could panic on a short or non-ASCII string.",
+    "reasoning": "compute_cache_key is the only producer of the key. It formats each of the 32 bytes of a SHA-256 digest as two lowercase hex digits, giving exactly 64 ASCII characters, even on the serialization-failure fallback (the digest is still 32 bytes). Index 12 is therefore in bounds and on a char boundary on every path.",
+    "locations": [
+     {
+      "code_snippet": "hash.iter().map(|b| format!(\"{:02x}\", b)).collect()",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "88",
+      "why_this_location_matters": "Guarantees a 64-character ASCII hex key."
+     }
+    ]
+   },
+   {
+    "description": "The cache queries could be injectable through request-derived values.",
+    "reasoning": "Every statement that carries data binds it with libsql::params!: the SELECT binds the hash, the INSERT binds hash, model, request_json, response_json, tokens_saved and now, and the DELETE binds the cutoff integer. The only string-built SQL is the fixed CREATE TABLE text. No request or response text is concatenated into SQL.",
+    "locations": [
+     {
+      "code_snippet": "\"SELECT response_json, tokens_saved, created_at FROM response_cache WHERE request_hash = ?\",\n                libsql::params![hash.clone()],",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "101",
+      "why_this_location_matters": "Shows the lookup binds its value as a parameter."
+     }
+    ]
+   },
+   {
+    "description": "Sub-claim: cached prompts and responses are stored in plaintext with default permissions in response_cache.db, creating a new exposure.",
+    "reasoning": "The cache stores request_json and response_json in a sibling file of the main database, created through the same libsql builder with no special mode. The main database already persists the same prompt and output text in plaintext in ai_interactions (input_context, output_raw) with the same default file handling. The cache therefore adds a second copy of data the deployment already keeps at the same sensitivity, not a new class of exposure. It is also opt-in via create_provider_cached(enable_cache=true). No secret is written: the request is the review prompt, and the code adds no credentials.",
+    "locations": [
+     {
+      "code_snippet": "\"INSERT INTO ai_interactions (id, parent_interaction_id, workflow_id, provider, model, input_context, output_raw, tokens_in, tokens_out, tokens_cached, created_at)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::create_ai_interaction",
+      "line": "768",
+      "why_this_location_matters": "Shows the main DB already stores the full prompt and raw output in plaintext, so the cache file does not widen exposure."
+     }
+    ]
+   },
+   {
+    "description": "CachingAiProvider::generate_content has no single-flight guard between the SELECT and the inner provider call. Concurrent identical requests would each miss and each call the paid provider, and the later INSERT OR REPLACE would overwrite the earlier row.",
+    "reasoning": "1. git_grep for create_provider_cached, CachingAiProvider and response_cache_ttl_days at 7ff827d finds only the definitions in src/ai/cache.rs and src/ai/mod.rs (the struct, its impl, the AiProvider impl, and create_provider_cached which constructs it). There is no call site for create_provider_cached anywhere in src/. 2. Every real provider construction goes through the uncached create_provider: src/bin/benchmark.rs:221, src/bin/review.rs:374, src/reviewer.rs:115. None of them wraps the provider in CachingAiProvider, so no caller, entry point or mode in this commit reaches generate_content on the caching wrapper. The duplicate-call race therefore cannot occur at this commit. 3. There is also no settings plumbing: response_cache_ttl_days appears nowhere in src/, so the config key the commit message describes is not read by anything yet. 4. The candidate's own premise is speculative. It depends on a future caller that issues byte-identical AiRequests concurrently. The concurrency primitives in the tree (Semaphore in src/reviewer.rs, buffer_unordered in src/bin/benchmark.rs:240) bound concurrency across distinct review requests, and I found no evidence that they issue identical requests at the same time. 5. Even if it were wired in later, the consequence is bounded: a duplicate paid call and an overstated tokens_saved log figure. INSERT OR REPLACE on the primary key keeps the table consistent, and no money, credential or live store is touched. Nothing in this commit makes it reachable, so there is no concrete failing path to report. If a later change wires create_provider_cached into the worker pool, the single-flight question should be reviewed there.",
+    "locations": [
+     {
+      "code_snippet": "let resp = self.inner.generate_content(request.clone()).await?;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "131",
+      "why_this_location_matters": "This is the miss path with no in-flight guard, but the enclosing wrapper is never constructed by any caller at this commit."
+     },
+     {
+      "code_snippet": "pub async fn create_provider_cached(\n    settings: &Settings,\n    enable_cache: bool,\n    cache_ttl_days: u64,\n) -> Result<Arc<dyn AiProvider>> {",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_provider_cached",
+      "line": "182",
+      "why_this_location_matters": "The only constructor of CachingAiProvider has no callers, so the race is unreachable. benchmark.rs:221, review.rs:374 and reviewer.rs:115 all call create_provider directly."
+     }
+    ]
+   },
+   {
+    "description": "compute_cache_key uses unwrap_or_default() on serde_json::to_value and serde_json::to_string, so a serialization failure could give every such request the same constant key.",
+    "reasoning": "Neither call can fail for any AiRequest, so the constant-key path is unreachable. (1) AiRequest (src/ai/mod.rs) contains only: Option<String> system, Vec<AiMessage> messages, Option<Vec<AiTool>> tools, Option<f32> temperature, Option<AiResponseFormat> response_format, and Option<String> context_tag. Every nested type derives Serialize, and none has a hand-written Serialize impl or a non-string-keyed map. The only free-form parts are serde_json::Value fields (ToolCall.arguments, AiTool.parameters, AiResponseFormat::Json.schema), and a Value always has string keys. The usual to_value failure, a map with non-string keys, therefore cannot occur. (2) The non-finite-float case raised in the verification question does not produce an error either. serde_json's Value serializer maps a NaN or infinite f32/f64 to Value::Null instead of failing, because Number cannot hold non-finite values. A NaN temperature thus yields a different key than an absent temperature, which is skipped, so it does not collapse to a constant key. (3) serde_json::to_string on a serde_json::Value is infallible in practice: it has string keys and finite numbers only, so the unwrap_or_default() fallback never runs. (4) The later serde_json::to_string(&request)? in generate_content propagates errors with ?, so even a hypothetical failure would abort before the INSERT. No row could be written under a constant key. No scenario in the current types lets a serialization failure be silently converted into a shared key. The remaining unwrap_or_default() calls are unreachable defensive defaults, not a silent-failure path.",
+    "locations": [
+     {
+      "code_snippet": "let mut val = serde_json::to_value(request).unwrap_or_default();\n...\nlet canonical = serde_json::to_string(&val).unwrap_or_default();",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::compute_cache_key",
+      "line": "80",
+      "why_this_location_matters": "The fallback is unreachable: AiRequest has only derived Serialize with string-keyed data, and NaN/inf floats become Null rather than errors."
+     },
+     {
+      "code_snippet": "pub struct AiRequest { pub system: Option<String>, pub messages: Vec<AiMessage>, pub tools: Option<Vec<AiTool>>, pub temperature: Option<f32>, pub response_format: Option<AiResponseFormat>, pub context_tag: Option<String> }",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "AiRequest",
+      "line": "117",
+      "why_this_location_matters": "Shows every field type is derived-serializable with no non-string map keys, so to_value cannot error."
+     },
+     {
+      "code_snippet": "let request_json = serde_json::to_string(&request)?;",
+      "file": "src/ai/cache.rs",
+      "function_or_symbol": "CachingAiProvider::generate_content",
+      "line": "133",
+      "why_this_location_matters": "Any serialization failure of the request propagates as an error before the INSERT, so no row would be stored under a constant key."
+     }
+    ]
+   }
+  ]
+ }
+}

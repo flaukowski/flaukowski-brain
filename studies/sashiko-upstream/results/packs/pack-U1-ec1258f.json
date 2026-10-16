@@ -1,0 +1,362 @@
+{
+ "commit": "ec1258f",
+ "label": "U1",
+ "A": {
+  "summary": "This commit changes how the Claude provider sends extended-thinking\nsettings in API requests. The thinking and effort values used to be two\nseparate top-level fields on the request body. They are now grouped into a\nnested \"thinking\" object, built from a new ThinkingConfig struct with \"type\"\nand \"effort\" fields, which matches the shape the Claude documentation\ndescribes. The deprecated budget_tokens option is deliberately not\nimplemented.\n\nThis has a user-visible effect on the request payload sent to the Claude\nAPI, and so on how thinking is applied when a Claude model is configured\nwith thinking or effort settings.\n\nBefore:\n  {\"thinking\": \"enabled\", \"effort\": \"high\", ...}\n\nAfter:\n  {\"thinking\": {\"type\": \"enabled\", \"effort\": \"high\"}, ...}\n\nThe request now always includes the \"thinking\" object, built from whatever\nthinking and effort values are configured. If neither is set, it serializes\nas an empty object ({\"thinking\": {}}) instead of omitting the field.",
+  "inline_review": "- [HIGH] In src/ai/claude.rs (translate_ai_request), the request always\n  sets thinking to Some(ThinkingConfig), and every field of ThinkingConfig\n  is skipped when None. With the default configuration (no thinking or\n  effort set) the body carries an empty thinking object, where the old\n  code omitted the key. With only effort set, the object has no type. The\n  Messages API likely rejects this with a 400, which classify_ai_error\n  treats as fatal, so reviews on a default Claude deployment would fail\n  without retry. The API rejection is inferred from the API contract, not\n  observed. Fix: build ThinkingConfig only when the thinking type is Some,\n  otherwise pass None.\n\n- [MEDIUM] In src/ai/claude.rs (ThinkingConfig, translate_ai_request),\n  effort is nested inside the thinking object. The sibling provider in\n  src/ai/bedrock.rs (build_additional_fields) sends thinking with only a\n  type and puts effort in a separate top-level output_config object, as\n  asserted by test_additional_fields_thinking_and_effort. If the API\n  rejects unknown keys in thinking, every Claude request with effort set\n  fails fatally. If it ignores them, effort is silently never applied\n  while cache_identity still keys on it. This rests on an unverified API\n  assumption. Fix: send effort under output_config.\n\n- [MEDIUM] In src/ai/claude.rs (translate_ai_request, ClaudeRequest), the\n  commit changes the serialized wire format of every Claude request, but\n  the commit message cites only documentation and shows no real request\n  with thinking enabled or unset. The thinking value is also never\n  validated, so setting it to enabled without budget_tokens (which the\n  commit deliberately does not implement) yields an invalid request. The\n  src/settings.rs ClaudeSettings.thinking field has no documentation of\n  allowed values.\n\n- [MEDIUM] In src/ai/claude.rs (ClaudeRequest, ThinkingConfig), there is no\n  serde_json serialization test covering the changed request body.\n  translate_ai_request is a pure function, so a test is easy to write and\n  would have caught the empty thinking object. It should cover (None,\n  None) omitting the key, (adaptive, None), and (adaptive, high). The\n  field ThinkingConfig.thinking serializes as type, which is confusing;\n  thinking_type would be clearer.",
+  "findings": [
+   {
+    "problem": "claude request sends empty thinking object when unconfigured",
+    "severity": "High",
+    "type": "Regression / API Contract",
+    "preexisting": false,
+    "explanation": "translate_ai_request in src/ai/claude.rs builds `thinking: Some(ThinkingConfig { thinking, effort })` unconditionally. Both inner fields use skip_serializing_if = Option::is_none, so when neither is configured (the default: ClaudeSettings thinking/effort are Option and passed through as None from create_client in src/ai/mod.rs) the body carries `\"thinking\": {}`. Before the patch an unconfigured client omitted both keys. The same happens when only effort is set, since the object then has no `type`. The Anthropic Messages API needs `type` inside a thinking object, so this will probably be rejected with a 400. ClaudeError::InvalidRequest is Fatal in classify_ai_error, so there is no retry. Every stage call from a default Claude deployment would then fail and the review would be marked failed. Claude is a primary provider, so this is a systematic failure on a primary path. The API rejection is inferred from the API contract, not observed. The fix is to build the config only when thinking is Some, otherwise pass None.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "The outer Option is always Some, so the thinking key is always serialized, as {} when nothing is configured."
+     },
+     {
+      "code_snippet": "pub struct ThinkingConfig {\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    #[serde(rename = \"type\")]\n    pub thinking: Option<String>,\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    pub effort: Option<String>,\n}",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "95",
+      "why_this_location_matters": "Every field is optional and skipped when None, so the struct can serialize to an empty object."
+     },
+     {
+      "code_snippet": "let thinking = claude.and_then(|c| c.thinking.clone());",
+      "file": "src/ai/mod.rs",
+      "function_or_symbol": "create_client (Claude branch)",
+      "line": "196",
+      "why_this_location_matters": "Shows that thinking defaults to None, so the empty-object case is the default configuration."
+     }
+    ]
+   },
+   {
+    "problem": "no serialization test for changed ClaudeRequest wire format",
+    "severity": "Medium",
+    "type": "Maintainability / Test Coverage",
+    "preexisting": false,
+    "explanation": "The commit changes the serialized wire format of ClaudeRequest, but src/ai/claude.rs has no test covering it. translate_ai_request is a pure function, so a deterministic serde_json::to_value test is easy to write. It would have caught the empty `thinking: {}` regression. It should cover (None, None) omitting the key, (adaptive, None), and (adaptive, high). bedrock.rs already has equivalent tests. The field name ThinkingConfig.thinking, which serializes as `type`, is also confusing. Naming it thinking_type would be clearer, but that is only a minor point.",
+    "locations": [
+     {
+      "code_snippet": "pub thinking: Option<String>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "98",
+      "why_this_location_matters": "A field named thinking inside ThinkingConfig is serialized as \"type\", which is easy to misread."
+     },
+     {
+      "code_snippet": "pub thinking: Option<ThinkingConfig>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeRequest",
+      "line": "91",
+      "why_this_location_matters": "This is the wire-format field whose shape changed, and no test guards the request body."
+     }
+    ]
+   },
+   {
+    "problem": "claude request nests effort in thinking, not output_config",
+    "severity": "Medium",
+    "type": "API Contract / Correctness",
+    "preexisting": false,
+    "explanation": "Claude is a primary provider, but I could not confirm from the repo how the Anthropic API treats these fields, so the impact rests on an unverified API assumption and is capped at Medium. What the repo does show: the sibling Bedrock provider serializes thinking as {type} only and sends effort in a separate output_config object (build_additional_fields, tested in test_additional_fields_thinking_and_effort, which asserts json[\"output_config\"][\"effort\"]). The new ThinkingConfig in src/ai/claude.rs puts effort inside the thinking object, contradicting the Bedrock layout for the same model family. If the API rejects unknown keys inside thinking, every direct-Claude request with effort configured fails with a 400, which classify_ai_error treats as Fatal, so reviews fail without retry. If the API ignores the key, effort silently never applies, and cache_identity still keys on effort (claude.rs:521), so the setting appears to take effect while the model ignores it. The candidate's third citation is partly wrong: the 'output_config.effort level' comment at src/settings.rs:141 belongs to BedrockSettings, not ClaudeSettings, so it supports the Bedrock layout but does not document ClaudeSettings. A related, concretely provable defect in the same change: translate_ai_response now always builds thinking: Some(ThinkingConfig { thinking, effort }). With both unset, serde skips both fields and serializes \"thinking\":{} on every request, where the old code omitted the key. With only effort set, it sends thinking:{effort:...} with no type. Whether the API rejects an empty or type-less thinking object is unverified, but the old code never sent one. Because the commit changes the wire format for every Claude request, the omission of output_config and the always-Some wrapper should be fixed together: send effort under a top-level output_config, and make thinking None when no type is configured.",
+    "locations": [
+     {
+      "code_snippet": "#[serde(skip_serializing_if = \"Option::is_none\")]\n    pub effort: Option<String>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "99",
+      "why_this_location_matters": "effort is serialized inside the thinking object instead of a top-level output_config, unlike the Bedrock provider."
+     },
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "The wrapper is always Some, so an unconfigured request serializes \"thinking\":{} and a request with only effort set serializes a thinking object without type."
+     },
+     {
+      "code_snippet": "output_cfg.insert(\"effort\".to_string(), Document::String(e.to_string()));\n        map.insert(\"output_config\".to_string(), Document::Object(output_cfg));",
+      "file": "src/ai/bedrock.rs",
+      "function_or_symbol": "build_additional_fields",
+      "line": "158",
+      "why_this_location_matters": "The sibling provider for the same model family places effort in output_config, separate from thinking."
+     }
+    ]
+   },
+   {
+    "problem": "thinking config always sent, default emits empty thinking object",
+    "severity": "High",
+    "type": "Implementation vs Intent",
+    "preexisting": false,
+    "explanation": "Reasoning: the Anthropic (Claude) provider is a primary production provider, and this affects the default configuration for every Claude user, not only those who set thinking. Blast radius is every Claude-backed review; the effect is a systematic request failure that needs operator intervention. The candidate's premise was partly inaccurate. The 'adaptive-only' doc comment is on BedrockSettings, and ClaudeSettings.thinking at src/settings.rs:109 has no doc or validation. Pre-patch, ClaudeRequest sent thinking as a bare top-level string, so 'enabled' was already invalid before this patch. The underlying problem is real but larger. translate_ai_request now always builds thinking: Some(ThinkingConfig { thinking, effort }). Both inner fields use skip_serializing_if = Option::is_none, so with no thinking or effort configured (the default, since both are Option with serde default) the body contains a thinking field that is an empty JSON object. Pre-patch, None fields were omitted entirely. As far as I know, the Messages API requires thinking.type whenever the thinking object is present, so this should yield a 400, surfaced as ClaudeError::InvalidRequest at claude.rs:~265. I could not confirm API behavior from the repository, so the exact rejection is inferred from the documented API contract. Separately, effort is nested inside the thinking object, but the API takes effort under output_config, so setting effort should also be rejected. Setting thinking to enabled without budget_tokens (the commit message's own example, with budget_tokens deliberately unimplemented) also yields an invalid request. The configured string is never validated, and translate_ai_request only special-cases disabled for temperature. The fix is to emit thinking only when the thinking type is Some, and to move effort to output_config.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "The Some wrapper is unconditional, so an all-None config serializes as an empty thinking object instead of being omitted."
+     },
+     {
+      "code_snippet": "pub struct ThinkingConfig {\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    #[serde(rename = \"type\")]\n    pub thinking: Option<String>,\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    pub effort: Option<String>,\n}",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "95",
+      "why_this_location_matters": "Every field is skipped when None, so the struct can serialize to an empty object. It has no budget_tokens field, and effort is nested under thinking."
+     },
+     {
+      "code_snippet": "#[serde(default)]\n    pub thinking: Option<String>,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "ClaudeSettings.thinking",
+      "line": "109",
+      "why_this_location_matters": "There is no documentation or validation of allowed values, so operators can set enabled and get an invalid request."
+     }
+    ]
+   },
+   {
+    "problem": "wire-format change sends empty thinking object, no validation",
+    "severity": "Medium",
+    "type": "Missing Validation Evidence",
+    "preexisting": false,
+    "explanation": "Reasoning: this is a request-shape change to the Anthropic provider, a primary provider. It is not a prompt or review-quality change, so the benchmark-evidence rule does not apply as such. The missing-evidence concern is real because the commit changes what is sent on every Claude request, its message cites only documentation, and the other defects it introduces are visible in the code. In translate_ai_request (src/ai/claude.rs, around line 395) the request is built with thinking: Some(ThinkingConfig { thinking, effort }), unconditionally. Both fields are Option<String> with skip_serializing_if = Option::is_none. When no thinking or effort is configured (both None), the request serializes as \"thinking\": {} instead of omitting the key. The old code omitted both fields in that case. The Anthropic Messages API requires a type inside a thinking object, so an empty object is a likely 400 for every Claude request without thinking configured. Because the commit includes no live request, nothing exercised this case. Effort is also nested inside the thinking object. I could not verify against the API that it is accepted there, since my understanding is that effort is a separate output-level parameter. The commit message states this placement but shows no request that confirms it. Severity is capped at Medium because I did not verify the default Settings values for thinking/effort or the live API response, so the breakage is speculative. If the default configuration leaves thinking unset, the impact would be systematic failure on a primary provider (High). The fix is to set thinking to None when both fields are None. The author should also show one real request with thinking enabled and one with it unset.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "The config is always wrapped in Some, so an unset thinking/effort serializes as an empty thinking object; effort is also nested under thinking without live-API confirmation."
+     },
+     {
+      "code_snippet": "pub thinking: Option<ThinkingConfig>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeRequest",
+      "line": "91",
+      "why_this_location_matters": "This is the changed wire-format field that the commit message does not back with any validation."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Other construction sites of ClaudeRequest might still use the removed top-level effort field or omit the new thinking field.",
+    "reasoning": "git_grep for ClaudeRequest across src/ shows a single struct literal, in translate_ai_request, which the patch updated. The other matches are the definition and parameter types. No other site constructs the struct.",
+    "locations": [
+     {
+      "code_snippet": "let mut claude_request = ClaudeRequest {",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "384",
+      "why_this_location_matters": "It is the only place ClaudeRequest is constructed."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change makes the Claude client send its thinking settings the way\nClaude's API documentation describes: as one nested \"thinking\" object\ninstead of two separate top-level fields. The commit message says the\n\"budget_tokens\" option is deprecated for the newest models, so it is not\nadded.\n\nIn src/ai/claude.rs, a new ThinkingConfig struct holds the \"type\" and\n\"effort\" values. The \"type\" value reuses the old thinking string field,\nrenamed on the wire. ClaudeRequest now has a single optional thinking\nfield of that type. translate_ai_request fills it from the same two values\nit used before.\n\nBefore:\n  Request body carried top-level fields, each omitted when unset:\n  {\"model\": \"...\", \"thinking\": \"enabled\", \"effort\": \"high\", ...}\n  With neither value set, neither key appeared.\n\nAfter:\n  Request body carries a nested object:\n  {\"model\": \"...\", \"thinking\": {\"type\": \"enabled\", \"effort\": \"high\"}, ...}\n  translate_ai_request always builds the object, so with neither value\n  set the body has \"thinking\": {} instead of omitting the key.",
+  "inline_review": "- [HIGH] In src/ai/claude.rs (translate_ai_request), the thinking field is\n  always built as Some(ThinkingConfig), so the outer skip_serializing_if on\n  ClaudeRequest.thinking never fires. With neither thinking nor effort set\n  (the default, and settings.rs documents unset as omit), both inner fields\n  are skipped and every Claude request carries an empty thinking object.\n  The API most likely rejects it with a 400 because type is missing; the\n  old code omitted the key. Effort-only config also yields a thinking object\n  with no type. Not confirmed against the API from the repo. Fix: emit None\n  unless thinking is set.\n\n- [HIGH] In src/ai/claude.rs (ThinkingConfig, translate_ai_request), unset\n  thinking and effort serialize as an empty thinking object, since both\n  ThinkingConfig fields are skipped when None and the wrapper is always\n  Some. type is optional in the struct although the wire format needs it\n  whenever the object is present. Every request through the default Claude\n  backend is probably refused with a 400. The commit message claims the\n  change follows the docs, but the diff has no test showing the body.\n\n- [MEDIUM] In src/ai/claude.rs (ClaudeRequest.thinking, translate_ai_request),\n  the Claude request now always sends thinking, empty when unset. If the\n  Messages API requires thinking.type, every default-config\n  ClaudeClient::generate_content call fails with a 400, which post_request\n  maps to ClaudeError::InvalidRequest. This breaks the documented contract\n  in src/settings.rs (ClaudeSettings.thinking) that unset means omitted. If\n  the API accepts the empty object, downgrade to Low. A captured API\n  response for an empty thinking object would settle it.\n\n- [MEDIUM] In src/ai/claude.rs (ThinkingConfig), effort is serialized inside\n  the thinking object, not under output_config.effort. src/ai/bedrock.rs\n  (build_additional_fields) puts effort under output_config and tests it,\n  and src/settings.rs (ClaudeSettings.effort) documents output_config.effort.\n  A configured effort is therefore rejected with a 400 or silently dropped,\n  so the operator believes it is applied when it is not. The old top-level\n  effort was also wrong, so this swaps one wrong placement for another.\n  Layout is unverified against the API; check the Messages API reference or\n  send one request per layout.\n\n- [MEDIUM] In src/ai/claude.rs (translate_ai_request, ThinkingConfig), a\n  malformed thinking object can reach the API in three cases: both settings\n  unset gives an empty object; effort only gives an object with no type;\n  thinking plus effort nests effort inside the object. src/settings.rs\n  (ClaudeSettings thinking and effort) declares the two as independent\n  options and src/ai/mod.rs reads them with no cross-validation, so the\n  effort-only case is reachable from config. The failure is loud (HTTP\n  error), not silent. Fix: emit thinking only when the thinking setting is\n  Some, and send effort under output_config.effort.\n\n- [MEDIUM] In src/ai/claude.rs (ThinkingConfig, translate_ai_request), the\n  request-body change has no serialization test, and claude.rs has no test\n  module. The commit changes the JSON sent on every Claude call, and nothing\n  would fail if it were reverted or wrong. The sibling src/ai/bedrock.rs has\n  test_additional_fields_thinking_and_effort for the same settings. A single\n  to_value assertion on a default request would have exposed the empty\n  thinking object. The commit message example uses type enabled, which needs\n  budget_tokens, and the commit says that is not implemented, so the example\n  is not a configuration this code supports.",
+  "findings": [
+   {
+    "problem": "claude.rs request-shape change has no serialization test",
+    "severity": "Medium",
+    "type": "Commit Quality / Unsupported Claim",
+    "preexisting": false,
+    "explanation": "Effect: the commit changes the JSON body sent to the Anthropic Messages API on every Claude call, and no test would fail if it were reverted or if it is wrong. Reachability: every Claude request. The diff touches only src/ai/claude.rs and adds no test. The sibling src/ai/bedrock.rs has a test (test_additional_fields_thinking_and_effort) that asserts the JSON shape for the same settings, so the gap is specific to claude.rs. The commit message says 'follow claude doc' but nothing in the diff verifies the emitted body. Its example uses type enabled, which needs budget_tokens, and the commit says that is not implemented, so the example is not a configuration this code supports. A single to_value assertion on a default request (thinking=None, effort=None) would have exposed the empty thinking object. Severity is Medium because the code defect itself is judged separately in the hard cases.",
+    "locations": [
+     {
+      "code_snippet": "pub struct ThinkingConfig {",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "94",
+      "why_this_location_matters": "New wire type with no accompanying serialization test; claude.rs has no test module."
+     },
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "The request body assembly changed and no test asserts the resulting JSON."
+     },
+     {
+      "code_snippet": "fn test_additional_fields_thinking_and_effort() {",
+      "file": "src/ai/bedrock.rs",
+      "function_or_symbol": "test_additional_fields_thinking_and_effort",
+      "line": "678",
+      "why_this_location_matters": "Bedrock tests the equivalent shape; Claude has none."
+     }
+    ]
+   },
+   {
+    "problem": "Claude request always sends thinking object, empty when unset",
+    "severity": "Medium",
+    "type": "Wire Contract Regression",
+    "preexisting": false,
+    "explanation": "Consequence and reach: with the default config (ClaudeSettings.thinking and effort both None, which ai/mod.rs passes straight into ClaudeClient::new), every ClaudeClient::generate_content call serialises \"thinking\":{} where the key was previously omitted. Every default-config Claude request is affected, not an operator-only path. If the Messages API requires thinking.type, as its docs state, each request fails with a 400. post_request maps that to ClaudeError::InvalidRequest, so it is a loud failure, not a silent one. Severity is capped at Medium because acceptance or rejection of thinking:{} by the Anthropic API cannot be verified from this repo. It has no recorded fixture, no claude.rs test, and no API response in the code I read. A captured 400 or 200 for an empty thinking object would settle it. If the API accepts the empty object, downgrade to Low. Proof of the code path: translate_ai_request builds thinking: Some(ThinkingConfig { thinking, effort }) with no guard. The outer skip_serializing_if = Option::is_none on ClaudeRequest.thinking can therefore never fire. Both inner fields are also skip_serializing_if is_none, so the result is exactly {}. settings.rs:138 documents 'Leave unset to omit', and the diff breaks that for the Claude path. Same-path defect found while verifying: effort is now nested inside thinking. With only effort configured, the body is thinking:{\"effort\":...} with no type. The effort value never reaches output_config.effort, which is where bedrock.rs build_additional_fields puts it and where the settings doc describes it. So the effort setting is either rejected or ignored on the direct Claude path. Related, pre-existing: normalize_temperature forces Some(1.0) when thinking is None, so default config also overrides the caller's temperature even though thinking is not enabled. Existing tests in bedrock.rs cover only the Bedrock builder. Nothing in claude.rs would fail if this change were reverted, and the commit message claims alignment with the docs without any test or captured request. The change is not pre-existing: omitting the key was the old behaviour for the unset case.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "Unconditional Some wraps the unset default into an empty thinking object, and effort is nested under thinking instead of output_config."
+     },
+     {
+      "code_snippet": "pub thinking: Option<ThinkingConfig>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeRequest.thinking",
+      "line": "91",
+      "why_this_location_matters": "The outer skip guard only omits None, which the call site never produces."
+     },
+     {
+      "code_snippet": "pub struct ThinkingConfig {\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    #[serde(rename = \"type\")]\n    pub thinking: Option<String>,\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    pub effort: Option<String>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "95",
+      "why_this_location_matters": "Both fields are skipped when None, so the object serialises as {}. Effort placed here has no type alongside it."
+     },
+     {
+      "code_snippet": "/// Leave unset to omit (thinking disabled). Valid values: \"adaptive\".",
+      "file": "src/settings.rs",
+      "function_or_symbol": "ClaudeSettings.thinking",
+      "line": "138",
+      "why_this_location_matters": "Documented contract that unset means the key is omitted."
+     },
+     {
+      "code_snippet": "400 => Err(ClaudeError::InvalidRequest(error_body))?,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeClient::post_request",
+      "line": "193",
+      "why_this_location_matters": "A rejection of the empty thinking object surfaces as a 400 error on every request, not as a silent result."
+     }
+    ]
+   },
+   {
+    "problem": "effort sent as thinking.effort, not output_config.effort",
+    "severity": "Medium",
+    "type": "Wire Contract Mismatch",
+    "preexisting": false,
+    "explanation": "Consequence: a configured Claude effort is either rejected with a 400 or silently dropped, so the operator believes effort is applied when it is not. Reachable whenever [ai.claude].effort is set and the direct Claude client is used (src/ai/mod.rs:197-204 feeds it into translate_ai_request at claude.rs:521). Contained to one provider and one optional setting, so Medium. Evidence: the in-repo Bedrock producer builds thinking:{type} and puts effort under output_config:{effort} (bedrock.rs:156-159), with a test asserting json[output_config][effort] (bedrock.rs:719). settings.rs:141 documents the setting as output_config.effort. The new ThinkingConfig nests effort next to type (claude.rs:99-100). The old code sent a top-level effort, which was also wrong, so this swaps one wrong placement for another. Verification limit: no vendored schema, fixture or API doc for the direct Messages API is in the repo. My understanding of that API is that effort lives under output_config and thinking takes type (and budget_tokens for older models), but this is not confirmed from the repo. If the API rejects unknown fields, the effort setting causes a 400 on every call, and if it ignores them the setting is silently dropped. The commit message quotes a doc example with effort inside thinking, but nothing in the diff verifies it, and Bedrock sharing the same model-side schema argues against it. Confirm by sending one request with each layout, or by checking the current Messages API reference.",
+    "locations": [
+     {
+      "code_snippet": "pub effort: Option<String>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "100",
+      "why_this_location_matters": "Effort is serialized inside the thinking object."
+     },
+     {
+      "code_snippet": "output_cfg.insert(\"effort\".to_string(), Document::String(e.to_string()));",
+      "file": "src/ai/bedrock.rs",
+      "function_or_symbol": "build_additional_fields",
+      "line": "156",
+      "why_this_location_matters": "In-repo producer places effort under output_config."
+     },
+     {
+      "code_snippet": "/// output_config.effort level.",
+      "file": "src/settings.rs",
+      "function_or_symbol": "ClaudeSettings.effort",
+      "line": "141",
+      "why_this_location_matters": "Project docs name output_config as the home of effort."
+     }
+    ]
+   },
+   {
+    "problem": "thinking always sent, as empty object when unconfigured",
+    "severity": "High",
+    "type": "Wire Contract Mismatch",
+    "preexisting": false,
+    "explanation": "Consequence: with neither thinking nor effort configured (the default; settings are Option and unset by default), every Claude request now carries \"thinking\":{}. translate_ai_request wraps the config in Some unconditionally (claude.rs:395-398), so skip_serializing_if on the outer field never fires, and both inner fields are skipped because they are None, leaving an empty object. A thinking object without a type is not a valid thinking config, so I expect the API to reject it with a 400 on the primary path (every review request), though I could not confirm the API response from the repo. Before this commit both None fields were skipped and nothing was sent. The same applies when only effort is set: thinking:{effort} has no type. Entry point: ClaudeClient request path at claude.rs:517-522, used by every caller of the Claude provider selected in src/ai/mod.rs:197-204. Fix: return None for the thinking field when thinking is None (and put effort under output_config). Also no test in the diff covers the serialized request, so nothing would catch this.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "Always wraps in Some, so an empty thinking object is serialized when both values are None."
+     },
+     {
+      "code_snippet": "pub thinking: Option<ThinkingConfig>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ClaudeRequest.thinking",
+      "line": "91",
+      "why_this_location_matters": "The outer skip_serializing_if only skips None, which is never produced now."
+     }
+    ]
+   },
+   {
+    "problem": "claude request always sends a thinking object, even empty or without type",
+    "severity": "Medium",
+    "type": "Wire Contract (effort-only configuration)",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: every Claude request built by translate_ai_request, via ClaudeClient::complete and its src/ai/mod.rs construction, can now carry a malformed thinking object, so Claude calls may be refused by the API. This is broader than the candidate states. Before this commit, thinking and effort were Option fields skipped when None, so an unset config sent nothing. After it, translate_ai_request unconditionally builds thinking: Some(ThinkingConfig { thinking, effort }), and both inner fields are skip_serializing_if is_none. The cases are: (a) both unset, which is the documented default (settings.rs: 'Leave unset to omit (thinking disabled)'), serializes as \"thinking\":{}; (b) effort set and thinking unset, as the candidate says, serializes as \"thinking\":{\"effort\":\"high\"} with no type; (c) thinking=\"adaptive\" with effort set puts effort inside the thinking object. The commit message's own example shows type is the discriminator of that object. Nothing prevents (a) or (b): settings.rs declares thinking and effort as independent Option<String> with serde default, and ai/mod.rs reads them with independent and_then clones, with no cross-validation. Also, the repo's Bedrock path (build_additional_fields in bedrock.rs) places effort under output_config.effort, not inside thinking, which suggests the Claude path now puts effort in the wrong place. The old top-level effort key was likely tolerated, so this turns a working or default setup into a likely 400 on every call. The failure is loud (an HTTP error), not silent, so it is not a false-success case. Severity is capped at Medium because I could not verify the Anthropic API's behaviour on a thinking object without type; if the API rejects it, case (a) breaks every default Claude request and would warrant High. A request-body serialization test for the unset and effort-only cases would confirm it; none is in the diff. The commit message claims alignment with the documentation, but nothing in the diff verifies the serialized shape. Fix: emit thinking only when the thinking setting is Some, and send effort under output_config.effort.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "395",
+      "why_this_location_matters": "The thinking object is wrapped unconditionally, so it is emitted empty when both are None and without type when only effort is set."
+     },
+     {
+      "code_snippet": "#[serde(skip_serializing_if = \"Option::is_none\")]\n    #[serde(rename = \"type\")]\n    pub thinking: Option<String>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "96",
+      "why_this_location_matters": "type is optional and skipped when None, so the discriminator can be absent from the serialized object."
+     },
+     {
+      "code_snippet": "pub thinking: Option<String>,\n    #[serde(default)]\n    pub effort: Option<String>,",
+      "file": "src/settings.rs",
+      "function_or_symbol": "ClaudeSettings thinking/effort",
+      "line": "109",
+      "why_this_location_matters": "The two settings are independent with no validation that effort requires thinking, so effort-only is reachable from config."
+     }
+    ]
+   },
+   {
+    "problem": "unset thinking serializes empty thinking object, likely 400",
+    "severity": "High",
+    "type": "Silent Behaviour Change (temperature override)",
+    "preexisting": false,
+    "explanation": "Every Claude request on the default configuration (thinking unset) is probably rejected by the API, and the error is not obvious from the diff. Reachability: translate_ai_request has one Claude caller (src/ai/claude.rs:516), so every request goes through it. Defaults leave thinking and effort as None (the commit that introduced them says 'Default thinking is None'). The changed code now builds `thinking: Some(ThinkingConfig { thinking, effort })` unconditionally. Both ThinkingConfig fields carry skip_serializing_if = Option::is_none, so with both None the wire body contains `\"thinking\":{}`. Before this commit the field was Option<String> and was omitted when None. The Anthropic API requires a `type` inside a thinking object, so I assume `{}` is rejected with a 400. Confirm that assumption with a serialization test or a live call. If so, the upgrade turns the default Claude backend into a hard failure for every review. Cap at High rather than Critical because it is a loud failure that blocks requests, not a silent one. The commit message says the change follows the documentation but the diff has no test showing the serialized body. The original candidate (temperature forced to 1.0 when thinking is None) is not a defect: the commit that introduced it documents why the None arm maps to 1.0. This is the real bug in the same code path.",
+    "locations": [
+     {
+      "code_snippet": "thinking: Some(ThinkingConfig {\n            thinking,\n            effort,\n        }),",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "396",
+      "why_this_location_matters": "The wrapper is always Some, so an unset thinking and effort still serialize as an empty `thinking` object. It should be None when both inner fields are None."
+     },
+     {
+      "code_snippet": "pub struct ThinkingConfig {\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    #[serde(rename = \"type\")]\n    pub thinking: Option<String>,\n    #[serde(skip_serializing_if = \"Option::is_none\")]\n    pub effort: Option<String>,",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "ThinkingConfig",
+      "line": "93",
+      "why_this_location_matters": "Both fields are skipped when None, so the struct serializes to `{}`. `type` is optional here, though the wire format requires it whenever the object is present."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "normalize_temperature silently overrides the caller's temperature with 1.0 when thinking is None, with no log and no test.",
+    "reasoning": "git blame attributes the match to e777c505 ('claude: add more settings to claude client'), not to the reviewed commit. Its message states the intent: when thinking is not disabled the API accepts only temperature 1.0. Because the default thinking is None and most models then behave as enabled or adaptive, the temperature is honoured only when thinking is explicitly 'disabled'. So the premise that thinking is not sent and 1.0 is therefore unjustified is wrong: an omitted thinking field leaves the model default in effect. translate_ai_request has a single Claude call site (src/ai/claude.rs:516), and the other translate_ai_request functions are separate private functions in the Gemini and OpenAI modules. The override is a documented, deliberate trade-off, and the reviewed commit does not touch it. A lack of logging or tests for a documented provider constraint is not a failure. The real defect on this path is the new empty `thinking` object, reported in findings.",
+    "locations": [
+     {
+      "code_snippet": "// With thinking enabled or adaptive temperature have to be set to 1.0\n    let normalize_temperature: Option<f32> = match thinking.as_deref() {\n        Some(\"disabled\") => request.temperature,\n        Some(_) | None => Some(1.0),\n    };",
+      "file": "src/ai/claude.rs",
+      "function_or_symbol": "translate_ai_request",
+      "line": "378",
+      "why_this_location_matters": "The None arm and its comment were added deliberately in e777c505, with a commit message explaining why the default path maps to 1.0."
+     }
+    ]
+   }
+  ]
+ }
+}
