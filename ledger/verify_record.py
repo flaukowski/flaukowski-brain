@@ -82,6 +82,18 @@ def fetch_sha256(url):
     return h.hexdigest(), n
 
 
+def fetch_crlf_sha256(url):
+    """sha256 of the file with LF line endings turned into CRLF: what a Windows working copy hashes to."""
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
+            data = r.read(MAX_BYTES + 1)
+    except (urllib.error.URLError, TimeoutError):
+        return None
+    if len(data) > MAX_BYTES:
+        return None
+    return hashlib.sha256(data.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest()
+
+
 def pinned(url):
     """True when the URL names content by a full commit sha, so it cannot change under the same URL."""
     return bool(re.search(r"/[0-9a-f]{40}/", url) or re.search(r"/(blob|raw|tree)/[0-9a-f]{40}/", url))
@@ -103,10 +115,29 @@ def check_record(rid, cache, fp):
 
     out.append(f"{rid}  {r['kind']} / {r['standing']}  by {r['authorUsername']}  ({r['campaignId']})")
 
-    ev = r.get("evidence") or []
+    own = r.get("evidence") or []
+    # evidence attached later, in a note about this record, counts only when its sha256 was already
+    # cited in this record's own text: that hash was committed at filing, before the note existed
+    cited = set(re.findall(r"\b[0-9a-f]{64}\b", ((r.get("title") or "") + " " + (r.get("body") or "")).lower()))
+    late = [(n["id"], e) for n in d.get("notes") or [] for e in n.get("evidence") or []]
+    backed = [e for _, e in late if (e.get("sha256") or "").lower() in cited]
+    for nid, e in late:
+        if (e.get("sha256") or "").lower() in cited:
+            continue
+        if fetch_crlf_sha256(e["url"]) in cited:
+            # the record cited a Windows (CRLF) copy; the same bytes with CRLF endings match it exactly
+            backed.append(e)
+            say("PASS", f"evidence '{e.get('label') or e['url']}' (note {nid}): with CRLF line endings it "
+                        "matches a sha256 cited at filing, so it is the same file")
+        else:
+            say("WARN", f"evidence '{e.get('label') or e['url']}' (note {nid}): its sha256 was not cited at "
+                        "filing, so it does not back this record")
+    ev = own + backed
     if not ev:
         say("WARN", "evidence: none attached")
     for e in ev:
+        if e not in own:
+            out.append(f"  {'':<7} (backfilled, its sha256 cited at filing)")
         got, size = fetch_sha256(e["url"])
         label = e.get("label") or e["url"]
         if got is None:

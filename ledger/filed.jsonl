@@ -31,3 +31,8 @@
 {"clientRef": "sux-result", "id": "01M52ETE0ASWDFHBE3615RWBMB", "response": null}
 {"clientRef": "sux-key-opened", "id": null, "response": {"error": "invalid_input", "message": "{\"formErrors\":[\"Unrecognized key(s) in object: 'after'\"],\"fieldErrors\":{}}"}}
 {"clientRef": "sux-key-opened", "id": "01M52ETX21QFAKDEQ9MP36GNH6", "response": null}
+{"clientRef": "kbf-e1-evidence", "id": "01M52MH8C94XPSJM6GJ91R1FJG", "response": null}
+{"clientRef": "kbf-e3-evidence", "id": "01M52MHA82VK3PZMF4X1PE0KBY", "response": null}
+{"clientRef": "kbf-e4-evidence", "id": "01M52MHC5Y2AET91Y3TY0N1MA5", "response": null}
+{"clientRef": "kbf-e5-evidence", "id": "01M52MHE3T28XZA6A9XK6SPM3H", "response": null}
+{"clientRef": "kbf-v3-evidence", "id": "01M52MHG3W06MQ6M5NR5PZC6Y1", "response": null}

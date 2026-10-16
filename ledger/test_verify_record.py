@@ -27,21 +27,24 @@ def rec(rid, kind, created, **kw):
 
 
 @pytest.fixture
-def ledger(monkeypatch):
+def ledger(monkeypatch, request):
     db = {PRE: rec(PRE, "preregistration", "2026-10-15T10:00:00Z"),
           RES: rec(RES, "result", "2026-10-16T10:00:00Z", body=f"pre-registration {PRE}")}
     reviews = {}
+    notes = {}
 
     def get_json(path):
         if path.startswith("/api/ledger/records/"):
             rid = path.rsplit("/", 1)[1]
-            return {"record": db[rid], "reviews": reviews.get(rid, [])} if rid in db else None
+            return ({"record": db[rid], "reviews": reviews.get(rid, []), "notes": notes.get(rid, [])}
+                    if rid in db else None)
         if path.startswith("/api/ledger/campaigns/"):
             return {"records": list(db.values())}
         raise AssertionError(path)
 
     monkeypatch.setattr(vr, "get_json", get_json)
     monkeypatch.setattr(vr, "fetch_sha256", lambda url: (SHA, len(BODY)) if url == PIN else (None, "HTTP 404"))
+    request.node.notes = notes
     return db, reviews
 
 
@@ -134,3 +137,32 @@ def test_no_evidence_stays_claimed_without_failing(ledger):
     db[RES]["evidence"] = []
     text, failed = run(RES)
     assert not failed and "evidence: none" in text and "=> CLAIMED" in text
+
+
+def test_backfill_whose_sha_was_cited_at_filing_counts(ledger, request):
+    db, _ = ledger
+    db[RES]["evidence"] = []
+    db[RES]["body"] += f" rows sha256 {SHA}"
+    request.node.notes[RES] = [{"id": "n1", "evidence": [{"url": PIN, "sha256": SHA, "label": "late"}]}]
+    text, failed = run(RES)
+    assert not failed and "backfilled" in text and "=> MACHINE-CHECKED" in text
+
+
+def test_backfill_with_an_uncited_sha_does_not_count(ledger, request, monkeypatch):
+    monkeypatch.setattr(vr, "fetch_crlf_sha256", lambda url: "f" * 64)
+    db, _ = ledger
+    db[RES]["evidence"] = []
+    request.node.notes[RES] = [{"id": "n1", "evidence": [{"url": PIN, "sha256": SHA, "label": "late"}]}]
+    text, failed = run(RES)
+    assert "was not cited at filing" in text and "=> CLAIMED" in text
+
+
+def test_backfill_matching_a_cited_crlf_copy_counts(ledger, request, monkeypatch):
+    crlf = "c" * 64  # BODY has no newline, so its real CRLF hash would equal SHA; use a distinct one
+    monkeypatch.setattr(vr, "fetch_crlf_sha256", lambda url: crlf)
+    db, _ = ledger
+    db[RES]["evidence"] = []
+    db[RES]["body"] += f" judge sha256 {crlf}"
+    request.node.notes[RES] = [{"id": "n1", "evidence": [{"url": PIN, "sha256": SHA, "label": "late"}]}]
+    text, failed = run(RES)
+    assert not failed and "with CRLF line endings it matches" in text and "=> MACHINE-CHECKED" in text

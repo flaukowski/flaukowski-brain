@@ -1,0 +1,120 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "kbf-e1-evidence",
+   "campaignId": "kb-fabrication",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M440CSA8Q3X4J7MER6RHMGTW",
+   "title": "Evidence backfill for the E1 result: 3 file(s) at pinned URLs, each matching a sha256 the result cited at filing",
+   "body": "Backfill, filed 2026-10-16: this result was filed as measured with no evidence attached, so its standing rested on the author alone (found by ledger/verify_record.py, flaukowski-brain 3550ed9). Ledger records cannot be edited, so the evidence is attached here. Every file below is pinned to a full commit sha, and its sha256 is one the result itself cited when it was filed, so the match was committed before this note existed. All three hashes the E1 result cites are published and attached: both regrade files and the leak guard.",
+   "evidence": [
+    {
+     "label": "runs/e1-regrade-kannaka.json, flaukowski-brain 3cf4716",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/3cf47168093c8ead5186aae5932ef979b8dac3ec/runs/e1-regrade-kannaka.json",
+     "sha256": "8f7ee71614f75ed722853dd7629c27000f634bf1927d52dd421af53ba7762bde"
+    },
+    {
+     "label": "runs/e1-regrade-qe.json, flaukowski-brain 3cf4716",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/3cf47168093c8ead5186aae5932ef979b8dac3ec/runs/e1-regrade-qe.json",
+     "sha256": "d9583ffc9333a5c8dbb34d37411823474bb99e767927c139161228eebe2994f2"
+    },
+    {
+     "label": "leak_guard.py, flaukowski-brain 526bc8c",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/526bc8c7a05ea1f494dec8a70dad0747b1ca84a0/leak_guard.py",
+     "sha256": "c41c11cec5eb710fb6a37a367d1b06dd6c43773f44b4ab93f97dfd92e150d050"
+    }
+   ]
+  },
+  {
+   "clientRef": "kbf-e3-evidence",
+   "campaignId": "kb-fabrication",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M440CYX5WWVDGP49630GACZG",
+   "title": "Evidence backfill for the E3 result: 3 file(s) at pinned URLs, each matching a sha256 the result cited at filing",
+   "body": "Backfill, filed 2026-10-16: this result was filed as measured with no evidence attached, so its standing rested on the author alone (found by ledger/verify_record.py, flaukowski-brain 3550ed9). Ledger records cannot be edited, so the evidence is attached here. Every file below is pinned to a full commit sha, and its sha256 is one the result itself cited when it was filed, so the match was committed before this note existed. Three of the five hashes the E3 result cites are published and attached. The other two (the training rows e3-items-valid.jsonl and the merged q4_K_M GGUF) were stated as not published when the result was filed, and still are not; anyone holding them can check them against the cited hashes.",
+   "evidence": [
+    {
+     "label": "train_e3.py, flaukowski-brain 0b3872a",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/0b3872a28eb318aec7c19233be4b72b1d4d2a648/train_e3.py",
+     "sha256": "e22385b1c03d625d4c406ed63f09f50776020b33dd975f9e15a4d2d10f4a18ce"
+    },
+    {
+     "label": "runs/e3-regrade-qe.json, flaukowski-brain 5c68b55",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/5c68b55d717398cdbd90cf548d7036d1c2f2ad9c/runs/e3-regrade-qe.json",
+     "sha256": "1ab961c833d1dfbfdf8f6a38c830b628cc7de822cbe57f8d189dd9664059ee1d"
+    },
+    {
+     "label": "runs/e3-grades-kannaka.tsv, flaukowski-brain 1622636",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/1622636af61b4306e9f2aa0e64eeca8c8166d62e/runs/e3-grades-kannaka.tsv",
+     "sha256": "ea9701feb515412fb17452eb7c6022a1a134c34188f9e0284b3930a78e0ab7f8"
+    }
+   ]
+  },
+  {
+   "clientRef": "kbf-e4-evidence",
+   "campaignId": "kb-fabrication",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M463H5AJS4KMW15CY98NFYSK",
+   "title": "Evidence backfill for the E4 result: 2 file(s) at pinned URLs, each matching a sha256 the result cited at filing",
+   "body": "Backfill, filed 2026-10-16: this result was filed as measured with no evidence attached, so its standing rested on the author alone (found by ledger/verify_record.py, flaukowski-brain 3550ed9). Ledger records cannot be edited, so the evidence is attached here. Every file below is pinned to a full commit sha, and its sha256 is one the result itself cited when it was filed, so the match was committed before this note existed. Two of the five hashes the E4 result cites are published and attached (the held-out slice, public in this repo since 2026-10-07, and Kannaka's grades). The other three (training rows e4-train.jsonl, the merged q4_K_M GGUF and the blind pack) were stated as not published at filing and still are not.",
+   "evidence": [
+    {
+     "label": "runs/e4-heldout-slice-v1.jsonl, flaukowski-brain f4ef21b",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/f4ef21b140dbe214b6ca087c5c4c53330e34d75b/runs/e4-heldout-slice-v1.jsonl",
+     "sha256": "9d3dbcccbda48ecbcea18fcfaccbf3411b06396ebc8d787bb1fac658db73c8b1"
+    },
+    {
+     "label": "runs/e4-grades-kannaka.tsv, flaukowski-brain f3839dd",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/f3839dda0719239088581902f6adfa760728292d/runs/e4-grades-kannaka.tsv",
+     "sha256": "3c86cd6268da15195cb154d24100867836ee674215b080f28918d9448fe61086"
+    }
+   ]
+  },
+  {
+   "clientRef": "kbf-e5-evidence",
+   "campaignId": "kb-fabrication",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M490JTB7QA2SP5W0GTPD97XY",
+   "title": "Evidence backfill for the E5 phase 1 result: 3 file(s) at pinned URLs, each matching a sha256 the result cited at filing",
+   "body": "Backfill, filed 2026-10-16: this result was filed as measured with no evidence attached, so its standing rested on the author alone (found by ledger/verify_record.py, flaukowski-brain 3550ed9). Ledger records cannot be edited, so the evidence is attached here. Every file below is pinned to a full commit sha, and its sha256 is one the result itself cited when it was filed, so the match was committed before this note existed. Three of the four hashes the E5 result cites are published and attached (the E5 items and variants, public in this repo since 2026-10-07, and Kannaka's grades). The fourth, the blind pack, was stated as not published at filing and still is not.",
+   "evidence": [
+    {
+     "label": "e5/probe-e5-items.json, flaukowski-brain 55a5932",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/55a5932f0b9fed4d9cd7340480bbc96b7eb7db53/e5/probe-e5-items.json",
+     "sha256": "ae20896db9d24e6f7b865c81ec2309177265906b56da684f05468083df3a0f09"
+    },
+    {
+     "label": "e5/e5-variants-v1.jsonl, flaukowski-brain 55a5932",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/55a5932f0b9fed4d9cd7340480bbc96b7eb7db53/e5/e5-variants-v1.jsonl",
+     "sha256": "02340370b67a7e5077da1521046c96cb7c1a3dafe38022eef70e76becd4a9c5f"
+    },
+    {
+     "label": "runs/e5-grades-kannaka.tsv, flaukowski-brain 80caa1a",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/80caa1ab2b92c912e89fb4b423dde518a7bcf1b7/runs/e5-grades-kannaka.tsv",
+     "sha256": "3b7ce4b9b1a45f0acb8d57d654df8b7078aac8333ab9b3d4e6381831761ea1c6"
+    }
+   ]
+  },
+  {
+   "clientRef": "kbf-v3-evidence",
+   "campaignId": "kb-fabrication",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M440D0SEAYBBYN6C285H0Y59",
+   "title": "Evidence backfill for the V3 voice check: ab_judge.py at a pinned URL; the cited sha256 is the same file with CRLF line endings",
+   "body": "Backfill, filed 2026-10-16: this result was filed as measured with no evidence attached (found by ledger/verify_record.py, flaukowski-brain 3550ed9). Ledger records cannot be edited, so the evidence is attached here. The one hash it cites, 86e703e36f40bc04..., is for ab_judge.py at kannaka-memory 1b01652, and that file is public. The cited value was computed from a Windows working copy with CRLF line endings; the file as git stores it and as the pinned URL serves it has LF endings and sha256 73bfbd063035d6f4.... Converting its line endings to CRLF reproduces the cited value exactly, so it is the same file. Hashes on this ledger are now cited as LF blob hashes for this reason.",
+   "evidence": [
+    {
+     "label": "tools/corpus/p2/ab_judge.py, kannaka-memory 1b01652 (LF blob)",
+     "url": "https://raw.githubusercontent.com/kannaka-labs/kannaka-memory/1b016526cdbff5b0675dcd43ba3d3808747f342e/tools/corpus/p2/ab_judge.py",
+     "sha256": "73bfbd063035d6f4981df6e8aa82993131d8d9550c3b73fddc8505b5b36ed439"
+    }
+   ]
+  }
+ ]
+}
