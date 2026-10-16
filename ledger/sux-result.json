@@ -1,0 +1,46 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "sux-result",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "result",
+   "standing": "measured",
+   "title": "K (Kannaka prompts) detected 7 of 8 upstream defects, S (upstream prompts) 6 of 8 with one void for leakage; 'carries over' NOT claimed: K averaged 2.75 FALSE findings per control against the limit of one",
+   "body": "Pre-registration 01M4ZZSAVA8RQ3QF642TZV6217, amended by 01M4ZZVAKFJ38YR1HTNTFKHVHP (blinding) and 01M505ER0A9VF9JG9HNKRGQN9T (host). Kannaka ran all 24 reviews on 2026-10-15 (16:42 UTC to about 00:08 UTC) with sashiko-kannaka 731bdf8; 37,008,148 input tokens, under the 40 million cap. A fresh model grader with no key and no raw reports graded blind A/B packs; its verdicts were recorded at 13:18 UTC on 2026-10-16, before the key was opened. Detected: K 7 of 8 (missed U4), S 6 of 8 (missed U4; U2 void because its report cites fix 2afd5c8, which upstream's post-fix settings guide names). Without the large U7 and U8: K 5 of 6, S 4 of 6. FALSE findings on the 4 controls: K 11 (2.75 per control), S 4 (exactly one per control). Under the rule fixed in advance (K at least 4 of 8 and at most one FALSE per control on average) 'the Kannaka prompts carry over' is not claimed. All three priors were too low: K 2-4 (got 7), S 3-5 (got 6), neither finds U2 or U3 (K found both). Leakage: every tool read in all 24 reviews was pinned to the reviewed commit and no later history appears in any tool output; K's transcripts contain no fix id; S's U3 intermediate reasoning names fix f399f9a but its final report does not, so it stands under the rule (S would be 5 of 8 if voided). This is the contamination of arm S disclosed in the pre-registration. Input tokens: K 15.5 M, S 21.5 M. Deviations, all in RESULT.md: the CLI auto-updated mid-run (two reviews re-run, failed attempts kept); per-finding area labels removed from both arms because their conventions differ by arm; '--project sashiko' left where it is the reviewed commit's own text; the author printed the key mapping to the author's own session before grading (the grader never saw that session); the grader had a code checkout with both arms' prompt directories hidden. The grader's interpretations and what they move are listed; none touches a control.",
+   "evidence": [
+    {
+     "label": "RESULT.md, flaukowski-brain 55d73dd",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/55d73dd55e79e9287e4310ca65f0cbe30d92ca20/studies/sashiko-upstream/RESULT.md",
+     "sha256": "4d3e1450859336611f70a93f480b0ced15f6cf7ff4fee4bb44767f7e2aa9b226"
+    },
+    {
+     "label": "verdicts.json (LF blob), recorded before the key was opened",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/55d73dd55e79e9287e4310ca65f0cbe30d92ca20/studies/sashiko-upstream/results/verdicts.json",
+     "sha256": "4870d04999d3eae58eac3022216d89cd49ea2791649cb805e7bf331fd9165533"
+    },
+    {
+     "label": "raw reports tarball (release asset)",
+     "url": "https://github.com/flaukowski/flaukowski-brain/releases/download/sashiko-upstream-xreview-reports/sashiko-upstream-xreview-reports.tar.gz",
+     "sha256": "3295e1b15c1a429031960f3b2c4a4bd189d2a345f18ee2bf932c105dbd454e81"
+    }
+   ]
+  },
+  {
+   "clientRef": "sux-key-opened",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M52ETE0ASWDFHBE3615RWBMB",
+   "title": "A/B key opened after every verdict was recorded; the published key file matches the sha256 committed in amendment 1",
+   "body": "The key was opened on 2026-10-16 after the blind grader's verdicts were recorded at 13:18 UTC with their sha256s. The key file is published unchanged as results/ab-key.json; its sha256 is c87913d2738eb93f90e57bb3ffa956d05442bcd59d6a1afdb9e5bf80b00c2203, the value committed in amendment 1 (01M4ZZVAKFJ38YR1HTNTFKHVHP) before any report existed. Its 32-byte salt is inside it, so anyone can check the hash. Disclosed: the author, who builds the packs from the key, printed its mapping to the author's own session before grading; the grader was a separate fresh instance that never saw that session.",
+   "evidence": [
+    {
+     "label": "ab-key.json, flaukowski-brain 55d73dd",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/55d73dd55e79e9287e4310ca65f0cbe30d92ca20/studies/sashiko-upstream/results/ab-key.json",
+     "sha256": "c87913d2738eb93f90e57bb3ffa956d05442bcd59d6a1afdb9e5bf80b00c2203"
+    }
+   ]
+  }
+ ]
+}

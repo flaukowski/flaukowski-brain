@@ -28,3 +28,6 @@
 {"clientRef": "sux-prereg", "id": "01M4ZZSAVA8RQ3QF642TZV6217", "response": null}
 {"clientRef": "sux-amend-1", "id": "01M4ZZVAKFJ38YR1HTNTFKHVHP", "response": null}
 {"clientRef": "sux-amend-2", "id": "01M505ER0A9VF9JG9HNKRGQN9T", "response": null}
+{"clientRef": "sux-result", "id": "01M52ETE0ASWDFHBE3615RWBMB", "response": null}
+{"clientRef": "sux-key-opened", "id": null, "response": {"error": "invalid_input", "message": "{\"formErrors\":[\"Unrecognized key(s) in object: 'after'\"],\"fieldErrors\":{}}"}}
+{"clientRef": "sux-key-opened", "id": "01M52ETX21QFAKDEQ9MP36GNH6", "response": null}
