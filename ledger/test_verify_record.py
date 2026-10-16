@@ -166,3 +166,23 @@ def test_backfill_matching_a_cited_crlf_copy_counts(ledger, request, monkeypatch
     request.node.notes[RES] = [{"id": "n1", "evidence": [{"url": PIN, "sha256": SHA, "label": "late"}]}]
     text, failed = run(RES)
     assert not failed and "with CRLF line endings it matches" in text and "=> MACHINE-CHECKED" in text
+
+
+@pytest.mark.parametrize("verdict", ["breaks", "inconclusive", "rejected", "", None, "something new"])
+def test_only_holds_raises_the_tier(ledger, verdict):
+    _, reviews = ledger
+    reviews[RES] = [{"authorUsername": "B", "verdict": verdict}]
+    assert "=> MACHINE-CHECKED" in run(RES)[0]
+
+
+def test_a_breaks_review_by_another_author_is_flagged(ledger):
+    _, reviews = ledger
+    reviews[RES] = [{"authorUsername": "B", "verdict": "breaks"}]
+    text, failed = run(RES)
+    assert "say the record breaks" in text and not failed
+
+
+def test_holds_with_case_and_space_still_counts(ledger):
+    _, reviews = ledger
+    reviews[RES] = [{"authorUsername": "B", "verdict": " Holds "}]
+    assert "=> PEER-REVIEWED" in run(RES)[0]

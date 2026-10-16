@@ -22,7 +22,8 @@ Per record:
 
 Tiers, in order: CLAIMED (filed; also any record with no evidence, since nothing could be checked),
 MACHINE-CHECKED (it has evidence, and evidence, links and order all pass),
-PEER-REVIEWED (also at least one review by another author whose verdict is not a rejection).
+PEER-REVIEWED (also at least one review by another author whose verdict is "holds"; "breaks",
+"inconclusive" and any unknown verdict do not raise it).
 
 Exit 0 when no check fails (a record with no evidence stays CLAIMED but is not a failure), 1 when any
 check fails, 2 when the script itself could not
@@ -47,7 +48,10 @@ MAX_BYTES = 512 * 1024 * 1024
 # ledger ids are 26-character Crockford base32, time-sortable; every one seen so far starts 01M
 ID_RE = re.compile(r"\b01[0-9A-HJKMNP-TV-Z]{24}\b")
 LINK_FIELDS = ("correctsId", "amendsId", "aboutId", "reviewsId")
-REJECTING = {"rejected", "broken", "does_not_hold", "fails", "refuted"}
+# a review raises a record only when it endorses it. The ledger's review verdicts are holds, breaks
+# and inconclusive; only "holds" endorses. Anything else, including a verdict this list has never seen,
+# does not raise the tier: an allowlist, so a new word cannot turn a rejection into an endorsement.
+ENDORSING = {"holds"}
 
 
 class CheckError(Exception):
@@ -189,11 +193,14 @@ def check_record(rid, cache, fp):
         say("PASS", "guard: no held-out hit in title/body")
 
     peers = [v for v in d.get("reviews") or [] if v.get("authorUsername") != r["authorUsername"]]
-    holding = [v for v in peers if str(v.get("verdict") or "").lower() not in REJECTING]
+    holding = [v for v in peers if str(v.get("verdict") or "").strip().lower() in ENDORSING]
+    against = [v for v in peers if str(v.get("verdict") or "").strip().lower() == "breaks"]
+    if against:
+        say("WARN", f"peer: {len(against)} review(s) by another author say the record breaks")
     if r.get("correctedBy") or r.get("brokenBy"):
         say("WARN", f"corrected by {r.get('correctedBy')} / broken by {r.get('brokenBy')}")
     say("INFO", f"peer: {len(peers)} review(s) by another author"
-                + (f", {len(holding)} not rejecting" if peers else "; the standing rests on the author"))
+                + (f", {len(holding)} saying it holds" if peers else "; the standing rests on the author"))
 
     # with no evidence there is nothing for the machine to have checked, so nothing has been raised
     tier = "CLAIMED" if failed or not ev else ("PEER-REVIEWED" if holding else "MACHINE-CHECKED")
