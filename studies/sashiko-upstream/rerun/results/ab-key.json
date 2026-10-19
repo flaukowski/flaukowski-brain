@@ -1,0 +1,14 @@
+{
+ "a_is": {
+  "0035364": "K1",
+  "248f7cb": "K0",
+  "505a024": "K0",
+  "5a5b667": "K0"
+ },
+ "arms": {
+  "K0": "earlier arm-K report (731bdf8)",
+  "K1": "arm-K report with 380d01c"
+ },
+ "salt": "a5521e6ad5b5dc3229a78aad463f3de2",
+ "study": "sux-controls-rerun"
+}

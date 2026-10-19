@@ -1,0 +1,205 @@
+{
+  "5a5b667": {
+    "label": "X1",
+    "A": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "FALSE",
+          "why": "The change's new redaction behaviour is tested on the clone-failure path and redact_secret has direct unit tests in src/utils.rs; the untested sites are additional log-argument call sites of the same pure function with no new branching, so this is a request for more coverage on correct, tested code."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "A stronger-assertion request on correct code: the test can fail on the [REDACTED] and token assertions whichever way git formats its stderr, and the user:pass@ regex is covered by test_redact_git_credentials/test_redact_mixed; whether git strips userinfo cannot be checked here and does not change the verdict."
+        }
+      ]
+    },
+    "B": {
+      "findings": []
+    }
+  },
+  "505a024": {
+    "label": "X2",
+    "A": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "PLAUSIBLE",
+          "why": "ON CONFLICT ... DO UPDATE SET source = excluded.source is confirmed, but it exactly mirrors UPSERT_BUG_SUBSYSTEM_SQL and the commit's own replace test treats the same name under two provenances as re-attribution, so whether a same-name collision in add is a defect or the intended mirror cannot be settled without the ingestion caller that does not exist yet."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: replace_patchset_maintainer_sections is pub and runs its SELECT, per-row DELETEs and per-row UPSERTs as separate autocommit statements with no transaction, while the mirrored replace_bug_subsystems is private and reachable only through the transactional update_bug_subsystems; with_connection is private so no caller can supply one, and the copied comment about committing a transaction describes a transaction that does not exist here."
+        },
+        {
+          "index": 2,
+          "class": "PLAUSIBLE",
+          "why": "Derivative of finding 0: the missing stronger-then-weaker test only matters if the source overwrite is a defect, which is undecided, so the test gap inherits that verdict."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "DEFAULT and CHECK are declarative schema constraints applied by the real migration that setup_db runs, every writer binds source, and no code path at this commit omits the column; asking for mutation-style tests of them is a coverage request on correct code."
+        },
+        {
+          "index": 4,
+          "class": "FALSE",
+          "why": "The prune path of replace is exercised by test_replacing_patchset_sections_prunes_and_reattributes and is correct; the empty-list variant is a request for more coverage."
+        },
+        {
+          "index": 5,
+          "class": "REAL",
+          "why": "Confirmed in create_patchset's merge block (db.rs ~5490-5610): it copies patchsets_subsystems to target_id with INSERT OR IGNORE, never touches patchset_maintainer_sections, then runs DELETE FROM patchsets WHERE id = ? with PRAGMA foreign_keys = ON, so the merged-away patchset's section rows are cascade-deleted and lost, contradicting the documented union-across-parts semantics."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "The same confirmed merge/cascade omission as finding 5, reported a second time."
+        },
+        {
+          "index": 7,
+          "class": "FALSE",
+          "why": "The commit's 'mirroring bug_subsystems down to the source column' is accurate for the schema it describes; the absence of an audit trigger, with no patchset audit sink existing to write to, is a design suggestion rather than wrong behaviour."
+        }
+      ]
+    },
+    "B": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "PLAUSIBLE",
+          "why": "Same claim as A finding 0: the unconditional source overwrite is confirmed and mirrors the bug-side upsert; whether a same-name/different-provenance collision in add is a defect or intended re-attribution cannot be decided from the code at this commit."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Same claim as A finding 1: the pub replace runs read, deletes and upserts as autocommit statements with no transaction, unlike the mirrored bug-side path which is only reachable inside update_bug_subsystems's transaction, and the copied libsql comment refers to a transaction that is absent."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "add is a loop of idempotent upserts with union semantics, so a partial prefix left on error is a valid intermediate state that a retry or a later part extends; no wrong state results and the caller receives Err."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "Same claim as A finding 7: the mirror claim is accurate for the schema, and the missing audit trail (with no patchset audit table to write to) is a design suggestion, not a defect."
+        }
+      ]
+    }
+  },
+  "0035364": {
+    "label": "X3",
+    "A": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "PLAUSIBLE",
+          "why": "Confirmed that `let result = result?;` precedes the agent branch and that main's Err exits 1 (as do new high/critical findings), but that exit-code overlap is pre-existing, the failure is loud on stderr with a non-zero exit, and the commit's 'error metadata' claim refers to result-level fields that are emitted; whether an agent contract must emit JSON for pre-result failures is a design question the code cannot settle."
+        },
+        {
+          "index": 1,
+          "class": "REAL",
+          "why": "Confirmed: run_worker_in_worktree returns review:null with no error key for --no-ai or an empty review set (local_review.rs 921-947), format_agent_review_output maps that to status 'clean' through unwrap_or_default with exit 0, while the human path explicitly prints 'No AI review was run.' (main.rs 2317-2321); --agent --no-ai parses, as the commit's own test combines them."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "The overrides are confirmed but produce no wrong output: --agent's help says it emits JSON, the commit states it bypasses the prompt and server queue, the dirty-tree warning still goes to stderr; the stderr note, dirty field and docs entry are suggestions."
+        },
+        {
+          "index": 3,
+          "class": "REAL",
+          "why": "The retain on planned_stages is new logic that runs only when a progress callback is installed, and the sole skip_report test calls worker.run(patchset, None), so no test executes it; under the scoring rule, new logic with no test at all."
+        },
+        {
+          "index": 4,
+          "class": "FALSE",
+          "why": "find_worker_command is pre-existing, prefers the sibling binary from the same build, and a stale worker fails loudly with clap's error replayed from the stderr tail; this is a hypothetical environment skew, not a defect in the change."
+        }
+      ]
+    },
+    "B": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Same claim as A finding 1: a review-less result (review:null, no error) is reported as status 'clean' with exit 0 in agent mode, whereas the human path distinguishes it with 'No AI review was run.'; confirmed in run_worker_in_worktree and format_agent_review_output."
+        },
+        {
+          "index": 1,
+          "class": "PLAUSIBLE",
+          "why": "Same claim as A finding 0: no JSON on a pre-result hard failure and the exit-1 overlap are confirmed, but the overlap is pre-existing, the failure is loud, and whether agent mode must wrap such failures in JSON is a design question."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "status (any finding) and the exit code (new high/critical only) answer different questions and are both derived from the same findings passed through verbatim with severity and preexisting intact; an undocumented mapping is a documentation nicety, not wrong behaviour."
+        },
+        {
+          "index": 3,
+          "class": "FALSE",
+          "why": "Same claim as A finding 2: the silent precedence of --agent over --interactive, --format and the daemon path is confirmed but produces no wrong output and is stated in the commit; the missing notice/help text is a suggestion."
+        },
+        {
+          "index": 4,
+          "class": "REAL",
+          "why": "The new `!agent` guards in handle_local and handle_review_command and the args.push(\"--agent\") forwarding are new logic with no test at all; the added tests only check that clap parses the flag (scoring rule: new logic with no test)."
+        },
+        {
+          "index": 5,
+          "class": "FALSE",
+          "why": "test_format_agent_review_output_clean_and_issues_and_error can fail on its status, findings, token, partial and error assertions, so the formatter is tested and correct; weak absence assertions and hand-written fixtures are a stronger-assertion request."
+        },
+        {
+          "index": 6,
+          "class": "REAL",
+          "why": "Same claim as A finding 3: the planned_stages retain is new logic reachable only with a progress callback, and the only skip_report test passes None, so it has no test at all."
+        }
+      ]
+    }
+  },
+  "248f7cb": {
+    "label": "X4",
+    "A": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Confirmed: the log level is chosen from the variant before the retry_count + 1 >= max_retries branch, so the attempt that marks the row Failed for NotIndexedYet emits only an info line and mark_patchwork_failed logs nothing; before this commit every failure logged at error (and the forge worker still does), so the change introduced a terminal failure with no warn/error signal."
+        },
+        {
+          "index": 1,
+          "class": "FALSE",
+          "why": "Folding every HTTP status into Api(String) and retrying up to max_retries is pre-existing, bounded to three attempts, and ends in a correctly recorded Failed row with the status text; separating permanent from transient failures is an enhancement suggestion."
+        },
+        {
+          "index": 2,
+          "class": "FALSE",
+          "why": "The 500 test fails if that path were mapped to NotIndexedYet, so the code under it is tested and correct; asserting on the message text is a stronger-assertion request."
+        },
+        {
+          "index": 3,
+          "class": "PLAUSIBLE",
+          "why": "The ~35s window is confirmed (main.rs 920 passes settings.review.max_retries, default 3; backoff 5s then 30s; the 180s arm unreachable), but whether that suffices for Patchwork's indexing lag cannot be determined from the repository, as the finding itself concedes."
+        }
+      ]
+    },
+    "B": {
+      "findings": [
+        {
+          "index": 0,
+          "class": "REAL",
+          "why": "Same claim as A finding 0: the terminal NotIndexedYet attempt marks the row Failed with only an info-level log, a regression from the error-level logging that preceded this commit; confirmed in PatchworkWorker::run."
+        },
+        {
+          "index": 1,
+          "class": "PLAUSIBLE",
+          "why": "Same claim as A finding 3: the shared three-attempt, ~35s budget is confirmed, but whether it is too short for Patchwork's mirror lag is not decidable from the code."
+        }
+      ]
+    }
+  }
+}

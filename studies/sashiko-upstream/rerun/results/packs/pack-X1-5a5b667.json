@@ -1,0 +1,236 @@
+{
+ "commit": "5a5b667",
+ "label": "X1",
+ "A": {
+  "summary": "This change keeps credentials out of the ingestor's logs and error\nmessages. When bootstrap_repo clones, updates a remote, or fetches an\narchive, git echoes the full remote URL in its stderr on failure, and\nthat URL can carry a user:password or a query token. The change now\npasses archive URLs and git stderr through redact_secret before they\nare logged or returned, and adds a test covering a failing clone.\n\nBefore:\n  A failed clone of https://gituser:s3cr3t_p4ss@host/repo.git?token=abc\n  returned an error like \"Git clone failed: fatal: unable to access\n  'https://gituser:s3cr3t_p4ss@host/repo.git?token=abc': ...\". The\n  bootstrap, clone and remote-update info logs printed the raw URL,\n  and the fetch and set-url warnings printed raw stderr.\n\nAfter:\n  The same failure returns \"Git clone failed: ...\" with the password\n  and token replaced by [REDACTED]. The bootstrap, clone and\n  remote-update log lines show the redacted URL (both the old and new\n  origin), and the fetch and set-url warnings show redacted stderr.\n  The set-url warning stderr is now also trimmed.\n\nThe new test, test_bootstrap_repo_redacts_secrets_on_failure, builds\nan in-memory ingestor and calls bootstrap_repo on an unreachable URL\n(127.0.0.1:1) containing a password and a token. It asserts that the\nreturned error contains [REDACTED] and contains neither secret.",
+  "inline_review": "- [LOW] src/ingestor.rs (Ingestor::bootstrap_repo), the redaction added in\n  the existing-repo branch is untested: the Updating remote origin info!,\n  the set-url warn!, and the Git fetch failed warn!, as well as the info!\n  in run_git_bootstrap. The only new test goes through the clone branch\n  (path does not exist) and asserts on the returned Git clone failed error\n  string. Reverting redact_secret at any of the logging sites would leave\n  every test green, although those logging paths are where the original\n  leak occurred. Impact is limited to a future regression going unnoticed.\n\n- [LOW] src/ingestor.rs (tests::test_bootstrap_repo_redacts_secrets_on_\n  failure), the assertion that the password s3cr3t_p4ss is absent may be\n  unable to fail. Git builds its HTTP failure message with an anonymizing\n  step that is believed to strip userinfo before the code sees stderr, so\n  the assertion would hold even with redact_secret removed. This is an\n  unverified assumption: git was not run here. Only the token= query\n  redaction is then proven by the test (via the [REDACTED] and\n  secret_tok_123 assertions). The user:pass@ regex path is covered only by\n  the direct unit tests in src/utils.rs, so the commit message claim that\n  credentials and tokens are redacted is demonstrated for tokens only.\n  The git_cmd detached_async helper clears only GIT_* location variables,\n  so proxy and credential-helper settings in the caller environment can\n  also change the stderr text. A stronger test would pass a stderr string\n  containing userinfo straight to the redaction, or use a fake git binary.\n  Production behaviour is not affected.",
+  "findings": [
+   {
+    "problem": "redaction in info!/warn! paths of bootstrap_repo is untested",
+    "severity": "Low",
+    "type": "Insufficient Coverage",
+    "preexisting": false,
+    "explanation": "Consequence: reverting the redact_secret calls in the existing-repo branch (Updating remote origin info!, set-url warn!, fetch warn!) or the run_git_bootstrap info! would leave every test green. The only new test goes through the `!path.exists()` clone branch and asserts on the returned Err string, so it covers just the 'Git clone failed' site. The logging paths are where the original leak occurred. Impact is limited to a future regression, and the commit message only claims a test for the failure case, so this is Low.",
+    "locations": [
+     {
+      "code_snippet": "info!(\"Updating remote origin from {} to {}\", crate::utils::redact_secret(&current_url), redacted_url);",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "314",
+      "why_this_location_matters": "This is in the existing-repo branch, which no test enters."
+     },
+     {
+      "code_snippet": "warn!(\"Git fetch failed: {}\", crate::utils::redact_secret(String::from_utf8_lossy(&output.stderr).trim()));",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "355",
+      "why_this_location_matters": "The fetch warning is a redaction site that nothing observes."
+     }
+    ]
+   },
+   {
+    "problem": "redaction test cannot fail on the user:pass@ half of its claim",
+    "severity": "Low",
+    "type": "Test may not be able to fail",
+    "preexisting": false,
+    "explanation": "Consequence: the test can stay green with the userinfo redaction removed, so a regression there would go unnoticed. Production behaviour is not affected: bootstrap_repo (src/ingestor.rs:271-300) passes git stderr through redact_secret on every path. Reachability: the test runs in CI only, and only git's stderr format decides whether its password assertion can fail. I could not run git with the tools available here. This is therefore an unverified assumption, and I am capping the severity at Low. The assumption: git's HTTP failure message ('unable to access ...') is built with transport_anonymize_url, which strips userinfo and keeps the query. If so, git itself removes gituser:s3cr3t_p4ss@ before the code sees it, and the assertion that the password is absent holds with or without redact_secret. Only the token= query is left for redact_secret to act on, because KEY_REGEX rewrites it to token=[REDACTED]. So the contains [REDACTED] and secret_tok_123 assertions do exercise the fix. The userinfo regex path (URL_CRED_REGEX) is not exercised by this test. The commit message's claim that credentials and tokens are redacted is shown only for tokens. Mitigations I verified: src/utils.rs has direct unit tests of the user:pass@ form (test_redact_git_credentials, test_redact_mixed), so the regex itself is covered. git_cmd::detached_async removes only the GIT_* location variables (INHERITED_LOCATION_VARS). It does not clear HTTP(S)_PROXY, credential helpers, or insteadOf rewrites, so a developer's environment can change the stderr text. A proxy error is not expected to echo the URL, which would make the test fail loudly rather than pass vacuously. To confirm, run git clone with that URL against 127.0.0.1:1 and check whether stderr contains the password. A stronger test would call the redaction with a stderr string that includes the userinfo, or fake the git binary.",
+    "locations": [
+     {
+      "code_snippet": "gituser:s3cr3t_p4ss@127.0.0.1:1/nonexistent.git?token=secret_tok_123",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "tests::test_bootstrap_repo_redacts_secrets_on_failure",
+      "line": "1274",
+      "why_this_location_matters": "The password absence assertion is vacuous if git already strips userinfo from its own stderr, so only the token redaction is proven by this test."
+     },
+     {
+      "code_snippet": "pub fn detached_async() -> tokio::process::Command",
+      "file": "src/git_cmd.rs",
+      "function_or_symbol": "detached_async",
+      "line": "87",
+      "why_this_location_matters": "It clears only GIT_* location variables, so proxy and credential-helper settings from the caller's environment still affect the stderr the test sees."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "run_git_bootstrap's error! might log a raw URL or git stderr from bootstrap_repo.",
+    "reasoning": "The only error that embeds git output is the clone-failure anyhow!, which wraps stderr in redact_secret. Other `?` errors come from I/O on spawn or create_dir_all and carry no URL. run_git_bootstrap is the only non-test caller and logs only that already-redacted error. The pre-clone info! is redacted in the diff.",
+    "locations": [
+     {
+      "code_snippet": "error!(\"Failed to bootstrap group {} epoch {}: {}\", group, epoch, e);",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::run_git_bootstrap",
+      "line": "176",
+      "why_this_location_matters": "It logs the already-redacted error from bootstrap_repo."
+     }
+    ]
+   },
+   {
+    "description": "Redaction might break the remote-url comparison.",
+    "reasoning": "The comparison `current_url != url` uses raw values. Redaction goes only into the separate redacted_url binding and the log arguments. The raw url is still what is passed to git.",
+    "locations": [
+     {
+      "code_snippet": "if current_url != url {",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "316",
+      "why_this_location_matters": "The comparison is on raw strings."
+     }
+    ]
+   },
+   {
+    "description": "A log or error site in bootstrap_repo or run_git_bootstrap still emits a raw URL or stderr.",
+    "reasoning": "Every site that formats url, current_url or a git stderr buffer now goes through redact_secret: the bootstrap info!, the clone info!, the clone error, the remote-update info!, the set-url warn! and the fetch warn!. The remaining info! lines log only the path and depth.",
+    "locations": [
+     {
+      "code_snippet": "crate::utils::redact_secret(String::from_utf8_lossy(&output.stderr).trim())",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "358",
+      "why_this_location_matters": "This is the last stderr site and it is covered."
+     }
+    ]
+   },
+   {
+    "description": "redact_secret could panic on regex compilation or on arbitrary stderr.",
+    "reasoning": "Both Regex::new calls use fixed literal patterns inside OnceLock::get_or_init, so a bad pattern would fail on every run, not on input. Callers pass a valid &str from from_utf8_lossy. The function does no slicing or indexing.",
+    "locations": [
+     {
+      "code_snippet": "let url_cred_re = URL_CRED_REGEX.get_or_init(|| Regex::new(r\"://([^/:]+):([^/@]+)@\").unwrap());",
+      "file": "src/utils.rs",
+      "function_or_symbol": "redact_secret",
+      "line": "58",
+      "why_this_location_matters": "The unwrap is on a constant pattern."
+     }
+    ]
+   },
+   {
+    "description": "Windows drive-letter paths or CRLF in git output might break or defeat redact_secret.",
+    "reasoning": "The URL regex needs a literal `://` and `@`, so `C:\\Users\\x` never matches. The key regex has no path dependence. Neither regex uses line anchors, and `.trim()` removes trailing CRLF at the changed call sites.",
+    "locations": [
+     {
+      "code_snippet": "Regex::new(r\"://([^/:]+):([^/@]+)@\")",
+      "file": "src/utils.rs",
+      "function_or_symbol": "redact_secret",
+      "line": "60",
+      "why_this_location_matters": "The pattern is anchored on `://` and `@`."
+     }
+    ]
+   },
+   {
+    "description": "Concurrent redact_secret calls might race on the lazily initialised regex statics.",
+    "reasoning": "KEY_REGEX and URL_CRED_REGEX are static OnceLock<Regex>, initialised with the thread-safe get_or_init. After that, replace_all takes &self on a Sync Regex. The function is synchronous and holds no lock across an await.",
+    "locations": [
+     {
+      "code_snippet": "KEY_REGEX.get_or_init(|| Regex::new(r\"(?i)(key|token|secret)=([a-zA-Z0-9_\\-]+)\").unwrap());",
+      "file": "src/utils.rs",
+      "function_or_symbol": "redact_secret",
+      "line": "56",
+      "why_this_location_matters": "The shared state is a OnceLock."
+     }
+    ]
+   },
+   {
+    "description": "The set-url warn! now calls .trim() on git stderr before redact_secret, a change the commit message does not mention. The candidate asks whether anything parses this message or whether the trim affects anything beyond log text.",
+    "reasoning": "1) In bootstrap_repo at the revision under review, the stderr text is used in exactly one place: as the argument of a warn! macro in the branch taken when set_url_output.status is not success. The result is not returned, stored or compared. The function goes on to the fetch step and ends with Ok(()). 2) git_grep for the message text 'Failed to update remote url' at this revision finds one match in the whole repository, at src/ingestor.rs:334, which is the log call itself. No other code matches on or parses that string. 3) The trim runs before redact_secret, so it only removes leading and trailing whitespace such as git's trailing newline. redact_secret uses regexes ((?i)(key|token|secret)=([a-zA-Z0-9_\\-]+) and ://([^/:]+):([^/@]+)@) that match inside the string and do not depend on edge whitespace, so redaction coverage is unchanged. 4) The trim matches the other two redacted stderr sites (the clone error and the fetch warning), which already trimmed. It removes a stray trailing newline from the log line and does not change behaviour. 5) The trim applies on every platform. Windows git may emit CRLF, and trim() strips that as well. Nothing is affected on either OS. The change is a log-formatting consistency tweak with no functional, contract or security impact, so it is dismissed. The only residual point is that the commit message does not mention it, and that is too minor to report.",
+    "locations": [
+     {
+      "code_snippet": "crate::utils::redact_secret(String::from_utf8_lossy(&set_url_output.stderr).trim())",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "334",
+      "why_this_location_matters": "The trimmed, redacted stderr is passed only to warn!. The sole repo-wide match for the message text is this log call, so no code parses it and the trim changes log whitespace only."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change keeps credentials out of the ingestor's logs and error\nmessages when git operations against an archive URL fail. In\nrun_git_bootstrap and bootstrap_repo, the archive URL and git's stderr\nare now passed through redact_secret before being logged or returned.\nGit often echoes the full remote URL, including any embedded\nuser:password or query token, in its error output, so those secrets\ncould previously end up in application logs.\n\nBefore:\n  A failed clone of https://gituser:s3cr3t_p4ss@host/x.git?token=abc\n  returned an error like \"Git clone failed: fatal: unable to access\n  'https://gituser:s3cr3t_p4ss@host/x.git?token=abc'...\" with the\n  password and token in clear text. The info lines for bootstrapping,\n  cloning and updating the remote origin, and the warnings for a failed\n  remote-url update or fetch, also printed the raw URL or raw stderr.\n\nAfter:\n  The same failure returns an error in which the credentials and token\n  are replaced with \"[REDACTED]\". The bootstrap, clone and remote-update\n  log lines show the redacted URL, and the warnings for a failed\n  remote-url update or fetch show redacted, trimmed stderr. Otherwise\n  behaviour is unchanged: the same git commands run and the same\n  success and failure paths are taken.\n\nA new unit test, test_bootstrap_repo_redacts_secrets_on_failure, calls\nbootstrap_repo with a URL containing a password and a token against an\nunreachable local port. It asserts that the resulting error contains\n\"[REDACTED]\" and does not contain the password or the token.",
+  "inline_review": "No issues found.",
+  "findings": [],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "redact_secret is now called on more runtime strings and could panic through unwrap on regex construction.",
+    "reasoning": "Both Regex::new(...).unwrap() calls take compile-time literal patterns. The patterns are valid and are exercised by the existing unit tests in utils.rs. replace_all on any &str cannot panic, and the call sites convert with from_utf8_lossy, so the input is always valid UTF-8.",
+    "locations": [
+     {
+      "code_snippet": "KEY_REGEX.get_or_init(|| Regex::new(r\"(?i)(key|token|secret)=([a-zA-Z0-9_\\-]+)\").unwrap());",
+      "file": "src/utils.rs",
+      "function_or_symbol": "redact_secret",
+      "line": "56",
+      "why_this_location_matters": "The unwrap operates on a constant valid pattern, so no runtime input can make it panic."
+     }
+    ]
+   },
+   {
+    "description": "some caller or other site in Ingestor may still log or return a raw epoch URL or raw git stderr after the redaction change.",
+    "reasoning": "1) git_grep for bootstrap_repo|run_git_bootstrap over src/ at the target commit shows bootstrap_repo is called only at src/ingestor.rs:176 (inside run_git_bootstrap) and in the new unit test at :1288. run_git_bootstrap is called only from run() at :126. No other file in src/ references them. 2) Every url/stderr site in ingestor.rs (grep 'url|stderr') was read. The epoch URL log at :171 uses redact_secret(&url). The clone log at :279 uses redacted_url. The origin-update log at :319-320 redacts both current_url and the new url. The clone error at :298, the set-url warn at :336 and the fetch warn at :358 all pass trimmed stderr through redact_secret. The only other uses of url are .arg(url) at :290 and :328, which pass the value to the git child process and do not log it. 3) The callers log only the already-redacted error. run_git_bootstrap logs the bootstrap_repo error with 'Failed to bootstrap group {} epoch {}: {}', where e is the redacted Git clone failed error. run() logs the run_git_bootstrap error, which can only come from get_tracked_groups or the redacted path, and none of those messages carry a URL. 4) The remaining raw '.output().await?' and create_dir_all errors are std::io::Error values from spawning git or creating a directory. They describe the OS failure (program not found, permission denied, path), not git stderr and not the remote URL passed as an argument. 5) Source of the URL: the only producer is find_epoch_urls, which builds 'https://lore.kernel.org' + manifest key, or the fixed fallback 'https://lore.kernel.org/<list_id>/0.git'. There is no credentials field, so production values carry no secrets. The redaction is defense in depth. 6) redact_secret (src/utils.rs:56) masks key|token|secret= query values and ://user:pass@ userinfo, which covers the shapes in the new test URL. No path that logs a raw URL or raw git stderr was found.",
+    "locations": [
+     {
+      "code_snippet": "crate::utils::redact_secret(String::from_utf8_lossy(&output.stderr).trim())",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "298",
+      "why_this_location_matters": "The error returned to callers is built from redacted stderr, so the caller's error log cannot leak it."
+     },
+     {
+      "code_snippet": "crate::utils::redact_secret(&url),",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::run_git_bootstrap",
+      "line": "171",
+      "why_this_location_matters": "The only other site that logs the epoch URL is redacted. bootstrap_repo is called only from this function (line 176), and the callers log only the redacted error."
+     },
+     {
+      "code_snippet": "String::from_utf8_lossy(&set_url_output.stderr).trim()",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::bootstrap_repo",
+      "line": "336",
+      "why_this_location_matters": "This is wrapped in redact_secret at lines 335-337, as are the fetch warn at line 358 and the remote URL log at lines 319-320. No raw stderr or URL log site remains."
+     }
+    ]
+   },
+   {
+    "description": "The commit message presents credential leakage through bootstrap_repo as a live problem, but the only production path builds public lore.kernel.org URLs, so the change is hardening and the message overstates it.",
+    "reasoning": "1. git_grep for bootstrap_repo at the target commit finds exactly two callers: run_git_bootstrap (src/ingestor.rs:176) and the new unit test. run_git_bootstrap is reached only from Ingestor::run when self.download is Some(n). 2. The url passed to bootstrap_repo comes from resolve_git_info -> find_epoch_urls. Every URL there is built as https://lore.kernel.org{key}, where key must start with /{list_id}/git/ and end with .git (so no userinfo can precede the host and no query string can follow), or the fallback https://lore.kernel.org/{list_id}/0.git, where list_id is a path component after the fixed host. No configuration value or manifest entry can inject user:pass@ or a trailing ?token= into these URLs. 3. The test passes a synthetic credentialed URL directly to the private function, a case no production caller produces. 4. This is a dismissal of the message-accuracy concern, not of the code change. The redaction itself is correct and useful hardening. redact_secret in src/utils.rs masks URL credentials and key/token/secret query parameters, and the diff applies it to the clone, fetch and set-url stderr and to the log lines. The one non-fixed URL the change touches is current_url, read from the on-disk repo's remote origin in the existing-repo branch, so a hand-edited archives/ checkout could carry credentials. That is an operator-created edge case, not a path the code produces. 5. The candidate alleges no wrong runtime behaviour, no contract change and no unsafe output. The commit text describes a conditional (when a git command fails against a URL containing credentials), which is true of git's behaviour in general and is not claimed as verified evidence from this deployment. It is below the bar for a reportable finding.",
+    "locations": [
+     {
+      "code_snippet": "epochs.push((epoch, format!(\"https://lore.kernel.org{}\", key)));",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::find_epoch_urls",
+      "line": "None",
+      "why_this_location_matters": "Shows every URL reaching bootstrap_repo has a fixed public host with a key restricted to a /list/git/N.git path, so no credentials or query tokens can be embedded in production."
+     },
+     {
+      "code_snippet": ".bootstrap_repo(&url, &epoch_path, group_remaining)",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "Ingestor::run_git_bootstrap",
+      "line": "176",
+      "why_this_location_matters": "The sole non-test caller of bootstrap_repo; its url comes only from find_epoch_urls."
+     }
+    ]
+   },
+   {
+    "description": "The test is vacuous or cannot fail, and depends on ambient Settings::new() and a real git binary.",
+    "reasoning": "The ?token=secret_tok_123 query is matched by the key|token|secret regex in redact_secret. If the redact_secret call on the clone stderr were removed, a git error echoing the URL would contain that token and the token and '[REDACTED]' assertions would fail, so the test would fail on revert. User:pass@ is covered directly by utils.rs unit tests. Settings::new().unwrap() is the established pattern in many other tests (src/ingestor.rs:759, src/main.rs:4512, src/reviewer.rs and src/server.rs tests), so it is not specific to this test. The unrelated-git-absent failure would be a failing test, not a false pass. Only the password-assertion strength and the token-only gap are retained in the finding.",
+    "locations": [
+     {
+      "code_snippet": "\"https://[REDACTED]:[REDACTED]@github.com/torvalds/linux.git\"",
+      "file": "src/utils.rs",
+      "function_or_symbol": "tests::test_redact_git_credentials",
+      "line": "141",
+      "why_this_location_matters": "Direct unit coverage of the user:pass@ branch of redact_secret."
+     },
+     {
+      "code_snippet": "let mut settings = Settings::new().unwrap();",
+      "file": "src/ingestor.rs",
+      "function_or_symbol": "tests (nntp test)",
+      "line": "759",
+      "why_this_location_matters": "Same ambient Settings::new() setup is already used by existing ingestor tests."
+     }
+    ]
+   }
+  ]
+ }
+}
