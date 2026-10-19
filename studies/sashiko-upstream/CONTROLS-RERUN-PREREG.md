@@ -26,8 +26,8 @@ Everything is as amendment 2 of the parent study (01M505ER0A9VF9JG9HNKRGQN9T), e
 - **Command:** `sashiko review <commit> --project kannaka`, local mode, in the sashiko-dev/sashiko clone
   at that commit (the parent study's clone at d329ead, or a fresh one; the head is recorded).
 - **Settings:** the same single file, sha256
-  e3105fea4c9909710412dd0ed731a7b68c7b6b8abb337a50e51f570d8b2196fd (claude-cli, sonnet, max_input_tokens
-  190000, max_interactions 150, concurrency 1, timeout 3600 s).
+  e3105fea4c9909710412dd0ed731a7b68c7b6b8abb337a50e51f570d8b2196fd (claude-cli, sonnet, the trial's token and
+  interaction limits, concurrency 1, timeout 3600 s).
 - **Model access:** the trial's isolated bridge with `--tools "" --strict-mcp-config
   --setting-sources ""`. The Claude Code CLI version used is recorded per review; the pinned 2.1.301 copy
   (sha256 84d61feeb1a07e5a5b3354d68432591cac18a5d38a419a30d86d0f3ad8cba397) if it is still available.
@@ -46,7 +46,7 @@ Everything is as amendment 2 of the parent study (01M505ER0A9VF9JG9HNKRGQN9T), e
   | Control | Report | sha256 |
   |---|---|---|
   | X1 5a5b667 | `5a5b667-K.json` | 7a89723ea28e73265c7d01e7f81b6ec25b4f83f2709cf6ccb3064144554f1529 |
-  | X2 505a024 | `505a024-K.json` | f247d1e8252a79a590620f234502ff04529073cd6af61861e25ffdaec63d7d5d |
+  | X2 505a024 | `505a024-K.json` | f247d1e8252a79a590620f234502ff04529073cd6af61861e25ffdaec53d7d5d |
   | X3 0035364 | `0035364-K.json` | e44e5586b7542d7c5cbe1d21bb3cfd5c766c795ec2c63b3c1a4242c5ec2d4d4a |
   | X4 248f7cb | `248f7cb-K.json` | 639a3721247806e3db6ff26d1be96a1b3afcb6dd5ce6daca4f5b492e100390b1 |
 
@@ -95,7 +95,7 @@ check on grader consistency, and that comparison decides nothing.
 
 ## Priors, written now
 
-- K1 FALSE total: 4 to 7 (1.0 to 1.75 per control). I expect the rule to remove most of the nine
+- K1 FALSE total: 4 to 7 (one to 1.75 per control). I expect the rule to remove most of the nine
   coverage findings but not all, and the two "not defects" cases to recur in some form. So "clears the
   bar" at about even odds.
 - K1 REAL total within 2 of K0's.
