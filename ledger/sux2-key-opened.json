@@ -1,0 +1,31 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "sux2-key-opened",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M5ATP0F3BH575FP6513N31H0",
+   "title": "sux-controls-rerun: the A/B key, opened after every verdict was recorded",
+   "body": "The grader's verdicts for all four packs were complete and hashed at 2026-10-19 19:33:14 UTC (verdicts.json sha256 301edcd1..., verdicts-notes.md 2c68f701..., both LF so the as-written and LF hashes coincide; the record is the evidence file verdicts.sha256). The key was opened at 19:33:27 UTC. The key file is published unchanged as ab-key.json; its sha256 a52bd621347a1d0595b78a8e628e8051c2208fbb8ef0b50c23bbbd83125d1a35 is the value written in pre-registration 01M5A5K2C9SRMCE6VFGXVK1Y4F before any report existed. The grader's inputs (the four packs, the rules and the code clone head) were hashed before it started and were unchanged after; that record is grader-inputs.sha256.",
+   "evidence": [
+    {
+     "label": "ab-key.json, the key unchanged",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/results/ab-key.json",
+     "sha256": "a52bd621347a1d0595b78a8e628e8051c2208fbb8ef0b50c23bbbd83125d1a35"
+    },
+    {
+     "label": "verdicts.sha256, hashes recorded before the key opened",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/results/verdicts.sha256",
+     "sha256": "8d1aaebd758d7cb2f54da479188d7565053bccb27311041837cbf24bc34492bf"
+    },
+    {
+     "label": "grader-inputs.sha256, the grader's inputs hashed before it started",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/results/grader-inputs.sha256",
+     "sha256": "e938ca3184eb83f46fcb5ff97a6f297cf0f222335db42bc87e8999d3aefd6180"
+    }
+   ]
+  }
+ ]
+}

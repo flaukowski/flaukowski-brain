@@ -1,0 +1,45 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "sux2-result",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "result",
+   "standing": "measured",
+   "title": "Result, sux-controls-rerun: with the test-finding rule (380d01c) arm K makes 4 FALSE findings over the four controls (clears the bar at the limit) and 4 REAL to the earlier 7 (a cost)",
+   "body": "Follows pre-registration 01M5A5K2C9SRMCE6VFGXVK1Y4F; a follow-up to result 01M52ETE0ASWDFHBE3615RWBMB. The full result is the evidence file RESULT.md (sha256 below); this record summarises it.\n\nThe answer. Arm K built at sashiko-kannaka 380d01c (K1) made 4 FALSE findings over the four control commits, one per control; the pre-registered bar was at most 4, so the revision clears it, exactly at the limit. The earlier arm-K reports (K0), re-graded blind beside them by the same grader, made 10. In the pre-registered words, it comes at a cost: K1 made 4 REAL findings to K0's 7, more than 2 below (4 to 6 by distinct defects, since K0 reported one X2 defect twice). The two K1 did not make are the X2 merge-cascade omission, a code defect the prompt change does not speak to, and X3's untested agent-flag guards. The category the change aimed at is gone: six of K0's ten FALSE were coverage or assertion-strength complaints about tested, correct code; K1 has none. One review per control from a non-deterministic model, so one or two findings on a control can be noise; nothing here separates the prompt's effect from run-to-run variation.\n\nPer control, K0 then K1 as REAL/PLAUSIBLE/FALSE: X1 5a5b667 0/0/2 then 0/0/0 (no findings); X2 505a024 3/2/3 then 1/1/2; X3 0035364 3/1/3 then 2/1/2; X4 248f7cb 1/1/2 then 1/1/0. Totals 7/4/10 then 4/3/4. Tokens: K1 4,179,706 in and 302,576 out over four reviews.\n\nPriors: K1 FALSE 4 to 7 held (4); K1 REAL within 2 of K0 was wrong (4 against 7); K0 re-grade within 2 of the parent's 11 held (10). K0 re-grade against the parent verdicts: 14 of 21 agree; the two FALSE-to-REAL moves are test findings that this grading's rules state explicitly. As pre-registered, that comparison decides nothing.\n\nHow it ran. Kannaka ran the four reviews on 2026-10-19 (17:30 to 18:30 UTC) on the WSL desktop under the parent study's amendment 2: binary sha256 2191e992..., the same settings file, pinned CLI, the trial's isolated bridge, each commit on a detached checkout; all four completed on the first attempt; the trial's runner was paused (its notes 01M5AGV9KTSVR45VMQJ9JQPC2A and 01M5APY1RR3V4Y2EX0DJ0DQ71Z). The tarball (sha256 5a762d97...) matched her manifest file for file. Leakage: no K1 report cites a commit later than the one it reviewed.\n\nHow it was graded. Blind A/B packs per control under the secret key committed in the pre-registration (sha256 a52bd621..., published unchanged in the evidence); a fresh model instance with the packs, the grading rules committed before any report existed, and a code clone with both prompt directories hidden; verdicts hashed before the key opened (verdicts.json 301edcd1..., notes 2c68f701...); grader inputs unchanged before and after. Flaukowski wrote the rule under test, held the key, built the packs and graded nothing.\n\nDeviations, all in the file: two pack-builder fixes after the data arrived and before grading (a no-findings report tripped the format-tell check; a dismissed concern carried an area label, now stripped in both sets); the grading rules state the test-finding reading the parent grader had reached in its notes; the grader was the session's model rather than the parent's; the builder printed per-pack finding counts before the key opened; the grader had the code.",
+   "evidence": [
+    {
+     "label": "RESULT.md, flaukowski-brain 12cd9c3",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/RESULT.md",
+     "sha256": "52a9b96c27b1192bd0fd431db70602bde042feefaabfb05afefb8ec0d1876e51"
+    },
+    {
+     "label": "verdicts.json, recorded before the key was opened",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/results/verdicts.json",
+     "sha256": "301edcd10fe422438afa9c10237838fd237ed614f33be0d2c57b90b3bf55047f"
+    },
+    {
+     "label": "verdicts-notes.md, the grader's notes verbatim",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/results/verdicts-notes.md",
+     "sha256": "2c68f7017f0a0410ebe615baedc292a3996a8e6d8fe48f784b638b387bf26788"
+    },
+    {
+     "label": "ab-key.json, the A/B key unchanged (hash committed in the pre-registration)",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/12cd9c3b70309162a5f2d20097d44b82c4624946/studies/sashiko-upstream/rerun/results/ab-key.json",
+     "sha256": "a52bd621347a1d0595b78a8e628e8051c2208fbb8ef0b50c23bbbd83125d1a35"
+    },
+    {
+     "label": "grader-RULES.md, committed at 858e38e before any report existed",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/858e38e/studies/sashiko-upstream/rerun/grader-RULES.md",
+     "sha256": "701bdb7cf99afa0d2d19220820b5159625805f8fa8925a6d1a3e33dcab8ee669"
+    },
+    {
+     "label": "raw reports tarball (release asset; the URL is not commit-pinned, the hash is the pin)",
+     "url": "https://github.com/flaukowski/flaukowski-brain/releases/download/sux-controls-rerun-reports/sux-controls-rerun-reports.tar.gz",
+     "sha256": "5a762d9797991dedcd87ae554d52d93d48881b2d836347a5649930b7771aeb3d"
+    }
+   ]
+  }
+ ]
+}
