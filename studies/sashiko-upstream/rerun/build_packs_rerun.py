@@ -56,9 +56,15 @@ def report(path):
             "explanation": scrub(x.get("severity_explanation", ""), c),
             "locations": [{k: scrub(str(v), c) for k, v in loc.items()} for loc in x.get("locations", [])],
         })
-    dismissed = [{"description": scrub(x.get("description", ""), c), "reasoning": scrub(x.get("reasoning", ""), c),
-                  "locations": [{k: scrub(str(v), c) for k, v in loc.items()} for loc in x.get("locations", [])]}
-                 for x in r["dismissed_concerns"]]
+    dismissed = []
+    for x in r["dismissed_concerns"]:
+        desc = x.get("description", "")
+        m = PREFIX.match(desc)
+        if m:  # the same leading "tag:" label as on findings; seen on a dismissed concern in one report
+            c["dismissed label removed"] = c.get("dismissed label removed", 0) + 1
+            desc = desc[m.end():]
+        dismissed.append({"description": scrub(desc, c), "reasoning": scrub(x.get("reasoning", ""), c),
+                          "locations": [{k: scrub(str(v), c) for k, v in loc.items()} for loc in x.get("locations", [])]})
     rep = {"summary": scrub(r["summary"], c), "inline_review": scrub(d["inline_review"], c),
            "findings": findings, "dismissed_concerns_DO_NOT_COUNT": dismissed}
     return d, rep, c
@@ -84,10 +90,17 @@ for commit in CONTROLS:
         for t in TELLS:
             for m in re.findall(t, s):
                 tells.append((name, commit, t, m))
-ks0 = {json.dumps(v, sort_keys=True) for v in shapes["K0"].values()}
-ks1 = {json.dumps(v, sort_keys=True) for v in shapes["K1"].values()}
+# a report with no findings (or no dismissed concerns) has nothing to compare there, so the field names
+# are pooled per set: a name present in one set's reports and absent from the other's is the tell
+def pooled(name):
+    u = {}
+    for v in shapes[name].values():
+        for part, names in v.items():
+            u.setdefault(part, set()).update(names)
+    return {k: sorted(s) for k, s in u.items()}
+ks0, ks1 = pooled("K0"), pooled("K1")
 if ks0 != ks1:
-    print("FIELD SETS DIFFER between K0 and K1:", ks0 ^ ks1)
+    print("FIELD SETS DIFFER between K0 and K1:", {k: (ks0.get(k), ks1.get(k)) for k in set(ks0) | set(ks1) if ks0.get(k) != ks1.get(k)})
     sys.exit(2)
 if tells:
     print("TELLS LEFT AFTER SCRUB:", tells[:10])
