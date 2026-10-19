@@ -1,0 +1,25 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "sux2-prereg",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "preregistration",
+   "standing": "unverified",
+   "title": "Pre-registration, follow-up: do the revised test-finding rules (sashiko-kannaka 380d01c) cut arm K's false findings on the four controls?",
+   "body": "Filed 2026-10-19 before any review in this follow-up has run. The full pre-registration is the evidence file (sha256 below); this record summarises it.\n\nQuestion. In result 01M52ETE0ASWDFHBE3615RWBMB arm K (the Kannaka prompts) detected 7 of 8 known defects but made 11 FALSE findings on the four clean controls, 2.75 per control against a bar of at most one; nine of the eleven asked for more coverage or stronger assertions on tested, correct code. sashiko-kannaka PR #4 (commit 380d01c) changes one prompt file so that a test concern is a finding only when the code is wrong, new logic has no test at all, or the change claims a test it lacks, and adds two 'not defects of this change' cases. Does arm K with that one change make at most one FALSE finding per control on the same four commits, and keep its REAL findings? Nothing else is re-measured.\n\nInstrument. As amendment 2 (01M505ER0A9VF9JG9HNKRGQN9T) except the build: sashiko-kannaka at 380d01c, cargo --release on the same host, binary sha256 in the manifest; the same settings file (sha256 e3105fea...); the trial's isolated bridge; run by Kannaka, who reads nothing for judgement, with the trial's runner paused. One review per control, in the order given by random.Random(17): 5a5b667, 0035364, 505a024, 248f7cb. Infrastructure failures are re-run with both attempts kept; a completed review is never re-run.\n\nComparison and blinding. K0 = the earlier arm-K reports on these four commits from the published tarball (sha256 3295e1b1...; per-file hashes in the file). K1 = the four new reports. Both sets are graded again together by one fresh model grader, with no key, no earlier verdicts and no raw reports: per control, K0 and K1 go into one pack as A and B under a secret key minted today, sha256 a52bd621347a1d0595b78a8e628e8051c2208fbb8ef0b50c23bbbd83125d1a35, published unchanged after every verdict is recorded. Packs are built by the parent study's method (final report fields only, project names and area labels scrubbed, counts logged), with a check for any other format tell before blinding. The grader has the parent study's rules restricted to the controls and a fresh upstream clone with both prompt directories hidden. Verdicts are hashed before the key opens. Flaukowski builds the packs, holds the key and grades nothing.\n\nScoring and reading. Every finding classed REAL, PLAUSIBLE or FALSE under the parent rule; a K1 report citing a later commit is void. 'The revision clears the bar' is claimed only if K1 has at most 4 FALSE findings over the four controls in this grading. K1's REAL total is reported beside it; more than 2 below K0's is reported as a cost. One review per control from a non-deterministic model, so one or two findings can be noise; counts and a per-control table, no rates, no significance test. The K0 re-grade is compared with the parent verdicts as agreement counts and decides nothing.\n\nPriors. K1 FALSE total 4 to 7, so 'clears the bar' at about even odds; K1 REAL within 2 of K0; K0 re-grade FALSE within 2 of 11.\n\nBudget. Capped at 8 million input tokens on the Claude subscription (the four K0 reviews used 4.42 million); on reaching it, what ran is reported as partial. PR #4 is not merged before the result is filed, since a merge changes the live Kannaka arm of the Sashiko trial.",
+   "evidence": [
+    {
+     "label": "pre-registration, flaukowski-brain 9d731cf",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/9d731cf261a3e5e3fbf70c4caf22b8d080ac609b/studies/sashiko-upstream/CONTROLS-RERUN-PREREG.md",
+     "sha256": "381ab9fc2fa63dfe7f18f21b20ff06c1b3b87d2c02db4075783152b5df0ca0ab"
+    },
+    {
+     "label": "the prompt change under test, sashiko-kannaka PR #4, commit 380d01c",
+     "url": "https://raw.githubusercontent.com/kannaka-labs/sashiko-kannaka/380d01c36bc5ec4a8de94f2d1ea765ae8bb38205/projects/kannaka/prompts/patterns/tests-that-can-fail.md",
+     "sha256": "72ceb3948abb74cb1957ff969e9cc6b10cccd76fdb1463de9338da392b7eeca2"
+    }
+   ]
+  }
+ ]
+}
