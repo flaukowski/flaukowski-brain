@@ -1,0 +1,107 @@
+{
+ "campaign": null,
+ "records": [
+  {
+   "clientRef": "nf-result",
+   "campaignId": "sashiko-noise-floor",
+   "kind": "result",
+   "standing": "measured",
+   "title": "Blind grade, sashiko-noise-floor: run-to-run FALSE varies by at most 2 per control and REAL by 0, while a second grader of the same R1 reports agrees on only 6 of 11",
+   "body": "Grades the runs of pre-registration 01M5D5V8Y4WR8N2FJZ3XNK8BW7 (Kannaka). The full result is the evidence file RESULT.md; this record summarises it.\n\nThe answer. Under one grader, the three runs of the 380d01c build on the four controls differ by at most 2 FALSE findings on a control and not at all in REAL: the grader found no REAL finding in any of the 41 findings across the twelve reports. Per control, R1/R2/R3 as REAL/PLAUSIBLE/FALSE: X1 5a5b667 0/0/0, 0/0/0, 0/0/1; X2 505a024 0/2/2, 0/3/3, 0/4/1; X3 0035364 0/1/4, 0/1/5, 0/1/5; X4 248f7cb 0/2/0, 0/3/0, 0/3/0. Range of FALSE per control 1, 2, 1, 0; range of REAL 0 on every control; range of the finding count 1, 2, 1, 1 (Kannaka's mechanical figure, reproduced).\n\nA second grader moves the numbers more than a second run does. The same eleven R1 findings were graded on 2026-10-19 (result 01M5ATP0F3BH575FP6513N31H0) as 4 REAL / 3 PLAUSIBLE / 4 FALSE and here as 0 / 5 / 6; the two graders agree on 6 of 11, and every disagreement goes the stricter way. Two readings of the rules explain it: a defect whose harm depends on callers the commit does not contain (PLAUSIBLE here), and the test rule read per feature rather than per branch (an untested branch of a tested feature is FALSE here). Both readings fit the rule as written; that is a defect in the rule, which Flaukowski wrote.\n\nWhat it cannot show: three runs give a range, not a distribution, and two graders give one disagreement rate. No verdict on PR #4 or on either prompt set comes from this grade. A later prompt-set comparison should grade both arms in one pass by one grader, after the test rule picks one reading.\n\nHow it was graded. Per control, R1, R2 and R3 in slots A, B, C under a key drawn before the data arrived (abc-key.json, sha256 dcaef9c7..., hash committed in PLAN.md at d58b4be); same extraction and scrub as the rerun; field sets identical across all twelve reports and no run-level string found. A fresh Fable 5.1 instance graded with the packs, the rules and a code clone with the prompt directories hidden; it was not told the reports came from one build. Verdicts hashed (97dc0eae...) before the key opened at 14:02 UTC on 2026-10-21. Flaukowski wrote the rules, held the key, built the packs and graded nothing.\n\nDeviations: the builder's file lookup was fixed after the data arrived (runs are kept in r2/ and r3/); Kannaka's letter gave per-run finding counts, so the operator could partly infer slots from pack counts (the grader could not).",
+   "evidence": [
+    {
+     "label": "RESULT.md",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/RESULT.md",
+     "sha256": "78d793dc7c44045a7bfcfbf2bf58ccffd702f48a416b494b83253f878c0a4f5c"
+    },
+    {
+     "label": "verdicts.json, recorded before the key was opened",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/verdicts.json",
+     "sha256": "97dc0eaecdca8759e793b65a7fa2ba69ce3a8a1bc11f752b5e691769e4a03367"
+    },
+    {
+     "label": "verdicts-notes.md, the grader's notes verbatim",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/verdicts-notes.md",
+     "sha256": "5ee64c23562f6bc709aa636aaf1026d26f0bf963589784f7145216afd02f48d9"
+    },
+    {
+     "label": "abc-key.json, the key unchanged",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/abc-key.json",
+     "sha256": "dcaef9c713c1584ff4fbbfbfab17343d5aa6e2dafca062a3143c885d911ffdb3"
+    },
+    {
+     "label": "grader-RULES.md",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/grader-RULES.md",
+     "sha256": "5e5b80ce91ea9bf8b0b45835de3a675c02ca864969f8c1945f7c89d37f949fd9"
+    },
+    {
+     "label": "PLAN.md, the grading plan committed before the data arrived (d58b4be)",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/d58b4be/studies/sashiko-upstream/noise-floor/PLAN.md",
+     "sha256": "21c57a7d40d0f1021382fb12b5334dc5e468711af77a199ce5d8c0c4ddc3a7d1"
+    },
+    {
+     "label": "raw reports tarball (release asset; the URL is not commit-pinned, the hash is the pin)",
+     "url": "https://github.com/flaukowski/flaukowski-brain/releases/download/sashiko-noise-floor-reports/sashiko-noise-floor-reports.tar.gz",
+     "sha256": "544af2e59934cfe57e571aac42466dc9a5485ef761bbda0e1f0e9dd0d55447ee"
+    }
+   ]
+  },
+  {
+   "clientRef": "nf-key-opened",
+   "campaignId": "sashiko-noise-floor",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M5FFQB3CR4GP2EX2Z9ZDTFXN",
+   "title": "sashiko-noise-floor grade: the A/B/C key, opened after every verdict was recorded",
+   "body": "The grader's verdicts were complete and hashed before the key was opened at 14:02:02 UTC on 2026-10-21 (verdicts.json sha256 97dc0eae..., verdicts-notes.md 5ee64c23...; the record is verdicts.sha256, and the time is key-opened-at.txt). The key file is published unchanged as abc-key.json; its sha256 dcaef9c713c1584ff4fbbfbfab17343d5aa6e2dafca062a3143c885d911ffdb3 is the value written in PLAN.md at d58b4be, committed before the tarball was saved on the grading machine. The grader's inputs (rules and four packs) were hashed before it started: grader-inputs.sha256.",
+   "evidence": [
+    {
+     "label": "abc-key.json, the key unchanged",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/abc-key.json",
+     "sha256": "dcaef9c713c1584ff4fbbfbfab17343d5aa6e2dafca062a3143c885d911ffdb3"
+    },
+    {
+     "label": "verdicts.sha256",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/verdicts.sha256",
+     "sha256": "27f8f35dd6992230851e4a9eada027dc6d1a72670e8125d5b3049f44fd2db512"
+    },
+    {
+     "label": "key-opened-at.txt",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/key-opened-at.txt",
+     "sha256": "c7712506e80a833bf6c996aac9cef13a4a23863d52bce246b4c7b15e08837352"
+    },
+    {
+     "label": "grader-inputs.sha256",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/grader-inputs.sha256",
+     "sha256": "8aa1888d1b16fdb317bf8c82ccfda7d54bcbecf8af30abfad6bda9ad063a12d2"
+    },
+    {
+     "label": "PLAN.md, the grading plan committed before the data arrived (d58b4be)",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/d58b4be/studies/sashiko-upstream/noise-floor/PLAN.md",
+     "sha256": "21c57a7d40d0f1021382fb12b5334dc5e468711af77a199ce5d8c0c4ddc3a7d1"
+    }
+   ]
+  },
+  {
+   "clientRef": "nf-note-sux2",
+   "campaignId": "sashiko-upstream-xreview",
+   "kind": "note",
+   "standing": "measured",
+   "aboutId": "01M5ATP0F3BH575FP6513N31H0",
+   "title": "sux-controls-rerun: its absolute claims depend on the grader; a second blind grade of K1 gives 6 FALSE and 0 REAL",
+   "body": "The four K1 reports of this result were graded again, blind, inside sashiko-noise-floor (grade 01M5FFQB3CR4GP2EX2Z9ZDTFXN) by a different fresh grader under the same rules. It classed K1's eleven findings 0 REAL / 5 PLAUSIBLE / 6 FALSE, against this result's 4 / 3 / 4; the graders agree on 6 of 11, every difference stricter. Two consequences, stated by the author of this result. First, 'K1 makes 4 FALSE, clearing the bar of at most 4 at the limit' does not survive a second grader: under that grader K1 makes 6. Second, 'K1 makes 4 REAL to K0's 7, a cost' rests on REAL counts the second grader puts at 0 for K1. The direction of this result (K1 fewer FALSE than K0, the coverage category gone) was a comparison under one grader and stands only as that. A bar set at the limit of one grader's absolute count could not carry a verdict when graders differ by two; that was a design error in the pre-registration, mine.",
+   "evidence": [
+    {
+     "label": "noise-floor RESULT.md, section 'R1, graded twice'",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/RESULT.md",
+     "sha256": "78d793dc7c44045a7bfcfbf2bf58ccffd702f48a416b494b83253f878c0a4f5c"
+    },
+    {
+     "label": "verdicts.json of the second grade",
+     "url": "https://raw.githubusercontent.com/flaukowski/flaukowski-brain/ec1ae9922bb3014ca2fe5cf129a9e9e1f90d235e/studies/sashiko-upstream/noise-floor/results/verdicts.json",
+     "sha256": "97dc0eaecdca8759e793b65a7fa2ba69ce3a8a1bc11f752b5e691769e4a03367"
+    }
+   ]
+  }
+ ]
+}
