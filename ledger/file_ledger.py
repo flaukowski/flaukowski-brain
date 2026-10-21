@@ -83,10 +83,14 @@ def main():
         ref = rec["clientRef"]
         if a.only and ref not in a.only:
             continue
-        body = {k: v for k, v in rec.items() if not k.startswith("_")}
+        # "after" orders the drafts here; the server rejects it as an unknown key
+        body = {k: v for k, v in rec.items() if not k.startswith("_") and k != "after"}
         for f in ("correctsId", "amendsId", "aboutId", "reviewsId"):
             if isinstance(body.get(f), str) and body[f].startswith("@"):
-                body[f] = ids[body[f][1:]]
+                if body[f][1:] in ids:
+                    body[f] = ids[body[f][1:]]
+                elif not a.dry_run:
+                    sys.exit(f"file_ledger: {ref} refers to {body[f]}, which is not filed yet")
         if a.dry_run:
             print("DRY", ref, body["kind"], len(body.get("body", "")), "chars,", len(body.get("evidence", [])), "evidence")
             continue
