@@ -35,10 +35,10 @@ report, shape = ns["report"], ns["shape"]
 def path_for(commit, run):
     if run == "R1":
         return os.path.join(r1dir, f"{commit}-K.json")
-    fs = [f for f in glob.glob(os.path.join(r23dir, "**", f"*{commit}*.json"), recursive=True)
-          if run in os.path.basename(f) and "attempt" not in os.path.basename(f) and "manifest" not in f.lower()]
-    assert len(fs) == 1, (commit, run, fs)
-    return fs[0]
+    # the tarball keeps each run in its own directory (r2/, r3/) under the R1 file name
+    p = os.path.join(r23dir, run.lower(), f"{commit}-K.json")
+    assert os.path.isfile(p), (commit, run, p)
+    return p
 
 
 # 1. format-tell check over the kept fields of all twelve reports

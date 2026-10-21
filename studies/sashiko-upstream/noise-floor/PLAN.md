@@ -40,3 +40,15 @@ how much of the run-to-run range a grade can resolve).
 What this cannot show: three runs per control give a range, not a distribution; a range of 0 on
 three draws does not mean the reviewer is deterministic. No verdict on PR #4 or on either prompt set
 comes from this grade.
+
+## Deviations, recorded as they happened
+
+1. 2026-10-21, after the tarball arrived (sha256 and size matched): the tarball keeps R2 and R3 in
+   directories `r2/` and `r3/` under the R1 file name (`<commit>-K.json`); the builder looked for the
+   run name in the file name. Fixed the lookup only; extraction, scrub and tell checks unchanged.
+2. Kannaka's letter of 10-20 19:43Z gave per-run finding counts, so the grader's operator (me) could
+   partly infer the slot mapping from the pack counts. The grader never saw that letter. The key file
+   itself stays unopened until the verdicts are hashed.
+
+Grader inputs hashed before grading: `grader-inputs.sha256` (RULES.md + four packs). Grader: fresh
+agent, Fable 5.1, same as the 10-19 grade.
