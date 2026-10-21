@@ -1,0 +1,528 @@
+{
+ "commit": "248f7cb",
+ "label": "X4",
+ "A": {
+  "summary": "Posting a Patchwork check used to treat an empty patch lookup as\nsuccess, so no check was posted when Patchwork had not yet indexed the\npatch. This change makes that case a distinct, retryable error, so the\nworker retries until Patchwork catches up (fixes issue 461).\n\nBefore:\n  When Patchwork returned an empty list for the Message-ID,\n  post_patchwork_check returned Ok(()). The worker marked the outbox\n  entry Sent although nothing was posted, while the review email\n  still went out. Other failures were plain String errors, logged at\n  error level.\n\nAfter:\n  An empty list returns Err(PatchworkCheckError::NotIndexedYet). The\n  worker logs it at info level as \"not ready yet\" and retries it with\n  the same three-attempt backoff used for other failures. If retries\n  run out, the entry is marked failed with the error text. Real API\n  or network failures become PatchworkCheckError::Api(String), still\n  logged at error level and retried the same way.\n\nThe change adds the PatchworkCheckError enum, with Display and Error\nimplementations, in src/patchwork.rs. It changes the return type of\npost_patchwork_check and updates the worker in\nsrc/worker/patchwork.rs to match on the variant. Three tests are\nadded: one for the Display text, and two using a small raw-socket\nHTTP server, checking that an empty 200 gives NotIndexedYet and that\na 500 gives Api.",
+  "inline_review": "- [MEDIUM] In src/worker/patchwork.rs (PatchworkWorker::run), the log level is\n  chosen from the error variant alone, before the max_retries check. When the\n  final attempt returns NotIndexedYet, the row is marked Failed through\n  mark_patchwork_failed, but the only log line is info 'not ready yet'. The\n  terminal loss of the Patchwork check never appears at error level, so\n  operators watching error logs see nothing while the review email has\n  already gone out (the issue 461 symptom). Log at error or warn whenever\n  the row is marked Failed, whatever the variant.\n\n- [MEDIUM] In src/worker/patchwork.rs (PatchworkWorker::run and\n  backoff_seconds), NotIndexedYet shares the default 3-attempt budget\n  (default_max_retries in src/settings.rs, passed from\n  settings.review.max_retries in src/main.rs). Only the 5s and 30s delays\n  are reachable, so the retry window is about 35s before the row becomes\n  terminal Failed and is never selected again. If Patchwork's mirror lags\n  longer, issue 461 (review email sent, no Patchwork status) still occurs,\n  now recorded as Failed instead of a false Sent. The Fixes #461 claim is\n  not backed by the diff, and the new tests never exercise the worker retry\n  path. Use a separate, longer budget for NotIndexedYet (for example the\n  180s tier) without changing the shared review and forge retry counts.\n\n- [MEDIUM] In src/patchwork.rs (post_patchwork_check), every empty 200 list\n  is returned as NotIndexedYet, and PatchworkWorker::run in\n  src/worker/patchwork.rs gives it the same short budget as API errors. A\n  patch not indexed within about 35s is dropped as Failed, and a permanently\n  empty list cannot be told apart from mirror lag. The new tests only check\n  single-request return values. Measure the real delay between review\n  completion and the patch appearing in the msgid lookup, give NotIndexedYet\n  its own longer backoff, and log at error level on the final failure.",
+  "findings": [
+   {
+    "problem": "final NotIndexedYet attempt marked Failed but logged at info",
+    "severity": "Medium",
+    "type": "Observability / Silent Failure",
+    "preexisting": false,
+    "explanation": "Consequence: when the last allowed attempt returns NotIndexedYet, the outbox row goes to terminal Failed and the Patchwork check is never posted, while the review email has already gone out. That is the issue 461 symptom. The only log line for that attempt is info!(\"... not ready yet\"). Reachability: any patch that Patchwork has not indexed by the third attempt, with the default max_retries of 3. Blast radius: one missing status per patch. It is recoverable because the reason is stored in the error_log column, but an operator watching error logs sees nothing. Mechanism: the match on &e chooses info! or error! from the variant alone, before the `entry.retry_count + 1 >= self.max_retries` check. mark_patchwork_failed then runs with no further log, and error! fires only if the DB write itself fails. The 'not ready yet' wording is also misleading on a terminal attempt. C18 says the old code logged this case at error!, but the old code returned Ok(()) and marked the row Sent, so that part is inaccurate. The visibility gap is still real. Fix: log at error or warn whenever the row is marked Failed, whatever the variant.",
+    "locations": [
+     {
+      "code_snippet": "crate::patchwork::PatchworkCheckError::NotIndexedYet => {\n    info!(\"Patchwork check ID {} not ready yet: {}\", entry.id, e);\n}",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "110",
+      "why_this_location_matters": "The log level depends only on the error variant, not on whether this attempt is the last one."
+     },
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "This is the terminal Failed transition, and it emits no error-level log for NotIndexedYet."
+     }
+    ]
+   },
+   {
+    "problem": "NotIndexedYet retry window is only about 35s before row is Failed",
+    "severity": "Medium",
+    "type": "Insufficient Fix / Retry Window",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: when Sashiko finishes a review and Patchwork's mailing list mirror has not indexed the message within roughly 35 seconds, the Patchwork check is never posted. The row is marked Failed and never retried, so issue 461 (review email sent, no Patchwork status) still occurs for slow-mirror cases. The only change is that the loss is now recorded in error_log instead of a false Sent. This is reachable on every patchwork_outbox row handled by PatchworkWorker::run. Impact is one missing CI-style status per patch, which can be re-queued by hand, so it is not High. It is capped at Medium because the real mirror lag is unknown: neither the repo, docs/ nor the diff states it. If the lag is under about 35s the fix works; if it is minutes, it does not.\n\nVerified chain. default_max_retries() returns 3 (src/settings.rs:810) and main.rs:920 passes settings.review.max_retries to PatchworkWorker::new, so the Patchwork worker shares the review retry budget. In PatchworkWorker::run, attempt 1 (retry_count 0): 0+1>=3 is false, so it schedules +5s (backoff_seconds(0)) and set_patchwork_retry_at increments retry_count to 1. Attempt 2 (retry_count 1): 2>=3 is false, so it schedules +30s and retry_count becomes 2. Attempt 3 (retry_count 2): 3>=3 is true, so mark_patchwork_failed runs and the status is terminal. The 180s tier (the _ arm of backoff_seconds) is unreachable at the default of 3. lock_pending_patchwork does honour next_retry_at (WHERE status = 'Pending' AND (next_retry_at IS NULL OR next_retry_at <= ?)), so the delays are real; total elapsed is about 35s plus worker polling granularity (5s idle sleep). A Failed row is never selected again.\n\nThe commit message claims Fixes #461, but the diff contains no evidence that the mirror catches up within this window. The new tests only use a one-shot server returning [] and check the enum variant; nothing exercises the worker's retry budget against NotIndexedYet. Confirming evidence would be measured Patchwork indexing lag from the issue or logs. The remedy is a separate, longer budget for NotIndexedYet (for example a dedicated limit or the 180s tier), without changing the shared review and forge retry counts.",
+    "locations": [
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "Treats NotIndexedYet like any Api error and marks the row terminally Failed after 3 attempts."
+     },
+     {
+      "code_snippet": "0 => 5,\n            1 => 30,\n            _ => 180,",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::backoff_seconds",
+      "line": "64",
+      "why_this_location_matters": "Only the 5s and 30s delays are reachable with max_retries=3, giving about a 35s window."
+     },
+     {
+      "code_snippet": "fn default_max_retries() -> u32 {\n    3\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "default_max_retries",
+      "line": "810",
+      "why_this_location_matters": "Sets the default shared attempt budget."
+     },
+     {
+      "code_snippet": "let pw_max_retries = settings.review.max_retries;",
+      "file": "src/main.rs",
+      "function_or_symbol": "PatchworkWorker::new call site",
+      "line": "920",
+      "why_this_location_matters": "Wires the generic review retry count into the Patchwork worker, so raising it would also affect review retries."
+     },
+     {
+      "code_snippet": "AND (next_retry_at IS NULL OR next_retry_at <= ?)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::lock_pending_patchwork",
+      "line": "7917",
+      "why_this_location_matters": "Confirms the backoff delays are honoured, so the window is genuinely about 35s and not shorter or longer."
+     }
+    ]
+   },
+   {
+    "problem": "NotIndexedYet retry window is about 35s, then check is dropped",
+    "severity": "Medium",
+    "type": "Design",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: after this change a Patchwork check for a patch that Patchwork's mirror has not indexed within about 35 seconds still never reaches Patchwork. The row ends as Failed, so issue 461 (review email sent, no Patchwork status) can persist. The failed check cannot be undone without manual re-queueing. It is reachable on every review completion: Reviewer::queue_notifications inserts a patchwork_outbox row, and PatchworkWorker::run polls it every 5s. Reasoning: the candidate's premise is only partly right. The empty-list case is bounded, and the final row is recorded as Failed with error_log, so it is not a silent success (that was the old Ok(()) bug). The api_url check does not catch the permanent cases. PatchworkPolicy::normalize only validates the scheme, and a 200 with [] for a valid host is not filtered earlier. But a permanent empty list costs only two extra requests and then a recorded failure, which is Low on its own. The real defect is in the retry budget. settings.review.max_retries defaults to 3 (default_max_retries). In PatchworkWorker::run the terminal condition is retry_count + 1 >= max_retries. backoff_seconds returns 5s for retry_count 0, 30s for retry_count 1, and the third attempt (retry_count 2) is terminal. The total wait is therefore about 35s plus request time. The doc comment and commit message treat NotIndexedYet as self-resolving through the three-attempt backoff, but a mailing-list mirror lag can plausibly exceed 35s. The 180s tier in backoff_seconds is never reached with the default max_retries. Nothing in the diff shows the window outlasts real indexing delay. The new tests only exercise the single-request return values, not the worker retry path. Second defect: on the final attempt, a NotIndexedYet error is logged only at info (\"not ready yet\") and then mark_patchwork_failed is called. The terminal failure is therefore never logged at error level, so log-based monitoring sees nothing when a check is permanently dropped. Cap at Medium: the 35s window versus real Patchwork indexing latency is an assumption about the external service. Confirm by measuring the delay between Sashiko completion and the patch appearing in Patchwork's /patches/?msgid= lookup. Fix direction: use a longer or separate backoff budget for NotIndexedYet, and log at error when the final attempt fails.",
+    "locations": [
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {\n    if let Err(db_err) = self\n        .db\n        .mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "NotIndexedYet shares the 3-attempt budget with API errors, so the terminal attempt marks the check Failed. The log for that attempt is only at info."
+     },
+     {
+      "code_snippet": "0 => 5,\n1 => 30,\n_ => 180,",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::backoff_seconds",
+      "line": "53",
+      "why_this_location_matters": "With max_retries=3 only the 5s and 30s delays are used, giving about 35s for Patchwork to index the patch."
+     },
+     {
+      "code_snippet": "return Err(PatchworkCheckError::NotIndexedYet);",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "236",
+      "why_this_location_matters": "Every empty 200 list is treated as transient, but the retry budget is far shorter than plausible mirror lag, and a permanent empty list is indistinguishable here."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "NotIndexedYet could be retried forever and spam Patchwork.",
+    "reasoning": "Every Err, including NotIndexedYet, goes through the same bounded check. set_patchwork_retry_at increments retry_count on each reschedule, and once retry_count+1 >= max_retries the row is marked Failed. Retries are therefore bounded at max_retries attempts per row. The separate concern that the bound is too short is covered in the hard cases.",
+    "locations": [
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "This is the terminal bound on retries for all error variants."
+     },
+     {
+      "code_snippet": "UPDATE patchwork_outbox SET status = 'Pending', retry_count = retry_count + 1, next_retry_at = ?, locked_at = NULL WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::set_patchwork_retry_at",
+      "line": "7986",
+      "why_this_location_matters": "retry_count increments on each reschedule, so the bound is reached."
+     }
+    ]
+   },
+   {
+    "description": "Changing the error type from String to PatchworkCheckError could break another caller or change the value stored in the error_log column.",
+    "reasoning": "git_grep found exactly one non-test caller, in src/worker/patchwork.rs. It converts the error with e.to_string() before calling mark_patchwork_failed(id, &str), whose signature is unchanged. Api(msg) displays as the bare message, so the stored text is identical to before. No other caller exists.",
+    "locations": [
+     {
+      "code_snippet": ".mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "120",
+      "why_this_location_matters": "The only consumer converts the typed error back to the same string shape."
+     },
+     {
+      "code_snippet": "pub async fn mark_patchwork_failed(&self, id: i64, error_log: &str) -> Result<()> {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_patchwork_failed",
+      "line": "7970",
+      "why_this_location_matters": "The persistence signature is unchanged."
+     }
+    ]
+   },
+   {
+    "description": "test_empty_patch_list_is_retryable_not_success might pass even if the original Ok(()) bug were reintroduced.",
+    "reasoning": "The test serves a real HTTP 200 with body [] from a local socket and calls the real function, so the empty-list branch runs and the set is not vacuous. If that branch returned Ok(()) again, matches!(result, Err(NotIndexedYet)) would be false and the assertion would fail. The companion 500 test asserts Err(Api(_)), so the two tests distinguish the variants.",
+    "locations": [
+     {
+      "code_snippet": "return Err(PatchworkCheckError::NotIndexedYet);",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "236",
+      "why_this_location_matters": "This is the exact line the fix changed from Ok(()), and the test fails if it is reverted."
+     }
+    ]
+   },
+   {
+    "description": "No test exercises PatchworkWorker::run (retry scheduling, the Failed transition after max_retries, the variant-based log levels), so a regression that treated NotIndexedYet as success in the worker would fail no test.",
+    "reasoning": "1) The behaviour that was wrong, returning Ok(()) on an empty patch list, now sits in post_patchwork_check and is covered by test_empty_patch_list_is_retryable_not_success, which asserts Err(NotIndexedYet). Reverting the change turns that result back into Ok(()) and fails the test. The 500 case is covered by test_api_error_status_is_not_mistaken_for_not_indexed. 2) The worker has exactly one call site (git_grep post_patchwork_check: src/worker/patchwork.rs:91). Its Ok(()) arm calls mark_patchwork_sent. Because the function now returns Err for the empty list, NotIndexedYet can only reach the Err arm. 3) The Err arm decides between retry and failure only on entry.retry_count + 1 >= self.max_retries. It never inspects the variant. The match on the variant only chooses info! or error! for the log line. NotIndexedYet therefore flows through the retry code that already existed (set_patchwork_retry_at: status back to Pending, retry_count + 1, next_retry_at set; lock_pending_patchwork re-selects it once next_retry_at has passed). That path is unchanged by this commit. 4) At the retry limit the entry becomes Failed with error_log set to the error text via mark_patchwork_failed(entry.id, &e.to_string()), so exhausted retries are recorded and not silent. This is pre-existing bounded behaviour that ends in a recorded failure. 5) The commit message claims no worker-level test. Its 'three-attempt backoff' claim describes the existing backoff_seconds and max_retries logic, which the diff reuses unchanged. The new worker code is only a log-level match, with no new scheduling logic, so the 'new logic has no test at all' criterion in tests-that-can-fail.md is not met. Unverified side note, not a finding: backoff_seconds gives 5s and then 30s, so if max_retries is 3 the retry window is about 35s before the entry is marked Failed. The remaining concern is that a mirror lag longer than that is recorded as Failed, not silently lost. The max_retries default was not read here (settings.review.max_retries).",
+    "locations": [
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "116",
+      "why_this_location_matters": "The retry-or-fail decision ignores the error variant, so NotIndexedYet reuses the existing retry and failure path."
+     },
+     {
+      "code_snippet": ".mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "120",
+      "why_this_location_matters": "Exhausted retries end in a recorded Failed status with the error text, not a silent success."
+     },
+     {
+      "code_snippet": "matches!(result, Err(PatchworkCheckError::NotIndexedYet)),",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "test_empty_patch_list_is_retryable_not_success",
+      "line": "598",
+      "why_this_location_matters": "This test fails if the empty-list case goes back to Ok(()), which is the actual defect the commit fixes."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "When Patchwork has not yet indexed a patch, looking it up by Message-ID\nreturns an empty list. Before this change, post_patchwork_check treated\nthat as success, so the worker marked the outbox entry Sent although no\ncheck was ever posted. This change makes that case a distinct, retryable\nerror, so the existing three-attempt backoff retries it until Patchwork's\nmailing list mirror catches up (fixes issue 461).\n\nThe function now returns a PatchworkCheckError enum with two variants:\nNotIndexedYet for the empty-list case, and Api(String) for URL-building,\nnetwork, HTTP status and parse failures. The worker logs NotIndexedYet at\ninfo level and Api errors at error level, and converts the error to a\nstring when recording a permanent failure in the database. The diff also\nadds three tests: one for the error's Display text, and two that use a\none-shot raw-socket HTTP server to check that an empty 200 response\nyields NotIndexedYet and that a 500 response yields Api.\n\nBefore:\n  Patchwork returns 200 with [] for a patch it has not indexed yet.\n  post_patchwork_check returns Ok(()), the outbox entry is marked Sent,\n  and no check is ever posted. The review email goes out but Patchwork\n  shows no status for the patch.\n\nAfter:\n  The same response returns Err(NotIndexedYet). The worker logs\n  \"Patchwork check ID <id> not ready yet\" at info level and retries\n  with the shared backoff. If the patch is still not indexed after the\n  maximum retries, the entry is marked failed with the message\n  \"Patchwork has not indexed this message yet\" instead of being\n  silently marked Sent.",
+  "inline_review": "- [MEDIUM] In src/worker/patchwork.rs (PatchworkWorker::run), the log level\n  is chosen from the error variant before the retry budget is checked. When\n  the final attempt returns NotIndexedYet, the row is marked Failed through\n  mark_patchwork_failed and the check is never posted, but the only log line\n  is info saying the check is not ready yet, which implies a later retry.\n  Operators filtering at warn or error see nothing; the loss is visible only\n  in the outbox error_log. Choose the level after the retry decision and log\n  at warn or error when the budget is exhausted.\n\n- [MEDIUM] In src/worker/patchwork.rs (PatchworkWorker::run and\n  backoff_seconds) and src/main.rs (patchwork worker setup), NotIndexedYet\n  shares review.max_retries, which defaults to 3. Only the 5s and 30s\n  backoff tiers are reachable, so the worker gives up after roughly 35 to\n  45 seconds and marks the row Failed. If Patchwork's mirror lags longer\n  than that, the check is still never posted and issue 461 recurs as a\n  Failed row instead of a false Sent. The new tests only cover\n  post_patchwork_check in src/patchwork.rs, not the worker retry or\n  terminal path. Give NotIndexedYet its own attempt budget and a longer\n  backoff (for example the 180s tier), independent of review.max_retries.",
+  "findings": [
+   {
+    "problem": "lost NotIndexedYet check on final attempt logged at info",
+    "severity": "Medium",
+    "type": "Silent Failure / Misleading Log",
+    "preexisting": false,
+    "explanation": "Consequence: when the last attempt returns NotIndexedYet, the row goes terminal Failed and the check is never posted, but the only log line is info! 'not ready yet', which implies a later retry. Reachable on every patch whose Patchwork mirror lags past the retry budget or which is never indexed (wrong msgid, list not tracked). Operators filtering at warn/error see nothing; the loss is visible only in patchwork_outbox.error_log. This is a missing log line on a terminal refusal (Medium). The state itself is now honest (Failed, not Sent), so it is not High. The log level is chosen from the error variant before the retry_count + 1 >= max_retries branch, and the commit's 'expected, self-resolving' rationale does not hold on the terminal attempt. Fix: choose the level after the budget decision and log warn/error on exhaustion.",
+    "locations": [
+     {
+      "code_snippet": "crate::patchwork::PatchworkCheckError::NotIndexedYet => {\n    info!(\"Patchwork check ID {} not ready yet: {}\", entry.id, e);\n}",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "110",
+      "why_this_location_matters": "Log level is selected from the variant alone, ignoring whether this attempt exhausts retries."
+     },
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {\n    if let Err(db_err) = self\n        .db\n        .mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "Terminal Failed transition for NotIndexedYet with no escalated log."
+     }
+    ]
+   },
+   {
+    "problem": "NotIndexedYet gives up after ~35s, so #461 recurs as a Failed row",
+    "severity": "Medium",
+    "type": "Incomplete Fix / Retry Budget",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: a review that finishes before Patchwork's mirror indexes the patch by more than about 35-45 seconds never gets a check posted. The outbox row ends Failed instead of the old false Sent, and nothing retries it. Every Patchwork-enabled review reaches this path via reviewer.rs insert_patchwork_outbox, then PatchworkWorker::run. The blast radius is one missing status per patch. It is a visible Failed row with an error_log, not a silent false success, so this is an incomplete fix, not a new silent failure. Verified: main.rs sets pw_max_retries = settings.review.max_retries, which defaults to 3 (settings.rs default_max_retries, Settings.toml max_retries = 3, docs/configuration.md says 3). The same value feeds ForgeWorker and the reviewer's own retry loop, so it cannot be raised for Patchwork alone without also changing review and forge retries. PatchworkWorker::run marks the row failed when retry_count + 1 >= 3. backoff_seconds is 5 for retry_count 0 and 30 for retry_count 1. The 180s arm is unreachable at the default. Attempts happen at roughly t0, t0+5s and t0+35s (plus up to 5s of idle poll per step), then terminal failure. I searched docs/ and found no recorded Patchwork mirror lag, so I cannot show whether 35s is enough. The commit message says 'Fixes #461' but nothing in the diff sizes the window against real lag, which is why this is capped at Medium. What would confirm it: observed mirror lag above about 40s on the target Patchwork instance, or the #461 reporter's timings. I did not read insert_patchwork_outbox's body, so the candidate's claim that its (patch_msg_id, api_url, context) dedup blocks re-queueing a Failed row is unverified; only its signature was seen. The worker-level retry path (reschedule versus mark failed on NotIndexedYet) has no test. The new tests only cover post_patchwork_check returning the error variants. Suggested fix: give NotIndexedYet its own attempt budget and backoff (minutes, using the 180s tier), independent of review.max_retries.",
+    "locations": [
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "At the default of 3, the third NotIndexedYet attempt is terminal and calls mark_patchwork_failed."
+     },
+     {
+      "code_snippet": "0 => 5,\n            1 => 30,\n            _ => 180,",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::backoff_seconds",
+      "line": "64",
+      "why_this_location_matters": "Only the 5s and 30s delays are reachable at max_retries=3, so the total wait is about 35s."
+     },
+     {
+      "code_snippet": "let pw_max_retries = settings.review.max_retries;",
+      "file": "src/main.rs",
+      "function_or_symbol": "main (patchwork worker setup)",
+      "line": "920",
+      "why_this_location_matters": "Patchwork has no budget of its own; it shares review.max_retries with forge and review retries."
+     },
+     {
+      "code_snippet": "fn default_max_retries() -> u32 {\n    3\n}",
+      "file": "src/settings.rs",
+      "function_or_symbol": "default_max_retries",
+      "line": "810",
+      "why_this_location_matters": "The default budget, also set explicitly in Settings.toml (max_retries = 3)."
+     },
+     {
+      "code_snippet": "return Err(PatchworkCheckError::NotIndexedYet);",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "236",
+      "why_this_location_matters": "The new retryable outcome is the one that now hits the short shared budget."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Changing post_patchwork_check to return Result<(), PatchworkCheckError> breaks other callers or the stored error_log contract.",
+    "reasoning": "git_grep over src/ found one non-test caller, in PatchworkWorker::run, which this diff updates. mark_patchwork_failed still takes error_log: &str, and Display for Api(msg) writes msg verbatim, so stored error text for existing failures is unchanged. The column type is unchanged. Only the new NotIndexedYet text is added.",
+    "locations": [
+     {
+      "code_snippet": "match crate::patchwork::post_patchwork_check(",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "91",
+      "why_this_location_matters": "Only production caller, updated in the diff."
+     },
+     {
+      "code_snippet": "pub async fn mark_patchwork_failed(&self, id: i64, error_log: &str) -> Result<()> {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_patchwork_failed",
+      "line": "7970",
+      "why_this_location_matters": "Persisted error_log stays a string."
+     },
+     {
+      "code_snippet": "Self::Api(msg) => write!(f, \"{msg}\"),",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "impl Display for PatchworkCheckError",
+      "line": "176",
+      "why_this_location_matters": "Api message rendered verbatim."
+     }
+    ]
+   },
+   {
+    "description": "The new error path leaves an outbox row stuck in Sending.",
+    "reasoning": "Every Err branch ends in mark_patchwork_failed (Failed, locked_at NULL) or set_patchwork_retry_at (Pending, locked_at NULL); Ok calls mark_patchwork_sent. If a DB update itself fails, sweep_ghost_patchwork resets stale Sending rows to Pending. NotIndexedYet adds no unpaired lock.",
+    "locations": [
+     {
+      "code_snippet": "UPDATE patchwork_outbox SET status = 'Pending', retry_count = retry_count + 1, next_retry_at = ?, locked_at = NULL WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::set_patchwork_retry_at",
+      "line": "7986",
+      "why_this_location_matters": "Retry path releases the lock."
+     },
+     {
+      "code_snippet": "UPDATE patchwork_outbox SET status = 'Failed', error_log = ?, locked_at = NULL WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_patchwork_failed",
+      "line": "7973",
+      "why_this_location_matters": "Terminal path clears the lock."
+     },
+     {
+      "code_snippet": "UPDATE patchwork_outbox SET status = 'Pending', locked_at = NULL WHERE status = 'Sending' AND locked_at < ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::sweep_ghost_patchwork",
+      "line": "7997",
+      "why_this_location_matters": "Recovers rows stranded in Sending."
+     }
+    ]
+   },
+   {
+    "description": "An empty patch list is still reported as success and marked Sent.",
+    "reasoning": "The empty-list branch now returns Err(NotIndexedYet) instead of Ok(()). Only the Ok arm calls mark_patchwork_sent, and the new test asserts the Err variant, so it would fail on the old behaviour.",
+    "locations": [
+     {
+      "code_snippet": "if patches.is_empty() {\n        debug!(\"Patchwork has not indexed msgid {} yet\", msgid);\n        return Err(PatchworkCheckError::NotIndexedYet);",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "234",
+      "why_this_location_matters": "Empty list is no longer mapped to Ok."
+     }
+    ]
+   },
+   {
+    "description": "error_log stored by mark_patchwork_failed loses information now that the error is an enum.",
+    "reasoning": "The worker passes e.to_string(). Display writes Api(msg) unchanged and a fixed sentence for NotIndexedYet, so stored text is the same as before for API errors, and test_patchwork_check_error_display asserts both renderings.",
+    "locations": [
+     {
+      "code_snippet": ".mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "120",
+      "why_this_location_matters": "Full error text is persisted on terminal failure."
+     }
+    ]
+   },
+   {
+    "description": "No test exercises PatchworkWorker::run, so a regression in the worker wiring (NotIndexedYet treated as success again, retry scheduling, exhaustion to Failed, log-level split) would pass the suite. The commit says the worker now retries it, and no test shows that.",
+    "reasoning": "1) The searches confirm the gap. PatchworkWorker is referenced only in src/worker/patchwork.rs, src/main.rs (construction) and design docs. The #[test] count under src/worker lists bug_worker, email, prefetch, revision_tests, prompts and prefetch_tests, with no patchwork.rs entry. tests/integration has no patchwork worker or outbox test. So nothing would fail if the worker's Ok(()) arm were reached for NotIndexedYet. Since post_patchwork_check no longer returns Ok(()) for the empty list, that regression could only come from a future edit to the worker or the function. 2) The root cause of #461 is covered. The bug was that post_patchwork_check returned Ok(()) on an empty list. test_empty_patch_list_is_retryable_not_success serves a real 200 with [] from a raw TCP server and asserts matches!(result, Err(PatchworkCheckError::NotIndexedYet)). The old code returned Ok(()), so this test fails against the pre-fix code. It is not a re-derived expectation, the set is not empty, and the mock mirrors the documented Patchwork behaviour (200 with an empty list). test_api_error_status_is_not_mistaken_for_not_indexed guards the opposite direction. 3) The worker's retry bookkeeping is unchanged by this commit. The Err arm already did: if entry.retry_count + 1 >= self.max_retries { mark_patchwork_failed } else { set_patchwork_retry_at(backoff_seconds(retry_count)) }. The diff adds only a log-level match on the error variant and &e.to_string() in place of &e. Once the function returns Err, the existing generic path handles it. The backoff is 5s, 30s and 180s, bounded by max_retries from settings.review.max_retries, and exhaustion ends in a recorded Failed row with error_log. This is pre-existing, bounded behaviour that ends in a correct state, so the short retry window is a design choice, not a defect of this change. 4) Under patterns/tests-that-can-fail.md, a test gap is a finding only if the code is wrong, new logic has no test at all, or the commit claims a test it does not contain. The code is not shown to be wrong. The new worker logic is a trivial two-arm log split plus a string conversion. The commit message claims no test of the worker, and its statement that the worker retries through the shared backoff describes behaviour the existing path provides. The remaining concern is a wish for more branch coverage, which the guide says to leave as a summary suggestion with no severity. Suggestion only: a worker-level test over an in-memory database with a stubbed Patchwork endpoint would lock in the Pending-to-Sent transition.",
+    "locations": [
+     {
+      "code_snippet": "matches!(result, Err(PatchworkCheckError::NotIndexedYet)),",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "test_empty_patch_list_is_retryable_not_success",
+      "line": "623",
+      "why_this_location_matters": "A real HTTP 200 with an empty list reaches the code under test, and the assertion fails against the old Ok(()) behaviour, so the root cause of #461 is covered by a test that can fail."
+     },
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {\n    if let Err(db_err) = self.db.mark_patchwork_failed(entry.id, &e.to_string()).await {\n...\n} else {\n    let delay = Self::backoff_seconds(entry.retry_count);\n    let retry_at = chrono::Utc::now().timestamp() + delay;\n    if let Err(db_err) = self.db.set_patchwork_retry_at(entry.id, retry_at).await",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "This retry and failure bookkeeping is generic and pre-existing. The commit only adds the log-level split and e.to_string(), so it introduces little new worker logic, and exhaustion ends in a recorded Failed row."
+     }
+    ]
+   }
+  ]
+ },
+ "C": {
+  "summary": "This change stops the Patchwork check poster from reporting success\nwhen Patchwork has not yet indexed the patch. It adds a\nPatchworkCheckError type with a NotIndexedYet variant, so the worker\nretries that case through its existing three-attempt backoff instead\nof marking the outbox entry Sent. This fixes issue 461, where a review\nemail went out but Patchwork never got a status for the patch.\n\nBefore:\n  When the msgid lookup on Patchwork returned an empty list because\n  its mailing list mirror had not caught up, post_patchwork_check\n  returned Ok. The worker marked the outbox entry Sent although no\n  check was posted, and it was never retried. Patchwork showed no\n  status for a patch whose review email had already been delivered.\n\nAfter:\n  An empty lookup result returns Err(NotIndexedYet). The worker logs\n  it at info level (\"Patchwork check ID N not ready yet\") and retries\n  with the shared backoff. Once the patch is indexed, the check is\n  posted and the entry is marked Sent. If the retries run out, the\n  entry is marked failed with the error text instead of being\n  reported as sent. Real API and network errors use a separate\n  Api(String) variant, are still logged at error level, and behave as\n  before.\n\nInternally, post_patchwork_check now returns\nResult<(), PatchworkCheckError> instead of Result<(), String>. The\nerror type implements Display and Error, and the worker calls\nto_string() on it when recording a failure. New tests cover the error\ndisplay text. They also use a small one-shot raw-socket HTTP server to\ncheck that a 200 response with an empty list gives NotIndexedYet and\nthat a 500 response gives an Api error.",
+  "inline_review": "- [MEDIUM] In src/worker/patchwork.rs (PatchworkWorker::run), the log level\n  is chosen from the error variant alone, before the retry-exhaustion check.\n  When NotIndexedYet exhausts the retry budget, the row is marked Failed via\n  mark_patchwork_failed, but the only log line is the info-level not ready\n  yet message, and nothing is logged when the mark succeeds. A permanently\n  dropped check is invisible to error-level alerting; the only trace is the\n  error_log column of the Failed row. Before this change every final failure\n  was logged at error. Log at warn or error when the attempt is terminal.\n\n- [MEDIUM] In src/worker/patchwork.rs (PatchworkWorker::run and\n  backoff_seconds), NotIndexedYet shares the generic review max_retries\n  budget (default 3, taken in src/main.rs from settings.review.max_retries).\n  Backoffs are 5s then 30s, so the whole retry window is about 35s and the\n  180s tier is unreachable. If the Patchwork mirror lags longer than that,\n  the row ends Failed and the review email goes out with no check, which is\n  the issue 461 symptom. The diff gives no measured mirror lag and no\n  worker-level test covers exhaustion; the new tests only cover the\n  empty-list classification. Give NotIndexedYet its own larger budget or\n  longer backoff, or confirm the real lag.\n\n- [MEDIUM] In src/patchwork.rs (post_patchwork_check), an empty patch list\n  maps to NotIndexedYet, which cannot distinguish mirror lag from a patch\n  this instance will never track (wrong api_url, project or list). In\n  src/worker/patchwork.rs (PatchworkWorker::run), the exhausting attempt is\n  logged at info, and the stored error_log says only that Patchwork has not\n  indexed the message yet, which suggests lag rather than misconfiguration.\n  Marking Failed is more honest than the earlier silent Sent, but the\n  terminal failure should log at error and state that retries were\n  exhausted and the patch may not be tracked by this instance. Whether any\n  deployment is actually misconfigured was not confirmed.",
+  "findings": [
+   {
+    "problem": "final NotIndexedYet attempt marks row Failed, logs info",
+    "severity": "Medium",
+    "type": "Retry Behaviour for Permanent Absence",
+    "preexisting": false,
+    "explanation": "Consequence: when the retry budget is exhausted on NotIndexedYet, the Patchwork check is permanently dropped and the only log line is info-level 'not ready yet', which reads as transient. Anyone alerting on error-level logs misses the lost check; the only trace is the error_log column of the Failed row. Reachability: every NotIndexedYet result passes through this arm, and the final attempt (retry_count + 1 >= max_retries) goes straight to mark_patchwork_failed. The log level is chosen from the error variant alone, before the exhaustion check, and nothing is logged on a successful mark-failed. Before the change the final failure of any error was logged at error level, and the commit's stated purpose was to stop a Patchwork check from vanishing quietly, so this reintroduces a quieter form of it. Contained: the DB row does record Failed with the message, and it is a log-level defect, not a wrong result, so Medium. The fix is to log at warn/error when the attempt is terminal.",
+    "locations": [
+     {
+      "code_snippet": "crate::patchwork::PatchworkCheckError::NotIndexedYet => {\n    info!(\"Patchwork check ID {} not ready yet: {}\", entry.id, e);\n}",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "110",
+      "why_this_location_matters": "Level is chosen from the variant alone, so the terminal give-up is logged as info."
+     },
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {\n    if let Err(db_err) = self\n        .db\n        .mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "Terminal transition logs nothing on success, so a dropped check is silent at error level."
+     }
+    ]
+   },
+   {
+    "problem": "NotIndexedYet retry window is only about 35s",
+    "severity": "Medium",
+    "type": "Incomplete Fix / Retry Window",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: when Patchwork's mailing-list mirror lags more than about 35 seconds behind Sashiko's review, the new NotIndexedYet path ends the outbox row as Failed. The patch then gets no check while the review email has already gone out, which is the issue 461 symptom. Every API-mode check enqueued by src/reviewer.rs (insert_patchwork_outbox) and processed by PatchworkWorker::run reaches this path. Verified in code: (1) src/main.rs:920 builds the worker with pw_max_retries = settings.review.max_retries, the same budget used by reviewer.rs and the forge worker. (2) src/settings.rs default_max_retries() is 3, and Settings.toml:217 also sets max_retries = 3, so the shipped config does not raise it. (3) In PatchworkWorker::run the error arm checks entry.retry_count + 1 >= self.max_retries. mark_patchwork_failed and set_patchwork_retry_at (src/db.rs, set_patchwork_retry_at increments retry_count) give this sequence: attempt 1 at retry_count 0 retries after backoff_seconds(0) = 5s; attempt 2 at retry_count 1 retries after 30s; attempt 3 at retry_count 2 gives 3 >= 3 and marks Failed. The total window is about 35s plus poll time, and the 180s tier in backoff_seconds is unreachable with the default cap. (4) NotIndexedYet is handled exactly like Api errors in that budget logic; only the log level differs. The commit message says Fixes #461 and calls the condition self-resolving, but nothing in the diff or in docs/ gives a measured mirror lag, and no worker-level test covers exhaustion; the new tests only cover the empty-list classification in post_patchwork_check. I could not determine the real kernel.org lag, since it depends on the external Patchwork deployment. That is why this is capped at Medium. It stays reported because the change makes a transient case retryable but does not give it a window sized to the lag. The failure is now visible in error_log instead of silent, which is an improvement, but the review-sent-without-status outcome still occurs whenever the lag exceeds the window. Confirming the actual lag, or giving NotIndexedYet its own larger retry budget, would resolve it.",
+    "locations": [
+     {
+      "code_snippet": "if entry.retry_count + 1 >= self.max_retries as i64 {",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "117",
+      "why_this_location_matters": "The shared cap makes NotIndexedYet terminal after two backoffs."
+     },
+     {
+      "code_snippet": "0 => 5, 1 => 30, _ => 180,",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::backoff_seconds",
+      "line": "64",
+      "why_this_location_matters": "Only the 5s and 30s tiers are used with a cap of 3."
+     },
+     {
+      "code_snippet": "fn default_max_retries() -> u32 { 3 }",
+      "file": "src/settings.rs",
+      "function_or_symbol": "default_max_retries",
+      "line": "810",
+      "why_this_location_matters": "The default budget is shared with review and forge retries and is not tuned for index lag."
+     },
+     {
+      "code_snippet": "let pw_max_retries = settings.review.max_retries;",
+      "file": "src/main.rs",
+      "function_or_symbol": "main (PatchworkWorker construction)",
+      "line": "920",
+      "why_this_location_matters": "Shows the Patchwork worker takes the generic review budget, with no separate setting."
+     },
+     {
+      "code_snippet": "return Err(PatchworkCheckError::NotIndexedYet);",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "236",
+      "why_this_location_matters": "The new transient signal is consumed by a worker that treats it like any other error for budgeting."
+     }
+    ]
+   },
+   {
+    "problem": "exhausted not-indexed check is logged at info and mislabelled as lag",
+    "severity": "Medium",
+    "type": "Behavior Change / Permanent Not-Found Treated as Retryable",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: the empty-list branch cannot tell 'mirror has not caught up yet' from 'this patch will never exist on this instance'. It returns HTTP 200 with [] for both, and post_patchwork_check maps both to NotIndexedYet. In PatchworkWorker::run, every NotIndexedYet is logged at info, including the attempt that exhausts the budget (retry_count + 1 >= max_retries, default 3 from Settings.toml and settings.rs default_max_retries). That attempt calls mark_patchwork_failed and the row becomes Failed, but the only log line is 'not ready yet' at info. Only the Api variant logs at error. Reachability: api_url comes from per-subsystem or default patchwork settings in the email policy (insert_patchwork_outbox in reviewer.rs queue_notifications). Nothing in the code checked here validates that the configured instance tracks the patch's list or project. A wrong api_url, wrong project, or untracked list therefore returns 200 with []. Nothing in the code prevents it, and I could not confirm from the visible config whether any deployment is currently misconfigured. Before the commit these rows were silently marked Sent, which was a false success. Failed with an error_log is the more honest outcome, so the state change is acceptable. The problem is that the terminal failure is invisible at error level and the stored error_log says 'has not indexed this message yet', which suggests lag rather than misconfiguration. Anyone filtering logs on error will not see that a check was permanently dropped. Related effect on the same path: the backoff is 5s then 30s (backoff_seconds), so the whole retry window is about 35s. Any mirror lag longer than that also ends Failed with the same info-level log. The commit message does not mention either the permanent case or this window. The finding rests on the unverified assumption that a deployment can have an api_url that never indexes a given msgid; this is capped at Medium. Confirm by checking the deployed email_policy.toml patchwork api_url and project against the lists being reviewed. Fix: log at error (or warn) when NotIndexedYet exhausts retries, and make the stored error_log say that retries were exhausted and the patch may not be tracked by this instance.",
+    "locations": [
+     {
+      "code_snippet": "crate::patchwork::PatchworkCheckError::NotIndexedYet => {\n    info!(\"Patchwork check ID {} not ready yet: {}\", entry.id, e);\n}\n...\nif entry.retry_count + 1 >= self.max_retries as i64 {\n    if let Err(db_err) = self.db.mark_patchwork_failed(entry.id, &e.to_string()).await",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "109",
+      "why_this_location_matters": "The final, retry-exhausted attempt is logged at info while the row is permanently marked Failed, so a dropped check produces no error-level log."
+     },
+     {
+      "code_snippet": "if patches.is_empty() {\n    debug!(\"Patchwork has not indexed msgid {} yet\", msgid);\n    return Err(PatchworkCheckError::NotIndexedYet);\n}",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "234",
+      "why_this_location_matters": "Single point where 'not yet' and 'never' are conflated; a permanently untracked patch gets the same variant and message as transient lag."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "The return type change might leave another caller expecting a String error.",
+    "reasoning": "git_grep shows the only non-test caller is PatchworkWorker::run, which matches both variants exhaustively and passes &e.to_string() to mark_patchwork_failed(&self, id: i64, error_log: &str). The other hits are the definition, the new tests and a documentation mention.",
+    "locations": [
+     {
+      "code_snippet": ".mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "120",
+      "why_this_location_matters": "Sole caller adapted to the new error type."
+     }
+    ]
+   },
+   {
+    "description": "The error type change might alter what is stored in patchwork_outbox.error_log and break readers.",
+    "reasoning": "mark_patchwork_failed still takes error_log: &str. Display for Api(msg) writes msg unchanged, so hard API failures store identical text; the only new text is for NotIndexedYet, which was previously marked Sent with no error_log. No schema change.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn mark_patchwork_failed(&self, id: i64, error_log: &str) -> Result<()> {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::mark_patchwork_failed",
+      "line": "7970",
+      "why_this_location_matters": "Persisted contract is still a plain string."
+     }
+    ]
+   },
+   {
+    "description": "Retrying NotIndexedYet could post the Patchwork check twice.",
+    "reasoning": "NotIndexedYet is returned only from the lookup, before any POST is built or sent, so a retry after it repeats only a GET. The POST is reached only when the list is non-empty. Duplicate-post risk after ambiguous POST errors is a separate, unchanged mechanism (tracked separately).",
+    "locations": [
+     {
+      "code_snippet": "return Err(PatchworkCheckError::NotIndexedYet);",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "post_patchwork_check",
+      "line": "236",
+      "why_this_location_matters": "Early return happens before the POST."
+     }
+    ]
+   },
+   {
+    "description": "Worker NotIndexedYet handling (pending retry, retry_count increment, final Failed with error_log) is untested; the 500-status test matches any Api error; the commit says the backoff is shared with the forge worker.",
+    "reasoning": "1) The worker edit in src/worker/patchwork.rs is a log-level match on the error variant plus e.to_string() passed to mark_patchwork_failed. The retry/fail branching (retry_count + 1 >= max_retries, backoff_seconds, set_patchwork_retry_at, mark_patchwork_failed) is unchanged generic code that runs for every Err. It is not new logic, so reverting the log-level arm changes only the log level. No existing test in src/worker covers patchwork.rs (tests exist only in bug_worker, email, prefetch and prompts), so no test would fail on that revert. Under tests-that-can-fail.md this is not a finding: the behavioural change is in post_patchwork_check, and test_empty_patch_list_is_retryable_not_success fails if the empty list goes back to Ok(()), which is the actual bug. 2) The DB transitions are visible and correct for NotIndexedYet: set_patchwork_retry_at sets status Pending and retry_count = retry_count + 1 with next_retry_at; mark_patchwork_failed sets status Failed with error_log, so an entry that is never indexed ends as a recorded Failed row with 'Patchwork has not indexed this message yet', not a silent success. That outcome is bounded and visible, and the retry window is pre-existing design. 3) The 500 test asserts Err(Api(_)), which a transport error would also satisfy. This is a real weakness in the assertion, but the code under it is right: every non-2xx path returns Api, and the test's job is to show an HTTP error is not mapped to NotIndexedYet, which it does. The stub binds a real listener, so connect succeeds, and it writes a full status line with matching Content-Length. The concern points to no code defect, only a stronger assertion that could be written, which the guide says is not a finding. 4) The commit says the backoff is shared with the forge outbox worker. In fact backoff_seconds is duplicated in forge.rs and patchwork.rs with identical 5/30/180 values, and forge's is_permanent_failure is not used by the patchwork worker. The commit wording is imprecise, but the behaviour it describes (three attempts, 5s then 30s) holds and the commit makes no claim about tests, so there is no claim-versus-evidence gap that affects behaviour.",
+    "locations": [
+     {
+      "code_snippet": ".mark_patchwork_failed(entry.id, &e.to_string())",
+      "file": "src/worker/patchwork.rs",
+      "function_or_symbol": "PatchworkWorker::run",
+      "line": "120",
+      "why_this_location_matters": "The failure path only changes the argument from &e (String) to &e.to_string(); retry and fail branching is unchanged and a final Failed row records the NotIndexedYet message."
+     },
+     {
+      "code_snippet": "UPDATE patchwork_outbox SET status = 'Pending', retry_count = retry_count + 1, next_retry_at = ?, locked_at = NULL WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::set_patchwork_retry_at",
+      "line": "7986",
+      "why_this_location_matters": "Shows NotIndexedYet really does return to Pending with an incremented count, so the retry the commit describes happens."
+     },
+     {
+      "code_snippet": "matches!(result, Err(PatchworkCheckError::Api(_))),",
+      "file": "src/patchwork.rs",
+      "function_or_symbol": "test_api_error_status_is_not_mistaken_for_not_indexed",
+      "line": "633",
+      "why_this_location_matters": "Assertion is loose (also matches transport errors), but the code under test is correct, so this is a suggestion, not a defect."
+     }
+    ]
+   }
+  ]
+ }
+}

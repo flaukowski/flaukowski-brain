@@ -1,0 +1,46 @@
+{
+ "X1 5a5b667": {
+  "A": {
+   "finding label removed": 1
+  },
+  "B": {},
+  "C": {
+   "dismissed label removed": 1
+  }
+ },
+ "X2 505a024": {
+  "A": {
+   "finding label removed": 5
+  },
+  "B": {
+   "finding label removed": 6
+  },
+  "C": {
+   "finding label removed": 4
+  }
+ },
+ "X3 0035364": {
+  "A": {
+   "finding label removed": 6
+  },
+  "B": {
+   "finding label removed": 6,
+   "dismissed label removed": 1
+  },
+  "C": {
+   "finding label removed": 5,
+   "dismissed label removed": 1
+  }
+ },
+ "X4 248f7cb": {
+  "A": {
+   "finding label removed": 3
+  },
+  "B": {
+   "finding label removed": 2
+  },
+  "C": {
+   "finding label removed": 3
+  }
+ }
+}

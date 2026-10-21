@@ -1,0 +1,821 @@
+{
+ "commit": "0035364",
+ "label": "X3",
+ "A": {
+  "summary": "This change adds an --agent flag to \"sashiko review\" and \"sashiko-cli\nlocal\" so AI coding agents running local reviews get a compact,\nnon-interactive result. In agent mode the plain-text report and summary\nLLM stages are skipped, the prompts and server submission are bypassed,\nand stdout carries a concise JSON object. GEMINI.md now tells agents to\npass --agent.\n\nBefore:\n  sashiko review --project sashiko HEAD~1..HEAD prints either the\n  human-formatted report (--format text) or the full result JSON\n  (--format json). The full JSON includes the LLM history, input_context,\n  inline_review and dismissed concerns. The report and summary stages\n  always run when there are findings. With a dirty worktree on a\n  terminal, it asks \"Do you want to proceed? [y/N]\". sashiko-cli local\n  submits to a running server if one is reachable, and with\n  --interactive it pauses for a rebuttal after issues are found.\n\nAfter:\n  sashiko review --project sashiko --agent HEAD~1..HEAD skips the report\n  and summary stages, never prompts about a dirty worktree, and prints\n  one JSON object such as:\n  {\"status\": \"issues_found\", \"baseline\": \"abc1234\", \"patches\": [...],\n  \"findings\": [...], \"concerns\": [...], \"tokens_in\": 1200,\n  \"tokens_out\": 300, \"tokens_cached\": 800}\n  The status is \"error\" if the result carries an error, \"issues_found\"\n  if there are findings, and otherwise \"clean\". The keys \"partial\" and\n  \"error\" appear only when present in the result. History,\n  input_context, inline_review and dismissed concerns are omitted. The\n  --agent flag takes precedence over --format. sashiko-cli local --agent\n  always runs the review locally instead of submitting to a server,\n  forwards --agent to the worker, and does not enter the interactive\n  re-run pause.\n\nInternally, the flag is carried through ReviewOptions and WorkerOptions\ninto WorkerConfig.skip_report and the workflow state, where the Linux\nreport stage and the Sashiko report and summary stages use skip_if. The\nworker leaves review_inline empty rather than \"No issues found.\" when\nthe report is skipped, and drops \"report\" and \"summary\" from the planned\nstage progress list. New tests cover the output formatter, CLI parsing\nof the flag, and a worker run for both the Linux and Sashiko projects\nthat fails if a report or summary prompt is issued.",
+  "inline_review": "- [MEDIUM] In src/local_review.rs (format_agent_review_output), a result whose\n  review is null is reported as status clean. run_worker_in_worktree returns\n  early with review null and no error key when --no-ai is set or\n  review_patch_index matches no patch, so an agent sees clean with empty\n  findings although no patch was reviewed, and may open a PR as if\n  self-review had passed. The only hint is tokens_in of 0. Emit a\n  not_reviewed status (or an explicit reason field) when review is null or\n  absent, and add a test for it.\n\n- [MEDIUM] In src/local_review.rs (format_agent_review_output), status is\n  issues_found whenever findings is non-empty, but the exit code is 1 only\n  for new High or Critical findings (result_has_high_or_critical_findings in\n  src/main.rs, and the severity counts in handle_local in\n  src/bin/sashiko-cli.rs). A run with only pre-existing, Medium or Low\n  findings prints issues_found and exits 0, so an agent told to resolve\n  reported issues can loop on findings the CLI treats as success. Also,\n  error is copied when non-null while result_has_error requires a non-empty\n  string, and partial true does not affect status. Align status with the\n  exit-code rule or document the split, and add a test for it.\n\n- [MEDIUM] In src/main.rs (handle_review_command) and src/bin/sashiko-cli.rs\n  (handle_local), failures that occur before a result exists bypass the\n  agent JSON branch. A run_git_review error, empty worker output or\n  unparsable worker output returns Err, so sashiko review prints nothing on\n  stdout, and sashiko-cli prints a plain text Error line on stdout. Both\n  exit 1, the same code used for new High or Critical findings. An agent\n  loop cannot tell an infrastructure failure from findings and gets no JSON\n  error object, despite the commit message promising error metadata. In\n  agent mode emit a status error JSON object on stdout, keep diagnostics on\n  stderr, and exit 3 as result_has_error does.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_local), --agent silently overrides\n  other flags: --interactive is ignored (interactive && !agent), --format\n  text still prints JSON, and the running-server submit path is skipped.\n  There is no clap conflict, no stderr note, and the flag help text mentions\n  none of it. Declare conflicts_with or document the overrides in the help.\n\n- [LOW] In src/worker/prompts.rs (Worker::run, ParallelResolved handler) and\n  src/main.rs (handle_review_command), the new --agent wiring has no\n  executing test. The new tests cover only clap parsing, the pure formatter,\n  and a Worker run with no progress callback. The planned stage filter for\n  report and summary, the dirty-worktree prompt bypass, the interactive\n  guard, the server bypass and forwarding of --agent to the worker\n  subprocess can all be reverted while every test stays green.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_local), --agent skips the server\n  queue and always runs a local worker subprocess, so the review semaphore\n  and timeout_seconds kill in the server reviewer no longer apply, and the\n  wait on the child (wait_with_output) has no wall-clock timeout. Parallel\n  agent invocations multiply worktrees and model calls, and a stalled\n  provider can block the agent loop indefinitely. The missing timeout is\n  pre-existing for --force-local, but --agent makes it the default even when\n  a server is running. Wrap the wait in a timeout with an explicit kill, or\n  document the limit.",
+  "findings": [
+   {
+    "problem": "--agent silently overrides --interactive, --format and server path",
+    "severity": "Low",
+    "type": "Single Responsibility / Flag Overloading",
+    "preexisting": false,
+    "explanation": "Contained flag-hygiene defect. sashiko-cli local --interactive --agent accepts both flags but drops the rebuttal loop (interactive && !agent) with no stderr note and no clap conflicts_with. --format text --agent prints JSON. --agent also skips the running-server submit path (!force_local && !agent), so a review the daemon would have queued runs as a local subprocess. The commit message states the bypass, but the flag help text mentions none of these overrides. Impact is a surprised user or agent, with no data loss.",
+    "locations": [
+     {
+      "code_snippet": "if interactive && !agent && (has_error || has_issues) {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2167",
+      "why_this_location_matters": "--interactive is silently ignored when --agent is set."
+     },
+     {
+      "code_snippet": "if !force_local && !agent && let Ok(settings) = Settings::new()",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "1861",
+      "why_this_location_matters": "Agent mode silently switches from the server queue to local execution."
+     }
+    ]
+   },
+   {
+    "problem": "new --agent wiring in CLI entry points has no executing test",
+    "severity": "Low",
+    "type": "Test Coverage",
+    "preexisting": false,
+    "explanation": "The new tests prove only that clap parses --agent, plus the pure formatter and a Worker run with progress=None. The ParallelResolved filter that retains planned stages other than report and summary is never executed by any test, because the new test passes progress=None. Nothing exercises the !agent server bypass, the !agent interactive guard, the dirty-worktree prompt bypass, or forwarding of --agent to the worker subprocess args. Reverting any of these leaves every test green. This is regression risk in new behaviour, not a present defect.",
+    "locations": [
+     {
+      "code_snippet": "if skip_report { planned_stages.retain(|s| s != report && s != summary); }",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "Worker::run (event_cb, ParallelResolved arm)",
+      "line": "416",
+      "why_this_location_matters": "No test passes a progress callback, so this filter never runs under test."
+     },
+     {
+      "code_snippet": "if !agent && std::io::stdin().is_terminal() {",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "None",
+      "why_this_location_matters": "The dirty-worktree prompt bypass is untested."
+     }
+    ]
+   },
+   {
+    "problem": "--agent reports status clean when no AI review ran",
+    "severity": "Medium",
+    "type": "Silent Failure / False Success",
+    "preexisting": false,
+    "explanation": "Consequence: an agent reads status \"clean\" with empty findings although no patch was reviewed, and may open or update a PR as if self-review had passed. Reachability: in run_worker_in_worktree, options.no_ai clears patches_to_review, and a review_patch_index that matches no patch leaves it empty. Either way the early return emits {patchset_id, baseline, patches, review: null, input_context: \"\", tokens_in: 0, tokens_out: 0, tokens_cached: 0}. That object has no top-level error key and no skipped or not_reviewed marker, so result_has_error is false. format_agent_review_output then maps the missing review to an empty findings list with unwrap_or_default, and status falls through to \"clean\". Both callers pass the result through unchanged: main.rs handle_review_command calls format_agent_review_output(&result), and sashiko-cli handle_local calls it on the worker JSON. The only tell is tokens_in = 0, which a consumer has no reason to interpret as 'not reviewed'. The text path prints that no AI review was run, so agent mode loses a distinction the human path keeps. Severity is capped at Medium because the documented loop in GEMINI.md (sashiko review --project sashiko --agent <commit>) does not pass --no-ai or --review-patch-index, so a user has to add those flags or mistype an index. The new test has no review: null fixture, so it would not catch this. A fix is to emit status \"not_reviewed\" (or an explicit reason field) when review is null or absent, and add a test for it.",
+    "locations": [
+     {
+      "code_snippet": "let status = if result_has_error(result) { \"error\" } else if !findings.is_empty() { \"issues_found\" } else { \"clean\" };",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "format_agent_review_output",
+      "line": "1294",
+      "why_this_location_matters": "There is no branch for a result whose review is null, so an unreviewed result is labelled clean."
+     },
+     {
+      "code_snippet": "if patches_to_review.is_empty() { info!(\"No patches matched review index or list empty. Skipping AI review.\"); return Ok(json!({ \"patchset_id\": patchset_id, \"baseline\": baseline_arg, \"patches\": patch_results, \"review\": null, \"input_context\": \"\", \"tokens_in\": 0, \"tokens_out\": 0, \"tokens_cached\": 0 }));",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "936",
+      "why_this_location_matters": "The early return carries no error and no skipped marker, so a consumer cannot tell it from a clean review."
+     }
+    ]
+   },
+   {
+    "problem": "--agent status disagrees with exit code on preexisting/Low/Medium",
+    "severity": "Medium",
+    "type": "Wire Contract / Exit Code Mismatch",
+    "preexisting": false,
+    "explanation": "Consequence: in --agent mode the JSON status says issues_found for findings that do not fail the command, so an agent keyed on status and told by GEMINI.md to 'resolve any reported issues' can keep fixing or looping on findings the CLI treats as success. Reachability: every `sashiko review --agent` and `sashiko-cli local --agent` run. Verified code: format_agent_review_output sets status to 'error' if result_has_error, else 'issues_found' whenever `findings` is non-empty, with no look at `preexisting` or `severity`. The exit code uses a narrower rule. In main.rs, result_has_error exits 3, and result_has_high_or_critical_findings exits 1 only when `is_new && matches!(severity, critical|high)`. In sashiko-cli.rs, count_severities gives `counts.critical.new > 0 || counts.high.new > 0` for exit 1. So a result with only preexisting findings, or only new Medium/Low findings, prints status 'issues_found' and exits 0. I found no code or comment in the diff that documents this split (I did not search the docs or prompts beyond the diff). The findings keep their `preexisting` and `severity` fields, so an agent that reads them can tell the difference, but the headline `status` field cannot. The new test only covers a single High finding with no `preexisting` key, so it does not exercise this divergence. Secondary issue, same function: it copies `error` whenever it is non-null (`!err.is_null()`), but result_has_error requires a non-empty string. An empty-string or non-string `error` therefore gives status 'clean' or 'issues_found' alongside an `error` key. Likewise `partial: true` is copied but does not change `status`. I did not read the code that builds `error` in run_worker_in_worktree, so whether it can ever be empty or non-string is assumed; if it is always a non-empty string, only the status/exit mismatch stands. Capped at Medium because the status field is a new, undocumented contract and the full finding data is still present in the output.",
+    "locations": [
+     {
+      "code_snippet": "} else if !findings.is_empty() {\n        \"issues_found\"",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "format_agent_review_output",
+      "line": "None",
+      "why_this_location_matters": "Status is derived from non-empty findings only, ignoring preexisting and severity, and the error key is copied by a different test (non-null) than result_has_error (non-empty string)."
+     },
+     {
+      "code_snippet": "is_new && matches!(severity.as_str(), \"critical\" | \"high\")",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "result_has_high_or_critical_findings",
+      "line": "1254",
+      "why_this_location_matters": "The exit-code predicate (used by main.rs) counts only new High/Critical findings."
+     },
+     {
+      "code_snippet": "if counts.critical.new > 0 || counts.high.new > 0 {\n                std::process::exit(1);\n            }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2188",
+      "why_this_location_matters": "The local command uses the same narrow rule, so the exit code stays 0 while status says issues_found."
+     }
+    ]
+   },
+   {
+    "problem": "--agent failures before a result emit no JSON and exit 1",
+    "severity": "Medium",
+    "type": "Output Contract / Exit Codes",
+    "preexisting": false,
+    "explanation": "Consequence: an agent loop that runs 'sashiko review --project sashiko --agent' (as GEMINI.md now instructs) or 'sashiko-cli local --agent' cannot tell an infrastructure failure from 'new High/Critical findings', and has no JSON error object to parse. Both cases exit 1, and the failure case emits no JSON. Reachability: any Err before a result Value exists, such as a run_git_review error, an empty worker stdout (worker crashed or was killed), or non-JSON worker stdout. Verified in code. (1) sashiko review: handle_review_command does 'let result = result?;' before the 'if agent' branch (src/main.rs ~2259), so format_agent_review_output never runs. main() is 'async fn main() -> Result<(), Box<dyn std::error::Error>>', so the Err makes the process print the Debug-formatted error to stderr and exit 1. Stdout is empty. The findings path in the same function ends in std::process::exit(1) when result_has_high_or_critical_findings. Exit 1 is therefore shared, while result_has_error uses exit(3) only when a result exists. (2) sashiko-cli local: handle_local returns Err('Review subprocess produced no output (exit code: N)') or Err('Failed to parse review output JSON ...') before the 'if agent' print. main() then runs print_colored(Color::Red, 'Error: ') and println!('{}', e) to STDOUT, then std::process::exit(1). So stdout is not empty here but holds a non-JSON line 'Error: ...', which a JSON parser rejects, and again the exit code is 1, same as findings (exit(1) at count critical.new/high.new > 0). A diagnostic on stdout also breaks the machine-output-on-stdout, diagnostics-on-stderr rule. The commit message says the JSON carries 'any error or partial-completion metadata', but format_agent_review_output only reports error/partial when a result Value already exists; the Err paths above never reach it. The unit test only covers a result that already contains 'error', so it would not fail if these paths were broken. Only the worker's own error path (src/main.rs ~377, which prints an error JSON then exit(1)) yields a parseable result, and handle_local then maps it to exit 3. Not Critical/High: the failure is loud (non-zero exit plus stderr text) and the ambiguity requires a failure before any result exists. Fix: in agent mode, convert the Err into a {status:'error', error:...} JSON on stdout and exit with the same code as result_has_error (3), keeping diagnostics on stderr.",
+    "locations": [
+     {
+      "code_snippet": "let result = result?;",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2259",
+      "why_this_location_matters": "Early return on run_git_review Err happens before the agent JSON branch, so no JSON reaches stdout and main() exits 1 via the Result return."
+     },
+     {
+      "code_snippet": "std::process::exit(1);",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2281",
+      "why_this_location_matters": "Same exit code 1 is used for new High/Critical findings, so callers cannot distinguish findings from a failed review."
+     },
+     {
+      "code_snippet": "return Err(anyhow::anyhow!(",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2109",
+      "why_this_location_matters": "Empty or unparsable subprocess output returns Err before the agent branch prints format_agent_review_output."
+     },
+     {
+      "code_snippet": "std::process::exit(1);",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "main",
+      "line": "384",
+      "why_this_location_matters": "After printing 'Error: ...' as plain text on stdout, any run_command Err exits 1, colliding with the findings exit code."
+     }
+    ]
+   },
+   {
+    "problem": "--agent skips server queue limits and wall-clock timeout",
+    "severity": "Low",
+    "type": "Concurrency Hazard",
+    "preexisting": false,
+    "explanation": "Reachable only when an operator or agent runs 'sashiko review --agent' or 'sashiko-cli local --agent' with a Sashiko server up. The effect is a hung or resource-heavy CLI call, not data loss, money or false output, so Low. On the server path, handle_local posted to /api/submit and returned at once. The review then ran in src/reviewer.rs, where ReviewContext.semaphore (Semaphore::new(settings.review.concurrency)) bounded concurrent reviews, and the tool loop used timeout_at against settings.review.timeout_seconds (default 3600) with child.start_kill() on expiry. With --agent, the new '&& !agent' guard skips that branch, so the review runs in a local worker subprocess. The only bound left is per-process: run_worker_in_worktree buffers patches with buffer_unordered(concurrency) and caps model calls with its own llm_semaphore. Nothing bounds concurrency across processes, so N parallel agent invocations give N times the worktrees and model calls, and the shared server limit no longer applies. The wait is 'child.wait_with_output().await' with no tokio::time::timeout. The only deadline inside the worker is DeadlineBudget, which stops backoff retries and is not a kill switch. A provider call that stalls (api_timeout_secs defaults to 300 per HTTP call; stdio or cli providers may have no such bound, which I could not verify) keeps the caller blocked, and an agent loop has no wall-clock cutoff. kill_on_drop(true) only helps if the caller is cancelled. The missing timeout is preexisting for --force-local and for the no-server cold start, so the new part is that --agent makes it the default even when a server with limits is running. The commit message states the bypass is intentional for determinism, so this is a hardening gap. To confirm severity, check whether the stdio/claude-cli providers can hang without their own timeout. A fix would be wrapping wait_with_output in tokio::time::timeout(settings.review.timeout_seconds) with an explicit kill, or at least documenting that --agent has no limit.",
+    "locations": [
+     {
+      "code_snippet": "let output = child\n    .wait_with_output()\n    .await\n    .context(\"Failed to wait for review subprocess\")?;",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "None",
+      "why_this_location_matters": "The worker wait has no wall-clock timeout, and --agent now always takes this path instead of the server queue."
+     },
+     {
+      "code_snippet": "if !force_local\n    && !agent\n    && let Ok(settings) = Settings::new()",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "None",
+      "why_this_location_matters": "This guard routes agent runs around the /api/submit queue, where reviewer.rs applies the review semaphore and timeout_seconds kill."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Skipping extract_inline_review in agent mode does not lose findings or fail every patch.",
+    "reasoning": "extract_inline_review only validates the human-readable inline text. The call is guarded by if options.agent { None } else { ... }, the report stages are skipped via skip_if(|s| s.skip_report) in both workflows, and agent output is built from review.findings, which the worker still returns. The findings-without-inline-review error therefore cannot fire in agent mode, and no finding is dropped.",
+    "locations": [
+     {
+      "code_snippet": "let inline_content = if options.agent { None } else { match extract_inline_review(p.index, result.output.as_ref()) {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "review_single_patch",
+      "line": "698",
+      "why_this_location_matters": "Validation is bypassed exactly when the report stage is skipped."
+     }
+    ]
+   },
+   {
+    "description": "Every WorkerOptions, ReviewOptions and WorkerConfig construction site propagates the new fields.",
+    "reasoning": "The grep shows the construction sites. The production WorkerConfig sets skip_report: options.agent, the worker subcommand forwards agent, and all test literals were updated.",
+    "locations": [
+     {
+      "code_snippet": "skip_report: options.agent,",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "review_single_patch",
+      "line": "630",
+      "why_this_location_matters": "The production WorkerConfig carries the flag."
+     }
+    ]
+   },
+   {
+    "description": "Patch application failures and recorded review errors are not reported as clean.",
+    "reasoning": "These paths set a non-empty string error (Patch application failed, or error plus partial true for review_errors). result_has_error treats a non-empty string as an error and format_agent_review_output checks it first, so status is error and the error field is copied.",
+    "locations": [
+     {
+      "code_snippet": ".get(error).and_then(|e| e.as_str()).map(|e| !e.is_empty()).unwrap_or(false)",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "result_has_error",
+      "line": "1246",
+      "why_this_location_matters": "It maps a non-empty error string to status error."
+     }
+    ]
+   },
+   {
+    "description": "test_skip_report_skips_report_and_summary_stages uses stages Some(goal), so manual stages may already keep the report and summary stages from running. That would make the mock bail guard and the summary assertion vacuous, and the test would stay green if both skip_if(|s| s.skip_report) calls were removed.",
+    "reasoning": "1. manual_stages only gates three things: the pre-screen stage, the planning stage and the analysis stage list. In both workflows `.skip_if(|s| s.manual_stages.is_some())` appears only on prescreen_stage and planning_stage. `resolve_analysis_stages_with_options` uses manual_stages only to choose which analysis stages run. 2. The workflow builders add report_stage unconditionally. The Sashiko builder also adds summary_stage unconditionally: `.stage(report_stage(max_turns, temperature))` and `.stage(summary_stage(max_turns, temperature))`. The Linux builder adds `.stage(report_stage(max_turns, temperature))` after the findings early-exit. No manual_stages condition touches them, so Some(goal) does not suppress them. 3. Without skip_report, the only remaining skip is `s.findings.is_empty()` on the Sashiko report stage. The test mock returns a verification finding, so findings has one entry. The report stage therefore runs in Sashiko. The summary stage has no other skip condition and also runs. For Linux, the early_exit_if checks are all passed because the mock returns concerns and then a finding, so report_stage runs. 4. The mock fails on exactly those prompts. The Linux report prompt ends with 'Return raw text output, not JSON.', which the mock matches. The Sashiko report and summary prompts begin '# Generate plain-text inline review report' and '# Summarize the proposed change'. Each matches a `bail!(\"report or summary stage should have been skipped\")`, and `worker.run(...).expect(\"worker should succeed\")` would then fail. 5. The mock's verification, goal, dedup and conflict-resolution branches match both projects' headings (for example '# Verify remaining concerns and calibrate severity' for Sashiko), so the pipeline reaches the report stage before the assertions. 6. Removing the Linux report skip_if or the Sashiko report or summary skip_if therefore makes the test fail, and the loop covers both ProjectId::Linux and ProjectId::Sashiko. A control run with skip_report false is not needed to show this; the stage ordering and the bail guard show it. Minor note, not a finding: the `summary == \"\"` assertion is trivially true for Linux because Linux has no summary stage, but the bail guard and review_inline assertion still exercise the Linux skip.",
+    "locations": [
+     {
+      "code_snippet": ".stage(report_stage(max_turns, temperature))\n        .stage(summary_stage(max_turns, temperature))",
+      "file": "src/workflows/sashiko_patch_review.rs",
+      "function_or_symbol": "build_sashiko_patch_review_workflow_with_options",
+      "line": "1088",
+      "why_this_location_matters": "Report and summary stages are added unconditionally; manual_stages does not remove them, so the test reaches them."
+     },
+     {
+      "code_snippet": ".skip_if(|s| s.skip_report)",
+      "file": "src/workflows/sashiko_patch_review.rs",
+      "function_or_symbol": "summary_stage",
+      "line": "1059",
+      "why_this_location_matters": "This is the only skip condition on the summary stage; removing it makes the summary prompt reach the mock's bail guard and fail the test."
+     },
+     {
+      "code_snippet": ".skip_if(|s| s.skip_report)",
+      "file": "src/workflows/linux_patch_review.rs",
+      "function_or_symbol": "report_stage",
+      "line": "1167",
+      "why_this_location_matters": "This is the only skip on the Linux report stage, and findings are non-empty in the test, so removal triggers the 'Return raw text output, not JSON.' bail."
+     },
+     {
+      "code_snippet": "stages: Some(vec![\"goal\".to_string()]),\n                skip_report: true,",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "test_skip_report_skips_report_and_summary_stages",
+      "line": "1640",
+      "why_this_location_matters": "Manual stages only replace the analysis stage list and skip prescreen and planning; the test still reaches report and summary, so the skip assertions are not vacuous."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change adds an --agent flag to \"sashiko review\" and \"sashiko-cli\nlocal\" so AI coding agents get compact, non-interactive, machine-readable\noutput from local reviews. In agent mode the report and summary LLM stages\nare skipped, prompts and server submission are bypassed, and a concise JSON\nobject is printed.\n\nBefore:\n  sashiko review --project sashiko HEAD~1..HEAD printed either the human\n  report (--format text) or the full JSON (--format json), including raw\n  LLM history, input_context, dismissed concerns and inline_review. The\n  report and summary stages always ran when findings existed. A dirty\n  worktree on a terminal prompted \"Do you want to proceed? [y/N]\", and\n  \"sashiko-cli local\" submitted to a running server if one was reachable.\n\nAfter:\n  sashiko review --project sashiko --agent HEAD~1..HEAD runs the same\n  analysis and verification stages but skips the report and summary\n  stages, never prompts about a dirty worktree, and prints JSON such as:\n\n  {\"status\": \"issues_found\", \"baseline\": \"abc1234\", \"patches\": [...],\n   \"findings\": [...], \"concerns\": [...], \"tokens_in\": 1200,\n   \"tokens_out\": 300, \"tokens_cached\": 800}\n\n  Status is \"error\" if the result carries an error, \"issues_found\" if\n  there are findings, otherwise \"clean\". When present, \"partial\" and a\n  non-null \"error\" are included. History, input_context, inline_review\n  and dismissed_concerns are omitted. The --format option is ignored when\n  --agent is set. \"sashiko-cli local --agent\" always runs the review\n  locally instead of via the server, forwards --agent to the worker, and\n  skips the interactive pause-and-rerun loop.\n\nGEMINI.md now tells agents to pass --agent in the local review loop.\n\nInternally, the flag is threaded through ReviewOptions, WorkerOptions,\nWorkerConfig and the workflow state as skip_report. The report and summary\nstages in the Linux and Sashiko patch-review workflows are skipped when it\nis set, and a new format_agent_review_output function builds the compact\npayload. Tests cover flag parsing, the output formatter for clean, issues\nand error cases, and a worker run confirming the report and summary stages\nare not invoked.",
+  "inline_review": "- [MEDIUM] In src/local_review.rs (format_agent_review_output and\n  run_worker_in_worktree), --agent reports status clean when no AI review\n  ran. With --agent --no-ai, which both CLIs accept together, the worker\n  clears patches_to_review and returns review: null with no error key and\n  zero tokens. The same early return is taken when review_patch_index\n  matches no patch. The formatter turns the missing review into empty\n  findings and no error, so status is clean. An agent following GEMINI.md\n  cannot tell this from a real clean review. The new test has no review:\n  null case, so it would not fail on this defect. Emit a distinct status\n  (not_reviewed or error) and add a test.\n\n- [MEDIUM] In src/main.rs (handle_review_command) and src/bin/sashiko-cli.rs\n  (handle_local), --agent emits no JSON when the review fails outright.\n  The early return from result? skips the agent branch, so failures in\n  run_git_review (worktree creation, baseline resolution, a patch that\n  fails to apply) and the \"Review subprocess produced no output\" and parse\n  failures in handle_local print nothing on stdout. Only soft failures\n  produce the status error JSON. The commit message promises error\n  metadata in the JSON object. A consumer that parses only stdout sees an\n  empty stream, a second undocumented error shape. The exit code is\n  non-zero, which limits the damage.\n\n- [MEDIUM] In src/local_review.rs (review_single_patch,\n  run_worker_in_worktree) and src/bin/sashiko-cli.rs (handle_local), the\n  new --agent branches have no test. The risky one is review_single_patch\n  bypassing extract_inline_review when options.agent is set. If that guard\n  is lost, skip_report leaves review_inline empty and every agent run with\n  findings fails all its attempts, breaking the loop exactly when there is\n  something to report. The inline_review blanking, the dirty-prompt bypass,\n  the server-submission bypass and the --interactive suppression are also\n  unexercised. The Worker test sets skip_report directly and does not go\n  through review_single_patch. Existing tests would pass if any of these\n  were reverted.\n\n- [LOW] In src/local_review.rs (format_agent_review_output) and src/main.rs\n  (handle_review_command), the --agent status and the exit code disagree\n  and no document says which one gates. Status is issues_found for any\n  finding, including preexisting, Low and Medium ones. The exit code is 1\n  only for new High or Critical findings, so a run can print issues_found\n  and exit 0. A loop that stops on status clean may never converge on\n  preexisting findings, while a loop that gates on the exit code treats\n  new Medium findings as done. GEMINI.md only says to resolve reported\n  issues. The exit-code policy is inherited, but the status field is new.\n  Each finding carries severity and preexisting, so a careful consumer\n  can compute the gate itself.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_local and Commands::Local),\n  --agent silently overrides --interactive, --format and the server\n  queue. interactive && !agent drops the rebuttal re-run with no message,\n  the agent branch ignores --format, and !force_local && !agent skips a\n  running server without saying the review ran locally. clap declares no\n  conflicts_with and the help text mentions none of this. The commit\n  message states only the server bypass. The effect is limited to callers\n  that combine flags.\n\n- [LOW] In src/main.rs (handle_review_command), --agent skips the\n  dirty-worktree confirmation prompt, and the output JSON has no field\n  showing the review ran over uncommitted changes. Findings may describe\n  code that is not in the commit under review, and the consuming agent\n  cannot tell. The stderr warning is still printed, but a consumer\n  reading stdout does not see it.",
+  "findings": [
+   {
+    "problem": "--agent emits no JSON when the review fails outright",
+    "severity": "Medium",
+    "type": "Contract / Error Reporting",
+    "preexisting": false,
+    "explanation": "An agent that parses stdout gets an empty stream plus a stderr message on the worst failures, and only gets the status:error JSON for soft failures. In handle_review_command, `let result = result?;` returns before the new `if agent` branch, so run_git_review failures (worktree creation, baseline resolution, a patch that fails to apply) print nothing on stdout. handle_local has the same early return for 'Review subprocess produced no output' and for parse failures. The commit message promises a JSON object with any error metadata, and the only test feeds a hand-built Value to the formatter. Consumers must treat empty stdout plus a non-zero exit as a second, undocumented error shape. A loop that only parses stdout can read this as nothing to fix. The exit code is non-zero, which limits the damage.",
+    "locations": [
+     {
+      "code_snippet": "finish_progress(&mut progress_state.lock().unwrap());\n    let result = result?;",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2259",
+      "why_this_location_matters": "The early return skips the agent JSON output."
+     },
+     {
+      "code_snippet": "Review subprocess produced no output (exit code: {})",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "None",
+      "why_this_location_matters": "Subprocess failures also bypass the agent JSON branch."
+     }
+    ]
+   },
+   {
+    "problem": "--agent silently overrides --interactive, --format and server queue",
+    "severity": "Low",
+    "type": "Behavioural Surprise",
+    "preexisting": false,
+    "explanation": "Consequence is a caller getting different behaviour than the flags' help promises, with no diagnostic. `interactive && !agent && ...` drops --interactive without any message, so the rebuttal re-run never happens. `if agent {..} else { match format }` ignores --format. `!force_local && !agent` skips a running server without telling the caller the review ran locally. clap declares no conflicts_with, and the flag's help text mentions none of this. The commit message states the server bypass, but not the other overrides. The effect is confined to callers that combine flags, and it is reversible.",
+    "locations": [
+     {
+      "code_snippet": "if interactive && !agent && (has_error || has_issues) {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2167",
+      "why_this_location_matters": "--interactive is silently disabled."
+     },
+     {
+      "code_snippet": "/// Output concise machine-friendly JSON for AI agents and skip plain-text report generation\n        #[arg(long)]\n        agent: bool,",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "Commands::Local",
+      "line": "219",
+      "why_this_location_matters": "No conflicts_with, and the help text omits the overrides."
+     }
+    ]
+   },
+   {
+    "problem": "--agent skips dirty-tree prompt and JSON carries no dirty marker",
+    "severity": "Low",
+    "type": "Commit Message / Scope",
+    "preexisting": false,
+    "explanation": "In agent mode the dirty-worktree confirmation is skipped, and the output schema has no field showing the review ran over uncommitted changes. Findings may therefore describe code that is not in the commit under review, and the consuming agent cannot tell. The stderr warning is still printed, but a machine consumer reading stdout does not see it.",
+    "locations": [
+     {
+      "code_snippet": "if !agent && std::io::stdin().is_terminal() {",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2046",
+      "why_this_location_matters": "This is the bypassed safety prompt."
+     }
+    ]
+   },
+   {
+    "problem": "new --agent branches in CLI and local_review have no test",
+    "severity": "Medium",
+    "type": "Missing Test Coverage",
+    "preexisting": false,
+    "explanation": "These are new branches of real behaviour that no test executes. The risky one is review_single_patch bypassing extract_inline_review when options.agent is set. If that guard is lost, skip_report leaves review_inline empty and every agent run that has findings fails all its attempts, so the agent loop breaks exactly when there is something to report. The other uncovered branches are the dirty-prompt bypass, the server-submission bypass, the inline_review blanking in run_worker_in_worktree and the --interactive suppression. Existing tests would still pass if any of them were reverted. The Worker test sets skip_report directly and does not go through review_single_patch.",
+    "locations": [
+     {
+      "code_snippet": "let inline_content = if options.agent {\n    None\n} else {\n    match extract_inline_review(p.index, result.output.as_ref()) {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "review_single_patch",
+      "line": "698",
+      "why_this_location_matters": "If this guard is removed, agent runs with findings fail the inline-review check."
+     },
+     {
+      "code_snippet": "\"inline_review\": if options.agent {\n    String::new()",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "1155",
+      "why_this_location_matters": "The agent-mode blanking is not asserted anywhere."
+     },
+     {
+      "code_snippet": "if !force_local\n        && !agent\n        && let Ok(settings) = Settings::new()",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "1863",
+      "why_this_location_matters": "Only the clap parse is tested, not the bypass."
+     }
+    ]
+   },
+   {
+    "problem": "--agent reports status clean when no AI review ran",
+    "severity": "Medium",
+    "type": "Silent Failure / False Success",
+    "preexisting": false,
+    "explanation": "A machine consumer is told clean when nothing was reviewed. Reachable today with sashiko review --agent --no-ai, which both CLIs accept together: handle_local and handle_review_command in the diff add no rejection or override of --agent with --no-ai. In run_worker_in_worktree, options.no_ai clears patches_to_review. If all patches applied, the patches_to_review.is_empty() branch returns review: null with no error key and zero tokens. The same branch is taken whenever review_patch_index matches no patch or the patch list is empty (for example an empty commit range); I did not trace whether an earlier stage rejects an empty range, so that trigger is an assumption. format_agent_review_output then turns the missing review into empty findings and concerns through unwrap_or_default. result_has_error is false because there is no error string, so status is clean. GEMINI.md tells agents to run sashiko review --project sashiko --agent and resolve reported issues, so an agent has no signal in the payload to distinguish this from a real clean review. The human path may distinguish the no-review case; I did not verify print_review_result. Partly refuted parts of the candidate: when any patch fails to apply, the worker returns error 'Patch application failed', so status is error. When a per-patch review fails, the aggregate result sets partial and error via combined_review_error, so status is error. Those shapes are handled. The new test covers only a review object with empty findings, an issues result, and an error result. It has no review: null case, so it would not fail on this defect. Capped at Medium because the --no-ai trigger requires an explicit flag combination and the empty-range trigger is unverified. A fix is to emit a distinct status such as not_reviewed (or error) when review is null, and to add a test for it.",
+    "locations": [
+     {
+      "code_snippet": "let status = if result_has_error(result) { ... } else if !findings.is_empty() { ... } else { clean }",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "format_agent_review_output",
+      "line": "1294",
+      "why_this_location_matters": "Status is derived only from an error string and non-empty findings; a null or missing review falls through to clean."
+     },
+     {
+      "code_snippet": "if patches_to_review.is_empty() { ... review: null, tokens_in: 0 ... }",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "936",
+      "why_this_location_matters": "The early return after --no-ai or an unmatched review index carries no error key, so the formatter reports it as clean."
+     },
+     {
+      "code_snippet": "if options.no_ai { ... patches_to_review.clear(); }",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "921",
+      "why_this_location_matters": "Shows --no-ai empties the review list, and nothing in the diff stops it being combined with --agent."
+     }
+    ]
+   },
+   {
+    "problem": "--agent status and exit code disagree and no doc says which gates",
+    "severity": "Low",
+    "type": "Contract Inconsistency",
+    "preexisting": false,
+    "explanation": "Consequence: an agent in the local review loop can get contradictory pass/fail signals. Reachability: every `sashiko review --agent` and `sashiko-cli local --agent` run that has findings, which GEMINI.md makes the required pre-PR step. In format_agent_review_output, `status` is \"issues_found\" whenever `findings` is non-empty, including preexisting, Low and Medium findings. In handle_review_command (src/main.rs), the exit code is 3 on error and 1 only when result_has_high_or_critical_findings is true, meaning a new (non-preexisting) High or Critical finding. Otherwise it is 0. So a run with only preexisting or Medium/Low findings prints status issues_found and exits 0. A loop that stops on status == clean may never converge when the findings are preexisting, because the agent cannot fix them in the patch under review. A loop that gates on exit 0 treats new Medium findings as done. Verification: GEMINI.md (line 12 and the Stage 1 bullet) says only to 'resolve any reported issues' and 're-verify until ... the local self-review pass[es] cleanly'. It does not name `status` or the exit code as the gate, and docs/ has no mention of --agent or issues_found. The exit-code policy was already there for human mode, so the divergence itself is inherited. What is new is the `status` field, which gives the agent a second, stricter signal with no documented precedence. The new test test_format_agent_review_output_clean_and_issues_and_error covers status only, and nothing pins its relationship to the exit code. Mitigation: each finding carries its own `severity` and `preexisting` fields, so a careful consumer can compute the gate itself. That is why this is Low rather than Medium. It is also an unverified-assumption finding about how the agent consumes the output. Confirming evidence would be an agent loop that branches on `status` alone.",
+    "locations": [
+     {
+      "code_snippet": "} else if !findings.is_empty() {\n        \"issues_found\"",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "format_agent_review_output",
+      "line": "1297",
+      "why_this_location_matters": "Any finding, including preexisting, Low or Medium, sets status to issues_found."
+     },
+     {
+      "code_snippet": "if result_has_high_or_critical_findings(&result) {\n        std::process::exit(1);\n    }",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2280",
+      "why_this_location_matters": "The exit code uses a stricter predicate (new High or Critical only), so it can be 0 while status is issues_found."
+     },
+     {
+      "code_snippet": "Fix any valid findings, amend or commit, and re-verify until both `make check-pr` and the local self-review pass cleanly.",
+      "file": "GEMINI.md",
+      "function_or_symbol": "Stage 1 — Local Agentic Loop",
+      "line": "41",
+      "why_this_location_matters": "The only guidance given to agents. It does not define whether status or the exit code is the pass criterion."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Skipping extract_inline_review in agent mode could hide a failed attempt or remove a retry trigger.",
+    "reasoning": "extract_inline_review only fails an attempt when findings exist without review_inline. In agent mode the report stages are skipped deliberately via skip_report, so empty review_inline is expected, and retrying would only repeat the same empty result. The agent payload does not include inline_review. Genuine worker failures still go through the Err arm, which records last_error and retries, and failed patch reviews still set error and partial on the combined result.",
+    "locations": [
+     {
+      "code_snippet": "if !review_errors.is_empty()\n        && let Some(fields) = combined_result.as_object_mut()\n    {\n        fields.insert(\"partial\".into(), json!(true));\n        fields.insert(\"error\".into(), json!(combined_review_error(review_errors)));",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "1169",
+      "why_this_location_matters": "Failed patch reviews still surface as error and partial."
+     }
+    ]
+   },
+   {
+    "description": "The --agent path might leave worker pipes undrained or the child unreaped.",
+    "reasoning": "--agent only adds an argument to the existing spawn. stderr is drained by a spawned task and stdout is collected by wait_with_output, which also reaps the child. kill_on_drop is set. The spawn path is unchanged.",
+    "locations": [
+     {
+      "code_snippet": ".wait_with_output()",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "None",
+      "why_this_location_matters": "Drains stdout and reaps the child."
+     }
+    ]
+   },
+   {
+    "description": "--agent combined with --interactive could loop forever re-running the review.",
+    "reasoning": "The re-run continue is guarded by interactive && !agent. With --agent the guard is false, so control falls through to the exit-code logic and break, and the code never blocks on stdin. The silent override is a separate usability concern, reported elsewhere.",
+    "locations": [
+     {
+      "code_snippet": "if interactive && !agent && (has_error || has_issues) {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2167",
+      "why_this_location_matters": "Proves the interactive re-run loop cannot repeat in agent mode."
+     }
+    ]
+   },
+   {
+    "description": "test_skip_report_skips_report_and_summary_stages might pass vacuously.",
+    "reasoning": "The mock bails if a report or summary prompt is sent, so reverting either skip_if makes worker.run fail. The test asserts exactly one finding before the other checks, so an empty set cannot pass. It loops over both Linux and Sashiko projects and asserts review_inline and summary are empty, which covers the Worker::run change.",
+    "locations": [
+     {
+      "code_snippet": "anyhow::bail!(\"report or summary stage should have been skipped\");\n...\nassert_eq!(output[\"findings\"].as_array().unwrap().len(), 1);",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "test_skip_report_skips_report_and_summary_stages",
+      "line": "None",
+      "why_this_location_matters": "The mock fails if a skipped stage runs, and the count assertion rules out an empty set."
+     }
+    ]
+   },
+   {
+    "description": "handle_local always appends --agent to the worker args, but find_worker_command can resolve a legacy sashiko-review binary that may not accept the flag.",
+    "reasoning": "1) Cargo.toml at the target commit declares only three bins: sashiko (src/main.rs), sashiko-cli (src/bin/sashiko-cli.rs) and benchmark (src/bin/benchmark.rs). git_find_files shows src/bin contains only benchmark.rs and sashiko-cli.rs, so no sashiko-review binary is built from this crate or from any other arg set in this tree. 2) git_grep for sashiko-review in Cargo.toml, Makefile, Dockerfile, deployment, .github and scripts finds no build, install or packaging step that produces it. The only other matches are historical design docs (designs/DESIGN_REVIEW_WORKER.md names src/bin/review.rs, which no longer exists), tempdir prefixes in src/git_ops.rs and mailing-list addresses. 3) The sashiko worker subcommand, the one find_worker_command returns with Some(\"worker\") in every in-tree build, gained the hidden --agent flag in this same commit (Commands::Worker in src/main.rs), and the commit adds a parse test for it. 4) The sashiko-review branches are a pre-existing fallback for a stale externally installed binary. handle_local already passes --project unconditionally, with a comment saying the worker needs it, so such a binary was already required to accept the current flag set before this commit. --agent adds no new class of incompatibility, and no shipped build in this repository can produce a worker lacking --agent.",
+    "locations": [
+     {
+      "code_snippet": "[[bin]]\nname = \"sashiko\"\npath = \"src/main.rs\"\n\n[[bin]]\nname = \"sashiko-cli\"\npath = \"src/bin/sashiko-cli.rs\"\n\n[[bin]]\nname = \"benchmark\"\npath = \"src/bin/benchmark.rs\"",
+      "file": "Cargo.toml",
+      "function_or_symbol": "[[bin]] targets",
+      "line": "30",
+      "why_this_location_matters": "Only three binaries are built from this crate, and none is sashiko-review, so no shipped build produces a legacy worker without --agent."
+     },
+     {
+      "code_snippet": "let candidate = dir.join(\"sashiko-review\");\n        if candidate.exists() {\n            return Ok((candidate, None));\n        }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "find_worker_command",
+      "line": "2217",
+      "why_this_location_matters": "The legacy fallback only resolves a stale external binary. In-tree builds always resolve sashiko with the worker subcommand, which accepts --agent."
+     }
+    ]
+   },
+   {
+    "description": ":run drops 'report' and 'summary' from planned_stages with hard-coded names; the candidate says planned_stages_from may not yield those strings, so the progress UI would plan stages that never run. It also says no test covers the filter and that docs were not updated.",
+    "reasoning": "1) planned_stages_from in src/workflows/mod.rs builds its list from the analysis stage names and then appends `.map(|s| s.name.to_string())` over CONSOLIDATION_STAGES, for both ProjectId::Linux and ProjectId::Sashiko. The strings it yields for consolidation stages are therefore the `name` fields of the static ConsolidationStage values. 2) Those names are the literals used in the retain call. linux_patch_review.rs:731 has `name: \"report\"`. sashiko_patch_review.rs:409 has `name: \"report\"` and :415 has `name: \"summary\"`. The existing sashiko test asserts stage_short_label(\"summary\") is Some(\"Change Summary\"), which confirms the same name is registered. 3) The retain removes exactly the stages that skip_report disables. The report stage is gated by `.skip_if(|s| s.skip_report)` in linux_patch_review.rs and `.skip_if(|s| s.skip_report || s.findings.is_empty())` in sashiko_patch_review.rs. The summary stage is gated by `.skip_if(|s| s.skip_report)` in summary_stage. 4) If a project lacks a stage named 'summary' (the grep shows no such name in the Linux file), retain on a non-existent name is a no-op. The mismatch the candidate fears, planned stages that never run, cannot arise from a missing name. 5) The new worker test test_skip_report_skips_report_and_summary_stages runs both ProjectId::Linux and ProjectId::Sashiko with a provider that bails if a report or summary prompt is sent. It asserts empty review_inline and summary, so the skip behaviour itself is tested for both projects. The progress filter has no direct assertion, but the strings it relies on are proven equal, so there is no defect to report. 6) The documentation remark is hygiene only. Under the false-positive guide, documentation is not a basis for a finding. My grep counted `--agent|--interactive` together (2 matches in docs/sashiko-cli.md), so I could not tell whether `--agent` is documented. I did not verify this part.",
+    "locations": [
+     {
+      "code_snippet": "planned.extend(\n    sashiko_patch_review::CONSOLIDATION_STAGES\n        .iter()\n        .map(|s| s.name.to_string()),\n);",
+      "file": "src/workflows/mod.rs",
+      "function_or_symbol": "planned_stages_from",
+      "line": "82",
+      "why_this_location_matters": "Consolidation stage names come from the static stage name fields, so the planned list contains those exact strings."
+     },
+     {
+      "code_snippet": "name: \"summary\",",
+      "file": "src/workflows/sashiko_patch_review.rs",
+      "function_or_symbol": "SUMMARY",
+      "line": "415",
+      "why_this_location_matters": "Proves the Sashiko summary stage name equals the literal used in the retain filter."
+     },
+     {
+      "code_snippet": "name: \"report\",",
+      "file": "src/workflows/sashiko_patch_review.rs",
+      "function_or_symbol": "REPORT",
+      "line": "409",
+      "why_this_location_matters": "Proves the Sashiko report stage name equals the retain literal."
+     },
+     {
+      "code_snippet": "name: \"report\",",
+      "file": "src/workflows/linux_patch_review.rs",
+      "function_or_symbol": "REPORT",
+      "line": "731",
+      "why_this_location_matters": "Proves the Linux report stage name equals the retain literal."
+     },
+     {
+      "code_snippet": "planned_stages.retain(|s| s != \"report\" && s != \"summary\");",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "Worker::run (event_cb)",
+      "line": "416",
+      "why_this_location_matters": "The filter under review. Its literals match the stage names above, and a name absent from a project makes retain a no-op."
+     }
+    ]
+   },
+   {
+    "description": "format_agent_review_output falls back to defaults on every lookup, so a producer key rename would yield status clean with empty findings, and no test feeds real run_worker_in_worktree output through it.",
+    "reasoning": "1) Producer and consumer are in the same crate and file. run_worker_in_worktree (src/local_review.rs:797) builds its result from build_review_output (called at line 1141), which emits exactly the keys the formatter reads: summary, findings, concerns, dismissed_concerns, concerns_count, dismissed_concerns_count. The combined result then adds baseline, patches, review, tokens_in, tokens_out and tokens_cached, and inserts partial (true) and error (a string) only when review_errors is non-empty. Each key the formatter reads (review.findings, review.concerns, baseline, patches, tokens_*, partial, error) is present in that assembly under the same name and type (arrays, u64, bool, string). 2) The incomplete patch shape in the test fixture ('review_status': 'incomplete') matches mark_patch_review_incomplete, which inserts review_status = incomplete and review_error. The formatter passes patches through unchanged, so it does not depend on those keys. 3) The error path is consistent: result_has_error (used by the formatter for status) reads error as a non-empty string, and the producer writes error via combined_review_error as a string. 4) Every caller gets the same shape. src/main.rs:2264 uses the result of run_git_review, which calls run_worker_in_worktree at line 412. The sashiko-cli path uses the worker subprocess output (print_worker_json), which is the same combined_result. git_grep shows no other caller of format_agent_review_output. 5) A rename of these keys would also break result_has_high_or_critical_findings and result_has_error, which read the same keys and are pre-existing. The existing readers share the same dependence, so this change adds no new fail-open class. 6) Under tests-that-can-fail.md, the changed code has a dedicated test (test_format_agent_review_output_clean_and_issues_and_error) covering clean, issues_found and error. The residual concern, that its fixtures are hand-written instead of produced by the worker, is a stronger-fixture suggestion rather than a finding. The hand-written keys were checked against the current producer and match it. No concrete input reaches the formatter and produces a wrong result today.",
+    "locations": [
+     {
+      "code_snippet": "json!({\n        \"summary\": summary,\n        \"findings\": findings,\n        \"concerns\": concerns,\n        \"dismissed_concerns\": dismissed_concerns,\n        \"concerns_count\": concerns_count,\n        \"dismissed_concerns_count\": dismissed_concerns_count\n    })",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "build_review_output",
+      "line": "778",
+      "why_this_location_matters": "The producer emits review.findings and review.concerns under exactly the names the formatter reads."
+     },
+     {
+      "code_snippet": "let mut combined_result = json!({\n        \"patchset_id\": patchset_id,\n        \"baseline\": baseline_arg,\n        \"patches\": patch_results,\n        \"review\": review_output,\n ... \"tokens_in\": total_tokens_in,\n        \"tokens_out\": total_tokens_out,\n        \"tokens_cached\": total_tokens_cached\n    });\n\n    if !review_errors.is_empty()\n        && let Some(fields) = combined_result.as_object_mut()\n    {\n        fields.insert(\"partial\".into(), json!(true));\n        fields.insert(\"error\".into(), json!(combined_review_error(review_errors)));\n    }",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "1146",
+      "why_this_location_matters": "The combined result carries baseline, patches, review, tokens_* and the partial and error keys, matching the formatter's reads and the test fixture keys."
+     },
+     {
+      "code_snippet": "fields.insert(\"review_status\".into(), json!(\"incomplete\"));\n        fields.insert(\"review_error\".into(), json!(error));",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "mark_patch_review_incomplete",
+      "line": "762",
+      "why_this_location_matters": "The incomplete-patch shape in the error fixture matches what the producer writes."
+     }
+    ]
+   }
+  ]
+ },
+ "C": {
+  "summary": "This change adds an --agent flag to sashiko review and sashiko-cli local.\nIt gives AI coding agents a small, deterministic, non-interactive JSON\nresult instead of the human report plus bulky LLM history. In agent mode\nthe report and summary stages are skipped, which saves an LLM round-trip,\nand GEMINI.md now tells agents to pass --agent.\n\nBefore:\n  sashiko review --project sashiko HEAD prints a human-formatted report.\n  With --format json it prints the full result, including history,\n  input_context, inline_review and dismissed concerns. On a terminal, a\n  dirty worktree prompts \"Do you want to proceed? [y/N]\". sashiko-cli\n  local submits to a running server if one is reachable. The report and\n  summary LLM stages always run when findings exist.\n\nAfter:\n  sashiko review --project sashiko --agent HEAD prints one JSON object:\n    {\"status\": \"clean\" | \"issues_found\" | \"error\",\n     \"baseline\": \"...\", \"patches\": [...], \"findings\": [...],\n     \"concerns\": [...], \"tokens_in\": N, \"tokens_out\": N,\n     \"tokens_cached\": N}\n  The keys \"partial\" and \"error\" are added when present. History,\n  input_context, inline_review and dismissed concerns are omitted. No\n  dirty-worktree prompt appears. sashiko-cli local never goes through the\n  server, and its interactive re-run loop is disabled. The report and\n  summary stages are skipped, so review_inline and summary come back as\n  empty strings, and the planned-stage progress list drops \"report\" and\n  \"summary\".\n\nInternally, the flag is threaded through ReviewOptions, WorkerOptions, the\nhidden worker subcommand and WorkerConfig as skip_report. It is applied as\na skip_if condition on the report and summary stages of both the Linux and\nSashiko patch-review workflows. A new format_agent_review_output function\nbuilds the concise payload, and tests cover CLI parsing, the formatter and\nthe skipped stages in the worker.",
+  "inline_review": "- [MEDIUM] In src/main.rs (handle_review_command) and\n  src/bin/sashiko-cli.rs (handle_local), --agent prints no JSON on a hard\n  failure. The error return on the review result comes before the agent\n  output branch, so a failed run leaves stdout empty. It exits 1, the same\n  code used for new high or critical findings, so a crashed review and a\n  blocking finding look alike unless stderr is parsed. This contradicts the\n  commit message, which promises error metadata in the JSON.\n\n- [MEDIUM] In src/local_review.rs (format_agent_review_output), status falls\n  back to clean when no review ran. With --no-ai, an empty patch list, or a\n  review-patch-index that matches no patch, run_worker_in_worktree returns\n  early with review null and no error key. The formatter turns the missing\n  findings into an empty list and reports clean. GEMINI.md makes this status\n  the gate before opening a PR, so an unreviewed change is reported as\n  clean. Add a distinct status such as not_reviewed. The unit test covers\n  only well-formed inputs and would pass with this bug present.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_local) and src/main.rs\n  (handle_review_command), --agent silently overrides other options. It\n  drops --interactive and ignores --format with no message, and it skips a\n  running daemon, while docs/sashiko-cli.md neither lists --agent nor says\n  so. The dirty-tree prompt is skipped and the warning goes only to stderr,\n  and the agent JSON has no dirty field, so a stdout-only reader cannot tell\n  that uncommitted changes were reviewed. Print a stderr note for the\n  overridden flags, add a dirty field, and document --agent.\n\n- [LOW] In src/worker/prompts.rs (Worker::run, ParallelResolved handler),\n  the new filter that removes report and summary from planned_stages is not\n  exercised by any test. The only skip_report test, test_skip_report_skips_\n  report_and_summary_stages, passes None as the progress callback, so the\n  ReviewStarted event is never built. The Linux iteration has no summary\n  stage, so its summary assertion is trivially true. With --agent the\n  progress total could include stages that never start. Add a test that\n  passes a callback and checks planned_stages.\n\n- [LOW] In src/bin/sashiko-cli.rs (handle_local, find_worker_command), the\n  --agent flag is forwarded to a worker binary chosen only because the file\n  exists, with no version check. A stale sashiko next to sashiko-cli, in the\n  parent directory, or on PATH rejects --agent as an unknown argument, and\n  the local review fails with a clap usage error and no hint of version\n  skew. Add a version handshake or a clear rebuild error.",
+  "findings": [
+   {
+    "problem": "--agent emits no JSON on hard failure, exits like findings",
+    "severity": "Medium",
+    "type": "Contract Violation / Error Reporting",
+    "preexisting": false,
+    "explanation": "A review that never produced a result prints nothing to stdout in --agent mode, and a caller driving the loop from GEMINI.md cannot read a status from it. In handle_review_command the `let result = result?;` line sits before the `if agent` branch (visible in the diff), so any run_git_review Err (bad range, worktree or provider failure) propagates out of main with an empty stdout. A main that returns Err exits 1, which is the same code used for new high/critical findings, so a crashed review and a blocking finding look the same unless stderr is parsed. handle_local has the same shape: an empty or unparseable worker stdout returns Err before the agent branch. The commit message promises JSON with 'any error or partial-completion metadata', but that holds only when the worker returned a result object. I rate it Medium because the failure is loud on stderr and in the exit code, not hidden, and the agent can still react to it. The handle_local half and the exit-code collision rely on code outside the diff.",
+    "locations": [
+     {
+      "code_snippet": "let result = result?;\n\n    if agent {",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2259",
+      "why_this_location_matters": "The error return precedes the agent JSON, so no machine-readable error object is emitted."
+     },
+     {
+      "code_snippet": "if stdout.trim().is_empty() {\n            replay_tail();\n            return Err(anyhow::anyhow!(",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "None",
+      "why_this_location_matters": "Subprocess failure bypasses format_agent_review_output."
+     }
+    ]
+   },
+   {
+    "problem": "--agent reports status clean when no review ran (--no-ai, empty set)",
+    "severity": "Medium",
+    "type": "Silent Failure / False clean status",
+    "preexisting": false,
+    "explanation": "A change that was never reviewed is reported as clean, and GEMINI.md makes that status the gate before opening a PR. Reachable now by passing --agent together with --no-ai (both parse, and the diff's own parser test combines them), by an empty patch list, or by a --review-patch-index that matches no patch. Proof: run_worker_in_worktree clears patches_to_review when options.no_ai is set. All patches then apply, so the !all_applied branch is skipped. The patches_to_review.is_empty() branch returns early with review null, tokens 0, and no error and no partial key. format_agent_review_output reads review.findings through and_then/unwrap_or_default, so findings becomes an empty vec. result_has_error is false because there is no error key. The status chain then falls through to the final else and yields clean. The output is identical to a real clean review apart from zero token counters, and no status value such as skipped or not_reviewed exists. This is the unwrap_or_default-to-success shape from silent-failure.md. Severity is Medium rather than High because I did not confirm that an empty range reaches this branch instead of failing earlier in input resolution, and the --no-ai combination is an explicit operator choice. The fix is to treat a null or missing review as a distinct status (not_reviewed, or error), and to cover it in test_format_agent_review_output_clean_and_issues_and_error, which only exercises well-formed clean, issues and error inputs and would pass with the bug present.",
+    "locations": [
+     {
+      "code_snippet": "let status = if result_has_error(result) {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "format_agent_review_output",
+      "line": "1281",
+      "why_this_location_matters": "The only place the verdict is computed. The fallback is clean, and a missing or null review collapses to empty findings."
+     },
+     {
+      "code_snippet": "if options.no_ai {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "921",
+      "why_this_location_matters": "--no-ai clears patches_to_review, so the early return with review null is taken with no error key."
+     },
+     {
+      "code_snippet": "if patches_to_review.is_empty() {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "937",
+      "why_this_location_matters": "The early return emits review null, zero tokens and no error or partial, which the formatter maps to clean."
+     }
+    ]
+   },
+   {
+    "problem": "--agent silently overrides --interactive, --format and daemon path",
+    "severity": "Low",
+    "type": "Silent flag override",
+    "preexisting": false,
+    "explanation": "Consequence: an agent or user who passes --agent together with --interactive, --format text or a running daemon gets different behaviour than the flags promise, with no message, and the JSON cannot tell the reader that the reviewed tree was dirty. Reachability: every 'sashiko review --agent' and 'sashiko-cli local --agent' call. GEMINI.md now tells agents to use this on every PR. Confirmed in the diff: (1) In handle_local, 'if interactive && !agent && (has_error || has_issues)' turns --interactive into a single run with no stderr note, and the output branch 'if agent' never reads 'format'. (2) The daemon check is now '!force_local && !agent', so --agent never submits to a running daemon, but docs/sashiko-cli.md:182-185 still says local delegates to a running daemon unless --force-local is passed, and the flags table at lines 178-179 lacks --agent. The doc reads as if --agent will use the daemon, which it does not. (3) In handle_review_command (src/main.rs:2038-2046) the dirty-tree warning goes only to stderr and the y/N prompt is skipped when agent is set. format_agent_review_output (src/local_review.rs) emits status, baseline, patches, findings, concerns and tokens, with no dirty field, so a stdout-only consumer sees status 'clean' or 'issues_found' for a tree that included uncommitted changes. is_dirty(...).unwrap_or(false) also treats a failed dirty check as clean (preexisting). The prompt was already TTY-only, so the change matters only for terminal-run agents, and the stderr warning remains, which is why this stays Low. Unverified and not reported as a bug: contention with a running daemon on the same repo. Local runs create their own GitWorktree (src/local_review.rs:402) and concurrency semaphore, the same path --force-local already uses. Confirming this would need a read of GitWorktree::new naming and the daemon's worktree dir. Suggested fix: add a 'dirty' boolean to the agent JSON, print a stderr note when --agent is combined with --interactive, and document --agent in docs/sashiko-cli.md.",
+    "locations": [
+     {
+      "code_snippet": "if interactive && !agent && (has_error || has_issues) {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2167",
+      "why_this_location_matters": "--interactive is dropped with no message when --agent is set, and --format is ignored by the agent output branch."
+     },
+     {
+      "code_snippet": "if !agent && std::io::stdin().is_terminal() {",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "2046",
+      "why_this_location_matters": "The dirty-tree confirmation is skipped under --agent and the warning goes only to stderr."
+     },
+     {
+      "code_snippet": "let status = if result_has_error(result) { \"error\" } else if !findings.is_empty() { \"issues_found\" } else { \"clean\" };",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "format_agent_review_output",
+      "line": "1277",
+      "why_this_location_matters": "The agent JSON has no dirty indicator, so a stdout-only reader cannot tell the review included uncommitted changes."
+     },
+     {
+      "code_snippet": "--force-local | Force local execution even if a sashiko daemon is running (see note below).",
+      "file": "docs/sashiko-cli.md",
+      "function_or_symbol": "local command flags and daemon note",
+      "line": "182",
+      "why_this_location_matters": "The docs do not list --agent or say it bypasses the daemon, --interactive and --format."
+     }
+    ]
+   },
+   {
+    "problem": "skip_report progress filter in Worker::run has no test",
+    "severity": "Low",
+    "type": "Test Cannot Fail",
+    "preexisting": false,
+    "explanation": "Only the review progress display is affected, and the failure is cosmetic: with --agent the progress bar total could include report and summary stages that never start, so the bar stops short. It is reachable only when a progress callback is passed (the sashiko review CLI path). The candidate's main claim, that the worker test passes vacuously, is mostly not proven. Evidence: (1) Sashiko CONSOLIDATION_STAGES includes REPORT and SUMMARY, and the report stage has skip_if(skip_report || findings.is_empty()). The mock returns one High finding, so without skip_report the report stage would run, hit the 'Return raw text output' or '# Generate plain-text inline review report' marker and bail. (2) Stage::execute_isolated checks skip_if before calling the provider. (3) Worker::run propagates stage errors through WorkflowEngine::execute(...).await?, so a bail would fail the expect. (4) Reverting the '!self.skip_report' guard turns review_inline into 'No issues found.' and fails the assertion. Weaker points: Linux CONSOLIDATION_STAGES has no summary stage (only DEDUPLICATION, CONFLICT_RESOLUTION, VERIFICATION, REPORT), so the summary == '' assertion is trivially true for Linux. I did not read the Sashiko summary prompt text, so I have not confirmed that '# Summarize the proposed change' matches it; if it does not, reverting the summary skip_if would not fail the test. The real gap: the test passes progress as None, so the event_cb branch 'planned_stages.retain(|s| s != \"report\" && s != \"summary\")' never executes. planned_stages_from does return report (both projects) and summary (Sashiko) from CONSOLIDATION_STAGES, so the filter changes real output, and skipped stages never emit StageStarted or StageFinished, which is why the filter is needed. This is new logic that no test executes. Likewise, the server bypass in handle_local and the dirty-worktree prompt bypass in handle_review_command are exercised only by clap parse tests, not behaviour tests. Those are not reported separately. Confirm by adding a test that runs Worker::run with a progress callback and skip_report true, asserting ReviewStarted.planned_stages contains neither report nor summary.",
+    "locations": [
+     {
+      "code_snippet": "if skip_report {\n    planned_stages.retain(|s| s != \"report\" && s != \"summary\");\n}",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "Worker::run (event_cb, ParallelResolved arm)",
+      "line": "414",
+      "why_this_location_matters": "New branch that no test reaches: the only skip_report test calls worker.run(patchset, None), so the progress callback is never invoked."
+     },
+     {
+      "code_snippet": "let res = worker\n    .run(patchset, None)\n    .await\n    .expect(\"worker should succeed\");",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "test_skip_report_skips_report_and_summary_stages",
+      "line": "1564",
+      "why_this_location_matters": "Passing None as the progress argument means the retain filter and ReviewStarted event are never exercised; the Linux iteration also has no summary stage, so the summary assertion is trivial there."
+     }
+    ]
+   },
+   {
+    "problem": "local --agent forwarded to unversioned worker found by directory search",
+    "severity": "Low",
+    "type": "Version Skew",
+    "preexisting": false,
+    "explanation": "Consequence: when handle_local runs a stale sashiko worker, the new --agent flag is rejected as an unknown argument, so the local review fails with a clap usage error and no hint of version skew. The failure is loud and recoverable by rebuilding, so it is not silent false output. Reachability: find_worker_command (src/bin/sashiko-cli.rs:2203) never checks that the worker matches the current build. Its search order is: (1) sashiko in the directory of the running sashiko-cli executable, (2) sashiko in that directory's parent, (3) sashiko-review in the same directory with no subcommand, (4) sashiko on PATH via `which`, (5) sashiko-review on PATH via `which`. The first existing file wins on `exists()` alone. The stale-worker case is concrete. Running `cargo build --bin sashiko-cli` or `cargo run --bin sashiko-cli -- local ... --agent` rebuilds only the CLI, so an older target/debug/sashiko sitting next to it is used. The same happens with an installed sashiko-cli beside an older sashiko, or an older sashiko-review fallback, which was never given --agent. handle_local pushes `--agent` onto the worker args (line ~1988) whenever the flag is set, without checking worker capability. Assumption to confirm: I did not read the worker spawn and error handling at lines 1963-2125. If a non-zero worker exit is reported only as a generic failure, the clap message may be lost; otherwise it shows as a clap usage error. A version handshake or a clear 'rebuild sashiko' error would remove the ambiguity. Separate pre-existing issue in the same function, not part of this change: it checks `dir.join(\"sashiko\")` without .exe and uses `which`, which does not exist on Windows, so worker discovery likely fails there.",
+    "locations": [
+     {
+      "code_snippet": "let candidate = dir.join(\"sashiko\");\n        if candidate.exists() {\n            return Ok((candidate, Some(\"worker\")));\n        }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "find_worker_command",
+      "line": "2203",
+      "why_this_location_matters": "The first existing binary is chosen on existence alone, so a stale sashiko next to sashiko-cli, in the parent directory, or on PATH can be selected with no version check."
+     },
+     {
+      "code_snippet": "let (worker_bin, worker_subcmd) = find_worker_command()?;",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "1963",
+      "why_this_location_matters": "--agent is appended to this worker's args unconditionally, so an older worker rejects it as an unknown flag."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "--agent might not reach the worker or the workflow stages.",
+    "reasoning": "The flag is traced end to end: handle_local pushes --agent into the worker args, main.rs passes it into WorkerOptions, which feeds skip_report in WorkerConfig and then the workflow state, and both workflows gate their report stages on skip_report. sashiko review forwards it through ReviewOptions. The daemon-spawned worker leaves it false, so that path is unchanged.",
+    "locations": [
+     {
+      "code_snippet": ".skip_if(|s| s.skip_report || s.findings.is_empty())",
+      "file": "src/workflows/sashiko_patch_review.rs",
+      "function_or_symbol": "report_stage",
+      "line": "1028",
+      "why_this_location_matters": "The workflow honours the flag."
+     }
+    ]
+   },
+   {
+    "description": "The worker's stderr pipe might not be drained, so the child could block.",
+    "reasoning": "stderr is drained line by line in a separate tokio::spawn task, with a bounded 100-line tail, while wait_with_output collects stdout. Both pipes are consumed concurrently, and the change does not touch this path.",
+    "locations": [
+     {
+      "code_snippet": "let stderr_handle = tokio::spawn(async move {",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "None",
+      "why_this_location_matters": "stderr is drained concurrently."
+     }
+    ]
+   },
+   {
+    "description": "skip_report might be shared mutable state between the progress callback and the worker.",
+    "reasoning": "skip_report is a plain bool copied into a local before the move closure, so the closure owns an immutable copy. The workflow state field is set once at construction, and there is no static, lock or atomic.",
+    "locations": [
+     {
+      "code_snippet": "let skip_report = self.skip_report;",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "Worker::run",
+      "line": "398",
+      "why_this_location_matters": "The flag is captured by value."
+     }
+    ]
+   },
+   {
+    "description": "a patch that failed to apply, a per-patch Worker error, or an incomplete patch review is reported as clean.",
+    "reasoning": "Each of these sets a top-level error string. A patch-apply failure takes the !all_applied branch, which returns an error of 'Patch application failed' and is checked before the empty-review return, so it is never confused with a skipped review. A per-patch review_single_patch Err is pushed into review_errors after mark_patch_review_incomplete, and the combined result then gets both partial true and error set via combined_review_error. result_has_error is true for a non-empty top-level error string, so the formatter returns status error in those cases. partial is only inserted together with error, so the 'partial with no error' scenario is not reachable from the code read. This dismissal covers only those sub-claims; the no-review path is reported as a finding.",
+    "locations": [
+     {
+      "code_snippet": "if !all_applied {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "930",
+      "why_this_location_matters": "The apply-failure return carries a non-empty error, so the formatter yields error."
+     },
+     {
+      "code_snippet": "if !review_errors.is_empty()",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "run_worker_in_worktree",
+      "line": "1160",
+      "why_this_location_matters": "Per-patch failures are aggregated and both partial and error are inserted on the top-level result."
+     }
+    ]
+   },
+   {
+    "description": "In agent mode review_single_patch skips extract_inline_review, so a missing or malformed worker output is no longer rejected and retried, and could surface as a clean review.",
+    "reasoning": "extract_inline_review (src/local_review.rs:504-524) has exactly one Err path: `has_findings && inline_content.is_none()`, meaning findings are present but review_inline is missing or empty. A None output, a non-object output, or a missing findings key makes has_findings false, so the function returns Ok(None). The skipped guard therefore never rejected missing or malformed output in non-agent mode either, and agent mode loses no output-shape check. The only retry trigger lost is 'findings present, inline report empty'. In agent mode that condition is always true when findings exist, because skip_report skips the report stage in both workflows (linux_patch_review.rs and sashiko_patch_review.rs skip_if(|s| s.skip_report)). Keeping the guard would turn every agent run with findings into a failed attempt that is retried until it exhausts its attempts, so bypassing it is required. format_agent_review_output reads only review.findings, review.concerns, baseline, patches, tokens, partial and error, and never inline_review, so nothing downstream depends on the skipped value. Error and partial states come from result_has_error and the error/partial fields, which this change does not touch, so a failed run is still reported as status 'error'. Whether a None worker output surfaces as 'clean' is pre-existing behaviour that this change neither introduces nor worsens.",
+    "locations": [
+     {
+      "code_snippet": "if has_findings && inline_content.is_none() {\n        return Err(anyhow!(\n            \"Review failure on patch {}: Findings detected but review_inline field was missing or empty.\",\n            patch_index\n        ));\n    }\n\n    Ok(inline_content)",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "extract_inline_review",
+      "line": "516",
+      "why_this_location_matters": "This is the only Err path in the function. Missing or non-object output yields Ok(None), so the check skipped in agent mode validated nothing beyond the inline-report presence."
+     },
+     {
+      "code_snippet": "let inline_content = if options.agent {\n                    None\n                } else {\n                    match extract_inline_review(p.index, result.output.as_ref()) {",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "review_single_patch",
+      "line": "698",
+      "why_this_location_matters": "The bypass is consistent with the report stage being skipped in agent mode. Keeping the check would fail every agent run that has findings."
+     }
+    ]
+   },
+   {
+    "description": "The agent JSON status is issues_found for any non-empty findings, while the process exit code is 1 only for new high/critical findings and 3 for error, so a consumer could be misled about which signal to trust.",
+    "reasoning": "1) The exit-code logic is not conditional on agent. In handle_local, has_error leads to exit(3) and new critical or high findings lead to exit(1) after the agent JSON is printed. In handle_review_command, result_has_error leads to exit(3) and result_has_high_or_critical_findings leads to exit(1). A failed review therefore never exits 0 in agent mode, and the exit-code behaviour is unchanged from before this commit. 2) The status field and the exit code answer different questions. Exit code is a CI-style gate that already existed (new high/critical only). status is the agent-loop signal: GEMINI.md tells agents to 'resolve any reported issues', so any non-empty findings list is correctly issues_found. 3) The error case is consistent between the two signals: format_agent_review_output uses result_has_error(result) for status 'error', the same predicate that drives exit code 3, so the two signals cannot disagree on failure. 4) Consumers can reconcile them without ambiguity. The findings array is passed through verbatim from review.findings (cloned, not stripped), so each finding keeps its own severity and preexisting fields. These are the same fields count_severities and result_has_high_or_critical_findings read to compute the exit code (preexisting defaults to false, i.e. new). A consumer that wants the gating criterion can recompute it from the payload. 5) No silent failure or false success results: an errored review is reported as status error with the error string and exits 3, and findings are never hidden. At most this is a documentation nicety, not a defect with a concrete misbehaving input, and it does not meet the bar for a finding.",
+    "locations": [
+     {
+      "code_snippet": "if has_error {\n            std::process::exit(3);\n        }\n ... if counts.critical.new > 0 || counts.high.new > 0 {\n                std::process::exit(1);\n            }",
+      "file": "src/bin/sashiko-cli.rs",
+      "function_or_symbol": "handle_local",
+      "line": "2188",
+      "why_this_location_matters": "Exit codes run after the agent JSON is printed and are not gated on agent, so errors still exit 3 and new high/critical findings still exit 1."
+     },
+     {
+      "code_snippet": "if result_has_error(&result) {\n        std::process::exit(3);\n    }\n    if result_has_high_or_critical_findings(&result) {\n        std::process::exit(1);\n    }",
+      "file": "src/main.rs",
+      "function_or_symbol": "handle_review_command",
+      "line": "None",
+      "why_this_location_matters": "Same exit-code policy in sashiko review, unconditional on agent, using the same result_has_error predicate as the JSON status."
+     },
+     {
+      "code_snippet": "let is_new = !finding\n            .get(\"preexisting\")\n            .and_then(|b| b.as_bool())\n            .unwrap_or(false);",
+      "file": "src/local_review.rs",
+      "function_or_symbol": "result_has_high_or_critical_findings",
+      "line": "1264",
+      "why_this_location_matters": "The exit-code criterion reads preexisting and severity from the same finding objects that format_agent_review_output passes through unchanged, so consumers can reconcile status and exit code."
+     }
+    ]
+   },
+   {
+    "description": "The report/summary filter on planned_stages uses hard-coded stage names, while StageFinished counting uses is_counted_stage, so the progress numerator and denominator could disagree.",
+    "reasoning": "1) planned_stages_from (src/workflows/mod.rs) returns the filtered analysis stages followed by CONSOLIDATION_STAGES names. For Linux that list is dedup, conflict-resolution, verification, report. For Sashiko it is dedup, conflict-resolution, verification, report, summary. The literal names in the retain call match the registered stage names: REPORT has name \"report\" in both workflows, and SUMMARY has name \"summary\" in sashiko_patch_review.rs. Linux has no summary consolidation stage, so the \"summary\" half of the retain is a harmless no-op there. 2) The change adds .skip_if(|s| s.skip_report) to the report stage in both workflows and to the Sashiko summary stage. In Stage::execute_isolated (src/workflow/stage.rs) the skip_if check returns early, before the StageStarted event and before the StageFinished event are emitted. A skipped stage therefore never produces a StageFinished, and is_counted_stage is never consulted for it. 3) The numerator is completed_stages, incremented only on AiReviewStageFinished in src/main.rs. The denominator in patch_stage_total is p.planned_stages.len() plus preliminary stages while a patch is reviewing, and completed_stages once it is Finished or Failed. With skip_report, report and summary are removed from the denominator and are never counted in the numerator, so the two stay consistent. Without skip_report nothing is removed, which is the previous behaviour. 4) The hard-coded literals are a maintainability coupling to the stage tables, not a runtime mismatch, and they only affect progress display. The transient use of default_stage_count before ParallelResolved still includes report and summary. That predates this change, is replaced as soon as the plan arrives, and only affects the progress bar.",
+    "locations": [
+     {
+      "code_snippet": "planned_stages.retain(|s| s != \"report\" && s != \"summary\");",
+      "file": "src/worker/prompts.rs",
+      "function_or_symbol": "Worker::run (event_cb, ParallelResolved arm)",
+      "line": "417",
+      "why_this_location_matters": "The literals match the registered names (REPORT = \"report\", SUMMARY = \"summary\"), and the stages they remove are exactly the ones skipped when skip_report is set."
+     },
+     {
+      "code_snippet": "if let Some(ref predicate) = self.skip_if\n            && predicate(state)\n        {\n            return Ok((",
+      "file": "src/workflow/stage.rs",
+      "function_or_symbol": "Stage::execute_isolated",
+      "line": "399",
+      "why_this_location_matters": "A skipped stage returns before StageStarted and StageFinished are emitted, so it never increments completed_stages. This agrees with its removal from planned_stages."
+     },
+     {
+      "code_snippet": "sashiko_patch_review::CONSOLIDATION_STAGES\n                        .iter()\n                        .map(|s| s.name.to_string()),",
+      "file": "src/workflows/mod.rs",
+      "function_or_symbol": "planned_stages_from",
+      "line": "58",
+      "why_this_location_matters": "This shows which stage names (dedup, conflict-resolution, verification, report, summary) end up in the denominator, and that report and summary are among them."
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,740 @@
+{
+ "commit": "505a024",
+ "label": "X2",
+ "A": {
+  "summary": "This change adds a table, patchset_maintainer_sections, that records which\nMAINTAINERS file sections a patchset touches, and where each name came\nfrom. Bugs already record this to decide who may read their transcripts.\nPatchsets only had mailing list labels from To:/Cc: headers, which anyone\ncan set, so those cannot confer authority.\n\nThe table mirrors bug_subsystems, including the source column, so that\nonly rows with source maintainers_section grant authority. Migration 009\ncreates it with a cascading foreign key to patchsets, a CHECK constraint\non source, a default of caller_supplied (the least privileged value), and\ntwo indexes. The schema version moves from 8 to 9.\n\nIn src/db.rs there are four new methods:\n\nadd_patchset_maintainer_sections: unions sections in as each part of a\nseries arrives.\n\nreplace_patchset_maintainer_sections: sets the exact list and prunes stale\nrows, for backfill.\n\nauthorizing_sections_for_patchset: returns only maintainers_section rows.\nAn empty result means nobody is authorized.\n\npatchset_maintainer_sections: returns all rows with provenance, for\ndisplay only.\n\nFive tests cover the union across parts, authority limited to\nmaintainers_section rows, the empty case, replace with pruning and\nre-attribution, and isolation between patchsets.\n\nNothing reads these rows yet, so the only visible effect is the schema\nversion bump and a new empty table after migration.\n\nBefore:\n  Database schema version 8; no patchset_maintainer_sections table.\n\nAfter:\n  Database schema version 9; an empty patchset_maintainer_sections table\n  exists, and nothing queries it yet.",
+  "inline_review": "- [MEDIUM] In src/db.rs (UPSERT_PATCHSET_SECTION_SQL, used by\n  Database::add_patchset_maintainer_sections), the upsert ends in DO UPDATE\n  SET source = excluded.source with no precedence rule. The add path is\n  documented as a union that never narrows, but a later series part that\n  supplies a name already stored as maintainers_section with a weaker source\n  (path_prefix or caller_supplied) silently demotes it.\n  authorizing_sections_for_patchset filters on maintainers_section, so the\n  section stops authorizing and its maintainers lose transcript access.\n  Part arrival order decides the result. The new tests use net as both a\n  path prefix and a MAINTAINERS name, so a collision is plausible.\n  test_patchset_sections_union_across_parts only re-adds a name with the same\n  source, so it cannot catch this. The failure is closed and latent since\n  nothing reads the rows yet. Fix: on the add path keep the stronger source,\n  for example CASE WHEN excluded.source = 'maintainers_section' THEN\n  excluded.source ELSE source END, and add a test with conflicting sources.\n\n- [MEDIUM] In src/db.rs (patchset merge transaction) and\n  src/migrations/009_patchset_maintainer_sections.sql, the new table has\n  ON DELETE CASCADE on patchsets(id). The merge transaction moves\n  patchsets_subsystems rows to the target and then runs DELETE FROM\n  patchsets for the merged-away row, but never copies\n  patchset_maintainer_sections. With foreign keys enabled, the merged-away\n  row's sections are deleted without error, so\n  authorizing_sections_for_patchset returns a narrower or empty set, which\n  the docs define as closed. Maintainers silently lose transcript access.\n  This is the same narrowing the add path's comment says must be avoided.\n  Fix: add an INSERT OR IGNORE ... SELECT for the new table next to the\n  patchsets_subsystems move, keeping the stronger source on conflict, and\n  add a merge test.\n\n- [MEDIUM] In src/db.rs (Database::add_patchset_maintainer_sections and\n  Database::replace_patchset_maintainer_sections), writes are autocommit\n  statements on the single shared libsql connection in Database.conn.\n  Database::begin_transaction issues BEGIN IMMEDIATE on that same\n  connection with no guard, and src/worker/compressor.rs (compress_messages,\n  compress_patches, compress_patchsets) holds it open across awaited work\n  and issues ROLLBACK on per-row errors. A section write from another task\n  in that window joins the open transaction and is discarded by the\n  ROLLBACK while the caller still gets Ok(()). The patchset then authorizes\n  nobody and the empty result is read as legitimately closed, with no error\n  anywhere. The exposure to the shared connection exists already for other\n  writers, but this commit adds authority-bearing writers to it. The bug\n  side avoids it by writing through a libsql Transaction. The hazard is\n  live if the future ingestion and backfill callers share the compressor's\n  Arc<Database>, which is the existing pattern; this commit has no such\n  caller, so that is an assumption. Tests use a single task and cannot\n  catch it. Fix: serialize writers or give the compressor its own\n  connection.\n\n- [LOW] In src/db.rs (Database::replace_patchset_maintainer_sections and\n  the multi-row loop in add_patchset_maintainer_sections), the snapshot\n  SELECT, per-row DELETEs and per-row upserts run as separate autocommit\n  statements. An error midway (busy timeout, I/O error, kill) leaves a\n  half-pruned or partially written set and the caller sees Err with no\n  rollback. A concurrent add between the SELECT and the DELETE loop can\n  have its row deleted because it is not in the wanted set. The bug-side\n  counterpart, update_bug_subsystems, wraps the same work in a transaction.\n  The failures are closed and no caller exists yet. Fix: run the body in a\n  transaction, subject to the shared-connection caveat above.\n\n- [LOW] In src/migrations/009_patchset_maintainer_sections.sql, the table\n  mirrors bug_subsystems but omits the audit triggers from 002_bugs.sql\n  (trg_bug_subsystems_audit_insert and trg_bug_subsystems_audit_source),\n  which record reattribution because it decides who can reach the bug.\n  Changing a row's source via UPSERT_PATCHSET_SECTION_SQL, for example\n  path_prefix to maintainers_section, which starts conferring authority,\n  and deleting rows in replace_patchset_maintainer_sections leave no\n  trace. The bug-side sink, bug_enrichments, is keyed by bug_id and has no\n  patchset counterpart, so the triggers cannot be copied verbatim, and no\n  design note says the omission is deliberate. Nothing reads the rows yet.\n  Fix: add a patchset audit log table and triggers, or document the\n  omission as intentional.",
+  "findings": [
+   {
+    "problem": "add_patchset_maintainer_sections can downgrade authorizing rows",
+    "severity": "Medium",
+    "type": "Data Integrity / Authorization",
+    "preexisting": false,
+    "explanation": "Consequence: a patchset section already stored as maintainers_section is silently demoted to path_prefix or caller_supplied when a later part of the series supplies the same name with weaker provenance. authorizing_sections_for_patchset filters on source = 'maintainers_section', so the section stops authorizing and the maintainers lose access to the transcripts. Reachability: ingestion is per part, and part arrival order decides the outcome. The new tests already use 'net' as both a path prefix and a MAINTAINERS name, so a name collision is plausible. Calibration: the failure is closed (access is lost, not widened), the change is recoverable by re-ingesting, and nothing reads the rows yet, so the effect is latent. That makes it Medium. Proof is in the diff: UPSERT_PATCHSET_SECTION_SQL ends in 'DO UPDATE SET source = excluded.source' with no precedence rule, and the add path reuses it while its doc comment promises a union that never narrows. test_patchset_sections_union_across_parts only re-adds a name with the same source, so it cannot catch this. Fix: on the add path keep the stronger source, for example CASE WHEN excluded.source = 'maintainers_section' THEN excluded.source ELSE source END, and add a test that adds the same name with a conflicting source.",
+    "locations": [
+     {
+      "code_snippet": "ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source",
+      "file": "src/db.rs",
+      "function_or_symbol": "UPSERT_PATCHSET_SECTION_SQL",
+      "line": "746",
+      "why_this_location_matters": "The unconditional overwrite lets a weaker provenance replace a stronger one."
+     },
+     {
+      "code_snippet": "UPSERT_PATCHSET_SECTION_SQL,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::add_patchset_maintainer_sections",
+      "line": "2256",
+      "why_this_location_matters": "The additive path is documented as a union but reuses the overwriting upsert."
+     }
+    ]
+   },
+   {
+    "problem": "replace_patchset_maintainer_sections is not transactional",
+    "severity": "Low",
+    "type": "Atomicity / Live State",
+    "preexisting": false,
+    "explanation": "Consequence: replace_patchset_maintainer_sections reads the existing rows, then runs one DELETE per stale row, then one upsert per wanted row, as separate autocommit statements on self.conn. An error partway (busy timeout, I/O error, kill) leaves a half-pruned set, and the caller sees Err with no rollback. A concurrent add_patchset_maintainer_sections between the snapshot SELECT and the DELETE loop can have its row deleted because the row is not in 'wanted'. The same applies to add with several sections: an error on the Nth leaves N-1 written. Reachability: the doc comment names a backfill as the caller and ingestion as the other writer. The bug-side equivalent is wrapped in a transaction by update_bug_subsystems, and the new method is pub with no such wrapper. Calibration: the failures are closed (fewer rows means fewer readers), no caller exists yet, and the effects need a mid-sequence failure or a concurrent writer, so this is Low. Fix: run the body inside self.conn.transaction(), as update_bug_subsystems does, and add a transaction around the multi-row add.",
+    "locations": [
+     {
+      "code_snippet": "for section in existing {\n            if !wanted.contains_key(section.as_str()) {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2286",
+      "why_this_location_matters": "Deletes and upserts are independent autocommit statements after a stale snapshot read."
+     },
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_subsystems",
+      "line": "3189",
+      "why_this_location_matters": "The bug-side counterpart wraps the same prune-and-upsert in a transaction."
+     }
+    ]
+   },
+   {
+    "problem": "patchset merge cascade-deletes maintainer sections",
+    "severity": "Medium",
+    "type": "Incomplete Change / Data Loss",
+    "preexisting": false,
+    "explanation": "Consequence: when two patchset rows are merged, the merge transaction copies patchsets_subsystems to the target and then runs DELETE FROM patchsets WHERE id = merge_from_id. patchset_maintainer_sections has ON DELETE CASCADE and PRAGMA foreign_keys = ON is set in Database::new, so the merged-away row's sections are deleted without error. Nothing copies them to the target, so authorizing_sections_for_patchset returns a narrower set or an empty one. The doc comment says empty means closed, so maintainers of the lost sections silently lose transcript access. This is the same narrowing the add path's comment says must be avoided. Reachability: merging is the case for series whose parts were first ingested as separate rows. Three stages found it independently. Calibration: the failure is closed and nothing reads the rows yet, so it is latent, and no money or public surface is involved. The result is wrong authorization state with no error, so Medium. Fix: add an INSERT OR IGNORE ... SELECT for patchset_maintainer_sections next to the patchsets_subsystems merge, keeping the stronger source on conflict, and add a merge test.",
+    "locations": [
+     {
+      "code_snippet": "DELETE FROM patchsets WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "patchset merge transaction",
+      "line": "5608",
+      "why_this_location_matters": "This delete cascades to the new table and no step carried its rows to the target."
+     },
+     {
+      "code_snippet": "DELETE FROM patchsets_subsystems WHERE patchset_id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "patchset merge transaction (patchsets_subsystems move)",
+      "line": "5570",
+      "why_this_location_matters": "The old attribution table is merged explicitly while the new one is not."
+     },
+     {
+      "code_snippet": "FOREIGN KEY(patchset_id) REFERENCES patchsets(id) ON DELETE CASCADE",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "patchset_maintainer_sections",
+      "line": "37",
+      "why_this_location_matters": "Declares the cascade that turns the merge delete into a loss of attribution."
+     }
+    ]
+   },
+   {
+    "problem": "patchset section writes join the compressor's open transaction",
+    "severity": "Medium",
+    "type": "Concurrency Hazard",
+    "preexisting": false,
+    "explanation": "Consequence: a section write can return Ok(()) and then be silently undone by another task's ROLLBACK. The patchset then authorizes nobody, and authorizing_sections_for_patchset reports that as a legitimate empty result, so a transcript is closed to its maintainers with no error. It is not Critical or High because the damage fails closed (access is denied rather than granted) and the writers have no non-test caller yet; the commit says 'Nothing reads these rows yet'. Reachability: Database holds one libsql::Connection in `pub conn`. with_bug_actor and with_bug_claim clone that connection, so every handle shares it, and Arc<Database> is held by the ingestor, reviewer, workers and compressor. Database::begin_transaction issues 'BEGIN IMMEDIATE' on self.conn and holds no mutex or guard. The compressor's compress_messages, compress_patches and compress_patchsets each then await spawn-free DB work in a loop before commit_transaction, or run `db.conn.execute(\"ROLLBACK\", ())` on any per-row error. Any statement another task issues on the same connection in that window runs inside the open transaction. add_patchset_maintainer_sections and replace_patchset_maintainer_sections both issue autocommit statements on self.conn, so their rows are discarded by that ROLLBACK. Conversely, an existing writer that calls self.conn.transaction() during the window errors with a nested-transaction failure. Other writers already share the connection the same way, so the exposure is pre-existing in the pattern; this commit adds new authority-bearing writers to it. The bug side avoids the problem by writing through a libsql::Transaction (begin_bug_write, with_connection((*tx).clone())); the new functions do not. Same-path defect: replace_patchset_maintainer_sections runs its DELETEs and UPSERTs as separate autocommit statements. An error or crash midway leaves a partially pruned set, again failing closed. Wrapping the whole function in self.conn.transaction() would fix this, but that does not help if the transaction is on the shared connection already in use, so the real fix is to serialize writers or give the compressor its own connection. Assumption: the future ingestion and backfill callers are not in this commit. If they run on the same Arc<Database> as the compressor, which is the existing pattern, the hazard is live. If they use a dedicated connection, it is not. Tests cannot catch this because every test uses a single task and never opens a competing transaction.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn begin_transaction(&self) -> Result<()> {\n        self.conn.execute(\"BEGIN IMMEDIATE\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::begin_transaction",
+      "line": "4339",
+      "why_this_location_matters": "Opens a transaction on the shared connection with no guard excluding other users of self.conn."
+     },
+     {
+      "code_snippet": "let _ = db.conn.execute(\"ROLLBACK\", ()).await;",
+      "file": "src/worker/compressor.rs",
+      "function_or_symbol": "compress_messages / compress_patches / compress_patchsets",
+      "line": "114",
+      "why_this_location_matters": "The ROLLBACK discards every statement issued on the shared connection since BEGIN IMMEDIATE, including other tasks' section writes."
+     },
+     {
+      "code_snippet": "self.conn\n                .execute(\n                    UPSERT_PATCHSET_SECTION_SQL,",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::add_patchset_maintainer_sections",
+      "line": "2256",
+      "why_this_location_matters": "Autocommit write on the shared connection; it is absorbed into any open transaction and lost on ROLLBACK while the caller sees Ok(())."
+     },
+     {
+      "code_snippet": "for section in existing {\n            if !wanted.contains_key(section.as_str()) {\n                self.conn\n                    .execute(",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2286",
+      "why_this_location_matters": "Separate autocommit DELETEs and UPSERTs on the shared connection: not atomic, and exposed to the same transaction capture."
+     }
+    ]
+   },
+   {
+    "problem": "patchset section provenance changes and deletes are unaudited",
+    "severity": "Low",
+    "type": "Mirroring Gap / Auditability",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: once a reader consumes these rows, a change to which MAINTAINERS sections a patchset carries, or to a row's source, leaves no trace. Today nothing reads the rows (the commit says so) and no ingestion caller is wired yet, so nothing is exposed yet and the gap is hygiene, hence Low. Verification: 002_bugs.sql defines trg_bug_subsystems_audit_insert (AFTER INSERT ON bug_subsystems) and trg_bug_subsystems_audit_source (AFTER UPDATE OF source ... WHEN old.source <> new.source). Its comment says 'Reattributing a subsystem decides whether a maintainer can reach the bug at all, so the change is audited'. Both triggers write into bug_enrichments, which is keyed by bug_id. Migration 009 contains no CREATE TRIGGER (grep count is zero). The commit message says the table mirrors bug_subsystems 'down to the source column', and the same authority argument applies to this table. The only patchset-side tables are patchsets, reviews and patchsets_subsystems, none of which is an audit or enrichment sink, so the triggers cannot be copied verbatim. A docs search for audit or patchset_maintainer_sections found nothing, so no design note says the omission is deliberate. Code paths that would go unrecorded: add_patchset_maintainer_sections and replace_patchset_maintainer_sections both use UPSERT_PATCHSET_SECTION_SQL, whose DO UPDATE SET source = excluded.source silently reattributes a row (for example path_prefix to maintainers_section, which starts conferring authority). The replace function's DELETE also removes rows, and the bug side has no delete audit either. The Windows/Linux behaviour is identical. What would confirm or settle this: a patchset audit log table plus the equivalent triggers, or a note stating the omission is intentional. Not Medium because the rows are unread and the bug-side audit is itself not a hard control.",
+    "locations": [
+     {
+      "code_snippet": "CREATE TRIGGER IF NOT EXISTS trg_bug_subsystems_audit_source\nAFTER UPDATE OF source ON bug_subsystems\nFOR EACH ROW\nWHEN old.source <> new.source",
+      "file": "src/migrations/002_bugs.sql",
+      "function_or_symbol": "trg_bug_subsystems_audit_source",
+      "line": "300",
+      "why_this_location_matters": "The bug-side audit of reattribution, justified by its comment as deciding who can reach the bug. Its sink bug_enrichments has no patchset counterpart."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections (",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "patchset_maintainer_sections",
+      "line": "32",
+      "why_this_location_matters": "The migration creates only a table and two indexes, with no audit triggers and no log table, so source changes and deletes are not recorded."
+     },
+     {
+      "code_snippet": "ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source",
+      "file": "src/db.rs",
+      "function_or_symbol": "UPSERT_PATCHSET_SECTION_SQL",
+      "line": "746",
+      "why_this_location_matters": "This upsert can silently change a row's provenance, including to maintainers_section, with no record."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "Migration 009 might not apply atomically, the version bump might be wrong, or two processes starting together might both apply it and break the schema.",
+    "reasoning": "The block is guarded by current_version < 9. The SQL file and the PRAGMA user_version = 9 run inside one transaction and are committed together. The SQL uses CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS, so a second process that read the old version re-runs harmless statements.",
+    "locations": [
+     {
+      "code_snippet": "if current_version < 9 {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate",
+      "line": "1526",
+      "why_this_location_matters": "Guard, transaction, batch, version bump and commit are all in this block."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections (",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections",
+      "line": "None",
+      "why_this_location_matters": "IF NOT EXISTS makes repeated application a no-op."
+     }
+    ]
+   },
+   {
+    "description": "authorizing_sections_for_patchset builds its SQL with format! and might interpolate caller-influenced data into the authorization query.",
+    "reasoning": "The only interpolated value is SubsystemSource::MaintainersSection.as_str(), a &'static str literal chosen by a match over a closed enum. patchset_id is bound through libsql::params!, and section names reach SQL only as bound parameters. The CHECK constraint also limits stored source values.",
+    "locations": [
+     {
+      "code_snippet": "Self::MaintainersSection => \"maintainers_section\",",
+      "file": "src/db.rs",
+      "function_or_symbol": "SubsystemSource::as_str",
+      "line": "708",
+      "why_this_location_matters": "The interpolated value is a fixed constant."
+     }
+    ]
+   },
+   {
+    "description": "An unrecognised stored source value might be read as authorizing.",
+    "reasoning": "The CHECK constraint restricts source to three known strings. The display reader maps unknown values to CallerSupplied via from_stored, which confers nothing, and the authorizing query filters on the exact literal rather than on from_stored.",
+    "locations": [
+     {
+      "code_snippet": "_ => Self::CallerSupplied,",
+      "file": "src/db.rs",
+      "function_or_symbol": "SubsystemSource::from_stored",
+      "line": "722",
+      "why_this_location_matters": "Unknown values fall back to the least privileged source."
+     }
+    ]
+   },
+   {
+    "description": "replace_patchset_maintainer_sections might keep a read cursor open while deleting.",
+    "reasoning": "The SELECT runs in an inner block that drains rows into a Vec and drops the cursor before the first DELETE.",
+    "locations": [
+     {
+      "code_snippet": "let existing: Vec<String> = {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2297",
+      "why_this_location_matters": "No statement is in progress when the writes start."
+     }
+    ]
+   },
+   {
+    "description": "The new tests might share state, hide an FK problem, or pass on empty sets.",
+    "reasoning": "Each test calls setup_db, which builds a fresh :memory: database, so the hard-coded ids cannot collide. Database::new sets PRAGMA foreign_keys = ON and the fixture inserts the parent patchsets row, so the FK is exercised. The positive assertions compare exact non-empty vectors that would fail if add replaced instead of unioned, the authority filter were dropped, replace did not prune, or the upsert did not update source. The one empty-set assertion is the claim under test.",
+    "locations": [
+     {
+      "code_snippet": "url: \":memory:\".to_string(),",
+      "file": "src/db.rs",
+      "function_or_symbol": "tests::setup_db",
+      "line": "8868",
+      "why_this_location_matters": "A private in-memory database per test removes shared state."
+     },
+     {
+      "code_snippet": "conn.execute(\"PRAGMA foreign_keys = ON;\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "1383",
+      "why_this_location_matters": "Foreign keys are enforced in the test connection."
+     }
+    ]
+   },
+   {
+    "description": "Nothing writes or reads patchset_maintainer_sections yet, so after migration 9 existing patchsets have no rows and authorizing_sections_for_patchset returns an empty Vec for both not-yet-backfilled and genuinely unowned patchsets.",
+    "reasoning": "git_grep at the target commit finds the three accessors only as definitions in src/db.rs, in db.rs tests, and in the design doc. No handler, CLI or ingestion path calls the reader, so at this commit no access decision depends on an empty result and no caller can be misled. The commit message says 'Nothing reads these rows yet.' The empty result is documented as closed in the doc comment on authorizing_sections_for_patchset, and the migration default 'caller_supplied' is the least-privileged value, so missing data can only over-deny and cannot disclose. The design doc orders the series so ingestion (commit 3) and backfill (commit 4) land before the first enforcing reader (commit 6), and says an unattributed patchset stays closed until the backfill completes. git_log shows no later commits, so the series end could not be checked. A future reader landing before the backfill would be a defect in that commit, not in this one. The doc comments naming ingestion and backfill as callers match that plan. The code is platform independent.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn authorizing_sections_for_patchset(&self, patchset_id: i64) -> Result<Vec<String>> {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::authorizing_sections_for_patchset",
+      "line": "2344",
+      "why_this_location_matters": "No caller outside tests exists at this commit, and the doc comment defines an empty result as closed, so it cannot disclose or mislead."
+     },
+     {
+      "code_snippet": "Commits 1 through 4 change no access decision, so the restriction lands exactly once, in commit 6, by which time attribution is already in place for old and new patchsets alike.",
+      "file": "designs/DESIGN_PATCHSET_SUBSYSTEM_ACCESS_CONTROL.md",
+      "function_or_symbol": "6. Commits",
+      "line": "0",
+      "why_this_location_matters": "The series plan puts ingestion and backfill before the first reader."
+     }
+    ]
+   }
+  ]
+ },
+ "B": {
+  "summary": "This change adds a new table, patchset_maintainer_sections, that records\nwhich MAINTAINERS file sections a patchset touches and where each name\ncame from. It mirrors bug_subsystems so that only rows matched from\nMAINTAINERS can grant authority to read a patchset's raw review\ntranscripts. Mailing list labels from To:/Cc: headers stay separate,\nbecause anyone can put an address in Cc:.\n\nThe change adds migration 9 and four database methods: add sections (a\nunion, since a series arrives one part at a time), replace sections (for\nbackfill, pruning stale rows), list the authorizing sections, and list\nall sections with provenance for display. Nothing reads these rows yet,\nso no existing behaviour changes.\n\nBefore:\n  A patchset had only patchsets_subsystems (mailing list labels and\n  path regexes), which cannot decide who may read it. The schema was at\n  version 8, and there was no way to record which MAINTAINERS sections\n  a patchset touches.\n\nAfter:\n  The schema is at version 9 with a patchset_maintainer_sections table\n  keyed by (patchset_id, subsystem). Each row has a source of\n  maintainers_section, path_prefix or caller_supplied, defaulting to\n  caller_supplied. Only maintainers_section rows are returned by\n  authorizing_sections_for_patchset. A patchset with no such rows\n  returns an empty list, which the transcript rules are meant to treat\n  as closed. Rows are deleted along with their patchset.\n\nThe tests cover union across parts, non-MAINTAINERS sources granting no\nauthority, empty or blank input, pruning on replace, and isolation\nbetween patchsets.",
+  "inline_review": "- [MEDIUM] In src/db.rs (UPSERT_PATCHSET_SECTION_SQL and\n  Database::add_patchset_maintainer_sections), the additive path reuses an\n  upsert ending in DO UPDATE SET source = excluded.source. A section stored\n  as maintainers_section is silently overwritten when a later part supplies\n  the same name as path_prefix or caller_supplied. Then\n  authorizing_sections_for_patchset stops returning it and maintainers lose\n  transcript access with no error or log. The outcome depends on the order\n  in which series parts arrive, and contradicts the doc comment that the\n  union only grows. Keep the stronger source on conflict in the add path\n  (or use DO NOTHING) and keep the overwrite only for replace.\n\n- [MEDIUM] In src/db.rs (Database::replace_patchset_maintainer_sections),\n  the read, the deletes and the upserts run as separate autocommit\n  statements with no transaction. A failure partway (busy database, I/O\n  error, cancellation) leaves stale rows pruned and wanted rows partly\n  written, and concurrent readers or a concurrent add can see an\n  attribution that is neither the old nor the new one. The bug-side\n  equivalent is made atomic by update_bug_subsystems, which opens a\n  transaction; this pub method does not, so a future backfill gets the\n  non-atomic path. Wrap the rewrite in a transaction.\n\n- [MEDIUM] In src/db.rs (patchset merge routine) and\n  src/migrations/009_patchset_maintainer_sections.sql, the merge copies\n  only patchsets_subsystems before running DELETE FROM patchsets. The new\n  table has ON DELETE CASCADE and foreign keys are enabled in\n  Database::new, so the merged-from patchset's MAINTAINERS sections are\n  silently deleted instead of being unioned into the target. The target's\n  authority-bearing attribution narrows, which is the failure the\n  add_patchset_maintainer_sections doc comment says must not happen. It\n  fails closed and nothing writes production rows yet, but it becomes live\n  once ingestion calls add. Before the delete, copy the rows into the\n  target keeping the stronger source, and add a merge test that fails when\n  rows are lost.\n\n- [LOW] In src/db.rs (test_patchset_sections_union_across_parts), the\n  duplicate section repeats the identical name and source, so the test\n  passes even though add overwrites provenance. No test deletes a patchset\n  to check the cascade, and none inserts an invalid source to check the\n  CHECK constraint. Reverting the provenance handling would fail no test.\n  Add a case where the same name arrives with a weaker source.\n\n- [LOW] In src/migrations/009_patchset_maintainer_sections.sql\n  (patchset_maintainer_sections), source changes leave no audit record.\n  The bug side has triggers trg_bug_subsystems_audit_insert and\n  trg_bug_subsystems_audit_source in 002_bugs.sql that write to\n  bug_enrichments; the new table has only indexes. The upsert in\n  UPSERT_PATCHSET_SECTION_SQL can therefore grant or revoke read access\n  with no record of who or when once a reader exists. The migration comment\n  overstates parity with bug attribution. Nothing reads the rows yet, so\n  impact is low. Add an audit sink and triggers before the first reader\n  lands, or state that changes are not audited.\n\n- [LOW] In src/db.rs (Database::authorizing_sections_for_patchset) and\n  src/migrations/009_patchset_maintainer_sections.sql, the table is created\n  empty with no backfill and no marker of attribution state. Every\n  patchset that predates migration 9 returns Ok(empty), identical to\n  'populated, no maintainer matched', which the transcript rules treat as\n  closed. A gate wired before a backfill runs would deny every maintainer\n  on existing series and look like a correct result. No backfill caller\n  exists in this commit. Also, the bug side matches scope titles case\n  insensitively (COLLATE NOCASE) while this lookup returns stored titles,\n  so the gate must compare the same way or a case difference silently\n  denies. Fails closed; add a backfill marker or a distinct not-yet-\n  attributed result before the gate lands.",
+  "findings": [
+   {
+    "problem": "add_patchset_maintainer_sections can downgrade authority",
+    "severity": "Medium",
+    "type": "Logic Error",
+    "preexisting": false,
+    "explanation": "Consequence: a section already stored as maintainers_section can be silently changed to path_prefix or caller_supplied, so authorizing_sections_for_patchset stops returning it and the maintainers lose transcript access with no error or log. The outcome depends on the order in which series parts arrive, and on races if parts are ingested concurrently. Reachability: UPSERT_PATCHSET_SECTION_SQL ends in ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source, and add_patchset_maintainer_sections passes every item through it unchanged. The primary key does not include provenance. The commit's own replace test uses 'net' as both a path_prefix and a maintainers_section name, so the type allows the collision. It contradicts the doc comment that says the attribution only grows and a later part must not narrow it. replace_patchset_maintainer_sections also collects into a BTreeMap, so duplicate names in one slice resolve by input order. Blast radius is limited: the failure is fail-closed, nothing is exposed, and the data is recoverable by a re-run. No caller exists yet to show how often the same name arrives with different sources, so severity is capped at Medium. The fix is to keep the stronger source on conflict in the add path, or use DO NOTHING there and keep the overwrite only for replace.",
+    "locations": [
+     {
+      "code_snippet": "ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source",
+      "file": "src/db.rs",
+      "function_or_symbol": "UPSERT_PATCHSET_SECTION_SQL",
+      "line": "746",
+      "why_this_location_matters": "An unconditional overwrite lets a weaker provenance replace a stronger one."
+     },
+     {
+      "code_snippet": "pub async fn add_patchset_maintainer_sections(",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::add_patchset_maintainer_sections",
+      "line": "2256",
+      "why_this_location_matters": "This additive ingestion path reuses the overwriting statement even though it is documented as a union."
+     }
+    ]
+   },
+   {
+    "problem": "replace_patchset_maintainer_sections is not atomic",
+    "severity": "Medium",
+    "type": "Data Integrity",
+    "preexisting": false,
+    "explanation": "Consequence: the function reads, then issues N deletes, then N upserts as separate autocommit statements on self.conn. An error partway through (SQLITE_BUSY, I/O error, future cancellation) leaves stale rows pruned and the wanted rows only partly written. Concurrent readers of authorizing_sections_for_patchset see the intermediate set, and a concurrent add_patchset_maintainer_sections can interleave between the phases. The effect is an attribution that is neither the old nor the new one, with a stale or missing authorizing row. The doc comment says stale rows must not survive, but nothing makes the rewrite all-or-nothing. The bug-side equivalent is only run inside a transaction: update_bug_subsystems opens self.conn.transaction(), runs replace_bug_subsystems and commits. The new function is pub and takes no transaction. Its comment about libsql refusing to commit with a statement in progress describes a commit this function never performs. Reachability: any future backfill calling this pub method gets the non-atomic path. Impact is mostly fail-closed and recoverable by re-running, so Medium. No test injects a mid-way failure.",
+    "locations": [
+     {
+      "code_snippet": "for section in existing {\n            if !wanted.contains_key(section.as_str()) {\n                self.conn\n                    .execute(\n                        \"DELETE FROM patchset_maintainer_sections \\",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2286",
+      "why_this_location_matters": "The delete loop and the upsert loop commit independently, so a mid-way failure leaves partial state."
+     },
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_subsystems",
+      "line": "3194",
+      "why_this_location_matters": "The bug-side wrapper makes the equivalent replace atomic; the patchset side lacks it."
+     }
+    ]
+   },
+   {
+    "problem": "new tests cannot fail on source downgrade or cascade",
+    "severity": "Low",
+    "type": "Test Gap",
+    "preexisting": false,
+    "explanation": "Consequence: the union test repeats the identical (name, source) pair, so it passes even though add overwrites provenance. Nothing deletes a patchset to check the cascade, and nothing inserts an invalid source to check the CHECK constraint. The code under test is not necessarily wrong; the tests are weaker than the semantics the commit relies on. Reverting the provenance handling would not fail any test. This is a test-quality issue only, so Low.",
+    "locations": [
+     {
+      "code_snippet": "a later part adds to the attribution rather than replacing it",
+      "file": "src/db.rs",
+      "function_or_symbol": "test_patchset_sections_union_across_parts",
+      "line": "8885",
+      "why_this_location_matters": "The duplicate name uses the same source, so it cannot detect a downgrade through add."
+     }
+    ]
+   },
+   {
+    "problem": "patchset merge drops patchset_maintainer_sections via cascade",
+    "severity": "Medium",
+    "type": "Data Integrity",
+    "preexisting": false,
+    "explanation": "Consequence: when the merge routine folds one patchset row into another (series parts ingested separately), the merged-from row's MAINTAINERS sections are silently deleted by ON DELETE CASCADE instead of being unioned into the target. The target keeps only its own sections, so the authority-bearing attribution narrows. That is exactly the failure the new add_patchset_maintainer_sections doc comment says must not happen, and it fails closed (fewer maintainers can read transcripts) with no error or log. Reachability: the merge routine at src/db.rs:5563-5608 copies and deletes only patchsets_subsystems, never patchset_maintainer_sections, and then runs DELETE FROM patchsets WHERE id = ?. Foreign keys are enforced: PRAGMA foreign_keys = ON at src/db.rs:1383 runs on the local conn, which is then moved into Self { conn, .. }, so it is the stored self.conn, and the merge executes its statements through a transaction on self.conn (I did not read the transaction opening line, so that last link is inferred). I found no later patch in the series (git_log from the target to HEAD is empty). Calibration: git_grep shows the only callers of add_/replace_patchset_maintainer_sections are the new tests (db.rs:8897 onward), so no production row exists yet and nothing is lost at this revision. It becomes live as soon as ingestion calls add_, which the commit says is the intended caller, and merging is part of ingestion. Migration 007 also deletes patchsets, but it runs at user_version below 7, before migration 009 creates the table, so it is not affected. Fix: in the merge routine, before the delete, INSERT ... SELECT the merged-from rows into the target with ON CONFLICT handling that keeps the more privileged source, and add a merge test that fails when the rows are lost.",
+    "locations": [
+     {
+      "code_snippet": "DELETE FROM patchsets WHERE id = ?",
+      "file": "src/db.rs",
+      "function_or_symbol": "patchset merge routine (Database::...)",
+      "line": "5608",
+      "why_this_location_matters": "This delete cascades into patchset_maintainer_sections; only patchsets_subsystems is copied beforehand (db.rs:5563-5573)."
+     },
+     {
+      "code_snippet": "FOREIGN KEY(patchset_id) REFERENCES patchsets(id) ON DELETE CASCADE",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "patchset_maintainer_sections",
+      "line": "None",
+      "why_this_location_matters": "Defines the cascade that removes the merged-from patchset's sections."
+     },
+     {
+      "code_snippet": "conn.execute(\"PRAGMA foreign_keys = ON;\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "1383",
+      "why_this_location_matters": "The pragma runs on the connection returned as Self { conn, .. }, so the cascade is enforced for self.conn."
+     },
+     {
+      "code_snippet": "pub async fn add_patchset_maintainer_sections(",
+      "file": "src/db.rs",
+      "function_or_symbol": "add_patchset_maintainer_sections",
+      "line": "2256",
+      "why_this_location_matters": "The ingestion entry point whose union semantics the merge path would undo once it is wired in."
+     }
+    ]
+   },
+   {
+    "problem": "patchset_maintainer_sections source changes leave no audit record",
+    "severity": "Low",
+    "type": "Contract / Claim vs Diff",
+    "preexisting": false,
+    "explanation": "Consequence: once a later commit reads authorizing_sections_for_patchset to gate raw transcripts, any change to a row's source (for example a path_prefix or caller_supplied row promoted to maintainers_section) will grant or revoke read access with no record of who did it or when. Today nothing reads these rows (the commit says so), so no one is affected yet, which is why this is Low. Reachability: UPSERT_PATCHSET_SECTION_SQL uses ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source, and both add_patchset_maintainer_sections and replace_patchset_maintainer_sections reach it. Verification: the bug-side triggers trg_bug_subsystems_audit_insert and trg_bug_subsystems_audit_source (src/migrations/002_bugs.sql lines 278-323) insert into bug_enrichments with kind 'audit', author, tool and model taken from bugs.audit_*. That table is persistent and is read back by get_bug and the enrichment feed in src/db.rs (it filters on e.kind == 'audit'). The comment above the source trigger says reattribution is audited because it decides whether a maintainer can reach the bug. Migration 009 creates only the table and two indexes. A tree-wide grep for patchset audit, enrichment or trigger names at this commit finds nothing, and 002_bugs.sql holds all 11 CREATE TRIGGER statements in src/migrations, none for patchsets. patchsets has no audit_author/audit_tool/audit_model columns and no enrichment table, so the gap cannot be closed by copying the triggers; it needs a sink and an attribution channel. 'Mirrors' can fairly be read as covering columns only, but the migration comment says 'so a reader who understands bug attribution already understands this', which overstates parity. The bug side also does not audit deletes, so prune-on-replace is unaudited in both places. Suggested fix: add a patchset audit sink and triggers before the first reader of these rows lands, or state in the migration that provenance changes are not audited.",
+    "locations": [
+     {
+      "code_snippet": "CREATE TRIGGER IF NOT EXISTS trg_bug_subsystems_audit_source\nAFTER UPDATE OF source ON bug_subsystems\nFOR EACH ROW\nWHEN old.source <> new.source",
+      "file": "src/migrations/002_bugs.sql",
+      "function_or_symbol": "trg_bug_subsystems_audit_source",
+      "line": "300",
+      "why_this_location_matters": "The bug-side audit of provenance changes, writing to bug_enrichments, that the patchset table does not have."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections (",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "patchset_maintainer_sections",
+      "line": "32",
+      "why_this_location_matters": "Creates the authority-bearing table with only indexes and no triggers or audit sink."
+     },
+     {
+      "code_snippet": "ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source",
+      "file": "src/db.rs",
+      "function_or_symbol": "UPSERT_PATCHSET_SECTION_SQL",
+      "line": "746",
+      "why_this_location_matters": "The upsert silently rewrites provenance, which the bug-side trigger would have recorded."
+     }
+    ]
+   },
+   {
+    "problem": "empty patchset authorization cannot show 'never backfilled'",
+    "severity": "Low",
+    "type": "Incomplete Wiring / Silent Failure",
+    "preexisting": false,
+    "explanation": "Consequence: once a transcript gate reads authorizing_sections_for_patchset, every patchset that existed before migration 9 returns Ok(empty), which the doc comment defines as 'nobody was identified' and the transcript rules treat as closed. No caller exists yet (git_grep at 505a024 finds the four new methods only in their definitions in src/db.rs, in the tests, and in migrations/009_patchset_maintainer_sections.sql), and the migration creates the table empty with no INSERT ... SELECT backfill. Nothing records whether a patchset has been attributed, so 'never populated' and 'populated, no maintainer matched' return identical bytes. A gate wired before the backfill runs would deny every maintainer on every pre-existing series, and the denial would look like a correct empty attribution. The failure is fail-closed (no data is exposed), and the commit says nothing reads the rows yet, so I rate it Low. The replace_patchset_maintainer_sections doc says the backfill is the caller, but no such caller exists in this commit. git_log for the range after the target returned no commits, so no later patch in the series resolves this. Secondary points: (1) idx_patchset_maintainer_sections_subsystem serves a subsystem-to-patchset lookup that has no reader. (2) idx_patchset_maintainer_sections_authorizing duplicates the (patchset_id, subsystem) primary-key prefix, and its only extra effect is the source filter, so it is speculative. (3) The bug side matches scope titles with 'subsystem COLLATE NOCASE IN (...)' (src/db.rs:3417, 3678), while the new lookup returns stored titles and no patchset-scope query exists yet. The gate or ingestion must compare names case-insensitively, as the bug side does, or a case difference will silently deny. What would confirm or close this: a backfill marker or a distinct 'not yet attributed' result, and a case-insensitive scope match, landing before or together with the gate.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn authorizing_sections_for_patchset(&self, patchset_id: i64) -> Result<Vec<String>> {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::authorizing_sections_for_patchset",
+      "line": "2344",
+      "why_this_location_matters": "An empty Ok is ambiguous between 'never populated' and 'nobody identified', and it has no non-test caller yet."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections (",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "CREATE TABLE patchset_maintainer_sections",
+      "line": "32",
+      "why_this_location_matters": "The table is created empty with no backfill and no marker of attribution state, so all existing patchsets read as unattributed."
+     },
+     {
+      "code_snippet": "ON patchset_maintainer_sections(subsystem, patchset_id);",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "idx_patchset_maintainer_sections_subsystem",
+      "line": "41",
+      "why_this_location_matters": "This index is for a read pattern with no reader yet."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "authorizing_sections_for_patchset builds its SQL with format!, which might let attacker-controlled text into the query that decides transcript access.",
+    "reasoning": "The only interpolated value is SubsystemSource::MaintainersSection.as_str(), a match over a closed enum that returns a static literal (db.rs:708). patchset_id is bound with libsql::params. No caller-controlled text reaches the format string.",
+    "locations": [
+     {
+      "code_snippet": "Self::MaintainersSection => \"maintainers_section\",",
+      "file": "src/db.rs",
+      "function_or_symbol": "SubsystemSource::as_str",
+      "line": "708",
+      "why_this_location_matters": "The interpolated value is a constant literal."
+     },
+     {
+      "code_snippet": "let mut rows = self.conn.query(&sql, libsql::params![patchset_id]).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::authorizing_sections_for_patchset",
+      "line": "2344",
+      "why_this_location_matters": "patchset_id is passed as a bound parameter."
+     }
+    ]
+   },
+   {
+    "description": "Migration 9 might be left half-applied, recorded as version 9 without the table, or conflict when two processes start at once.",
+    "reasoning": "The DDL batch, PRAGMA user_version = 9 and the commit run in one transaction, so a failure before commit rolls everything back and the next start retries. Every statement uses IF NOT EXISTS, so a second process that read an older version re-runs harmless no-ops. The block depends only on patchsets, which version 1 creates.",
+    "locations": [
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;\n            tx.execute_batch(include_str!(\n                \"migrations/009_patchset_maintainer_sections.sql\"\n            ))\n            .await?;\n            tx.execute(\"PRAGMA user_version = 9\", ()).await?;\n            tx.commit().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate (version 9 block)",
+      "line": "1526",
+      "why_this_location_matters": "Schema creation and the version bump commit atomically."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections (",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections",
+      "line": "None",
+      "why_this_location_matters": "Idempotent DDL."
+     }
+    ]
+   },
+   {
+    "description": "An unrecognised or tampered source value in storage might be read back as one that confers authority.",
+    "reasoning": "The table has CHECK (source IN ('maintainers_section','path_prefix','caller_supplied')), so other values are rejected at write time. The display path maps unknown strings to CallerSupplied through SubsystemSource::from_stored, and the authorization query filters on the exact string 'maintainers_section', so nothing else can authorize.",
+    "locations": [
+     {
+      "code_snippet": "_ => Self::CallerSupplied,",
+      "file": "src/db.rs",
+      "function_or_symbol": "SubsystemSource::from_stored",
+      "line": "718",
+      "why_this_location_matters": "Unknown stored values fall to the least privileged variant."
+     },
+     {
+      "code_snippet": "CHECK (source IN ('maintainers_section', 'path_prefix', 'caller_supplied')),",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "CREATE TABLE patchset_maintainer_sections",
+      "line": "36",
+      "why_this_location_matters": "The database rejects any other provenance value."
+     }
+    ]
+   }
+  ]
+ },
+ "C": {
+  "summary": "This change adds a new table, patchset_maintainer_sections, that records\nwhich MAINTAINERS file sections a patchset touches. It mirrors the existing\nbug_subsystems table, including the source column. Only rows whose source\nis maintainers_section are meant to confer authority over who may read a\npatchset's raw review transcripts. The older patchsets_subsystems table\nholds mailing list labels from To:/Cc: headers and path regexes, which\nanybody can influence, so it cannot be used for that decision.\n\nThe change adds migration 9, an upsert statement, and four Database\nmethods. One adds sections as a union, for ingestion as each part of a\nseries arrives. One replaces the set exactly and prunes stale rows, for\nbackfill. One returns only the authorizing sections. One returns every\nsection with its provenance, for display. Tests cover union across parts,\nauthority only from maintainers rows, empty attribution, pruning on\nreplace, and isolation between patchsets.\n\nBefore:\n  Patchsets had no record of which MAINTAINERS sections they touch. The\n  database schema stopped at version 8.\n\nAfter:\n  The database migrates to version 9 on startup and creates an empty\n  patchset_maintainer_sections table with two indexes. No existing\n  behaviour or output changes, because nothing reads or populates the\n  table yet.",
+  "inline_review": "- [MEDIUM] In src/db.rs (UPSERT_PATCHSET_SECTION_SQL,\n  Database::add_patchset_maintainer_sections and\n  Database::replace_patchset_maintainer_sections), the upsert ends in\n  ON CONFLICT DO UPDATE SET source = excluded.source. A later write that\n  names the same section with a weaker source (path_prefix or\n  caller_supplied) silently demotes a stored maintainers_section row,\n  although the doc comment says add never narrows the attribution.\n  authorizing_sections_for_patchset then returns fewer sections with Ok\n  and no log, so legitimate maintainers lose access depending on the\n  arrival order of series parts. replace collects into a BTreeMap, so\n  duplicate names in one slice also resolve by slice order.\n  test_patchset_sections_union_across_parts repeats a name only with\n  identical provenance, so no test fails if the downgrade exists. The\n  failure is closed and nothing reads these rows yet, so it is latent.\n  Keep maintainers_section once present (for example a CASE in DO\n  UPDATE), merge duplicates by precedence in replace, and add a\n  stronger-then-weaker test.\n\n- [MEDIUM] In src/db.rs (Database::replace_patchset_maintainer_sections),\n  the read, the DELETEs and the upserts are separate autocommit\n  statements on the shared connection with no transaction. An error\n  between the delete loop and the upsert loop (SQLITE_BUSY, a libsql\n  error, a cancelled future) leaves a partially pruned attribution that\n  matches neither the old nor the new set, and a caller that logs and\n  continues turns this into silent loss of maintainer access. The\n  bug-side equivalent is atomic only because\n  Database::update_bug_subsystems opens a transaction and runs replace on\n  it via with_connection. The patchset function copies the logic without\n  that wrapper, and its comment about libsql refusing to commit with a\n  statement in progress describes a transaction that does not exist here.\n  A concurrent add between the SELECT and the DELETEs would also have its\n  new row deleted from the stale read. Open the transaction inside the\n  method as update_bug_subsystems does, or make the method private behind\n  a transaction-wrapping entry point.\n\n- [LOW] In src/db.rs (Database::add_patchset_maintainer_sections), the loop\n  issues one autocommit upsert per section with no atomic boundary. If\n  the Nth upsert fails, the function returns Err with sections 1..N-1\n  already committed, leaving an arbitrary prefix of a part's sections\n  chosen by input order. Upserts are idempotent and add is a union, so a\n  retry converges and the failure is closed, but ingestion is not in this\n  change so retry behaviour is unknown.\n\n- [LOW] In src/migrations/009_patchset_maintainer_sections.sql\n  (patchset_maintainer_sections), provenance changes leave no audit\n  trail. The bug side has trg_bug_subsystems_audit_source in 002_bugs.sql,\n  which records any change to source because it decides who can reach the\n  bug. Migration 009 claims to mirror bug_subsystems but creates only the\n  table and two indexes, so a promotion or demotion of source made through\n  UPSERT_PATCHSET_SECTION_SQL (via add or replace) cannot be reconstructed\n  later. No patchset audit table exists, so a trigger would need a new\n  sink. Nothing reads these rows yet, so no wrong access can occur today,\n  but the omission is unacknowledged and the impact grows once a consumer\n  lands.",
+  "findings": [
+   {
+    "problem": "patchset section add can demote maintainers_section provenance",
+    "severity": "Medium",
+    "type": "Data Integrity / Authorization Semantics",
+    "preexisting": false,
+    "explanation": "Consequence: a section stored as maintainers_section silently loses authority if a later write names it with a weaker source. The transcript lookup then returns fewer sections, and the caller sees Ok with no error or log. The failure direction is closed, so it denies legitimate maintainers and grants nobody extra access. Reachability: nothing reads these rows yet, so the effect is latent. It becomes live once ingestion and the transcript rules are wired in, and the outcome then depends on the arrival order of series parts. Proof: UPSERT_PATCHSET_SECTION_SQL ends in ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source. add_patchset_maintainer_sections passes each section's own source straight through. Its doc comment says it adds without removing and that narrowing is what the add/replace split prevents. The primary key allows one row per name, so the last writer wins. The commit's own replace test uses the bare name 'net' under two provenances, so the collision is plausible. replace_patchset_maintainer_sections collects into a BTreeMap, so a duplicate name within one slice also resolves by slice order. Tests: test_patchset_sections_union_across_parts repeats a name only with identical provenance, and no test writes a stronger source and then a weaker one for the same name. Reverting to a precedence-aware upsert would leave every new test green. Fix: keep maintainers_section once present, for example with a CASE in DO UPDATE, merge duplicates by precedence in replace, and add a test for a stronger source followed by a weaker one. Severity is capped at Medium because the failure is closed and no reader exists yet.",
+    "locations": [
+     {
+      "code_snippet": "ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source",
+      "file": "src/db.rs",
+      "function_or_symbol": "UPSERT_PATCHSET_SECTION_SQL",
+      "line": "746",
+      "why_this_location_matters": "Unconditional overwrite lets a weaker provenance replace maintainers_section, contradicting the documented union."
+     },
+     {
+      "code_snippet": "libsql::params![patchset_id, name, section.source.as_str()],",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::add_patchset_maintainer_sections",
+      "line": "2256",
+      "why_this_location_matters": "The incoming source is written as-is, with no comparison to the stored source."
+     },
+     {
+      "code_snippet": "let wanted: std::collections::BTreeMap<&str, SubsystemSource> = sections",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2291",
+      "why_this_location_matters": "Duplicate names collapse last-wins, so provenance depends on slice order."
+     },
+     {
+      "code_snippet": "// A section a previous part already contributed.",
+      "file": "src/db.rs",
+      "function_or_symbol": "test_patchset_sections_union_across_parts",
+      "line": "None",
+      "why_this_location_matters": "The only duplicate has the same provenance twice, so the test cannot detect a downgrade."
+     }
+    ]
+   },
+   {
+    "problem": "replace_patchset_maintainer_sections is not atomic",
+    "severity": "Medium",
+    "type": "Atomicity / Misleading Comment",
+    "preexisting": false,
+    "explanation": "Consequence: an error between the DELETE loop and the UPSERT loop (SQLITE_BUSY, a libsql error, or a cancelled future) leaves a patchset with a partially pruned attribution that matches neither the old nor the new set. Each statement autocommits on self.conn. Legitimate maintainers can lose access until another backfill succeeds, and a caller that logs and continues turns this into silent data loss. The function is pub and the doc comment names the backfill as the caller. The bug-side equivalent is only atomic because update_bug_subsystems opens self.conn.transaction(), runs the replace on it via with_connection, and commits. The patchset function copies the replace logic without that wrapper. Its comment about libsql refusing to commit with a statement in progress describes a transaction that does not exist here. Concurrency: a concurrent add between the SELECT and the DELETEs would have its new row deleted, because the delete set comes from a stale read. That interleaving depends on callers not visible in this change, so it is a secondary risk. The partial-failure path alone is enough. Everything fails closed, so this is not Critical. Fix: open the transaction inside the method as update_bug_subsystems does, or make the method private behind a transaction-wrapping entry point.",
+    "locations": [
+     {
+      "code_snippet": "for section in existing {\n            if !wanted.contains_key(section.as_str()) {\n                self.conn\n                    .execute(",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2286",
+      "why_this_location_matters": "Read, deletes and upserts are separate autocommit statements on the shared connection."
+     },
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;\n        self.with_connection((*tx).clone())\n            .replace_bug_subsystems(id, subsystems)",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::update_bug_subsystems",
+      "line": "3194",
+      "why_this_location_matters": "The mirrored bug path wraps replace in a transaction; the patchset path has no equivalent."
+     }
+    ]
+   },
+   {
+    "problem": "add_patchset_maintainer_sections leaves partial writes on error",
+    "severity": "Low",
+    "type": "Error Handling",
+    "preexisting": false,
+    "explanation": "Consequence: the loop issues one autocommit upsert per section. If the Nth fails, the function returns Err with sections 1..N-1 already committed. A caller that abandons the part leaves an arbitrary prefix of its sections, chosen by input order. Reachability: ingestion is not in this change, so retry behaviour is unknown. Since add is a union and upserts are idempotent, a retry converges, and the failure is closed. That limits it to Low.",
+    "locations": [
+     {
+      "code_snippet": "for section in sections {\n            let name = section.name.trim();\n            if name.is_empty() {\n                continue;\n            }",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::add_patchset_maintainer_sections",
+      "line": "2256",
+      "why_this_location_matters": "The per-row loop has no atomic boundary."
+     }
+    ]
+   },
+   {
+    "problem": "patchset section provenance changes leave no audit trail",
+    "severity": "Low",
+    "type": "Incomplete Mirror / Audit Gap",
+    "preexisting": false,
+    "explanation": "Consequence and reachability: a row in patchset_maintainer_sections can change from path_prefix or caller_supplied to maintainers_section (or the reverse) with no record of the change. Two paths do this. UPSERT_PATCHSET_SECTION_SQL ends with ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source, and it is used by add_patchset_maintainer_sections and replace_patchset_maintainer_sections. Because authorizing_sections_for_patchset filters on source = 'maintainers_section', that change decides who may read a patchset's raw review transcripts. Nothing reads these rows yet, as the commit message says, so no wrong access can occur today. That is why this is Low and not Medium. The impact grows once a consumer lands.\n\nVerification: 002_bugs.sql holds all 11 CREATE TRIGGER statements in src/migrations. They include trg_bug_subsystems_audit_insert and trg_bug_subsystems_audit_source, which write to bug_enrichments. The comment on the source trigger says reattributing a subsystem 'decides whether a maintainer can reach the bug at all, so the change is audited'. Migration 009 creates only the table and two indexes, with no triggers. Reachability is real, because the upsert path rewrites source whenever the value differs.\n\nThe verification question has two parts. (1) Is there an audit table a trigger could write to? No. The only patchset tables are patchsets and patchsets_subsystems (001_initial.sql), and bug_enrichments is keyed by a foreign key to bugs(id). A trigger would need a new patchset audit table, or a different sink, so this is a missing design element and not a one-line omission. (2) Does the commit or a later patch say the omission is intentional? No. git_log from the target to HEAD returns no later commits, and the commit message says only that the table mirrors bug_subsystems 'down to the source column'. It reads as a schema mirror, and the 009 header comment repeats the claim 'The schema mirrors bug_subsystems deliberately'. Neither mentions auditing, so the omission is unacknowledged. The mirror claim covers columns and the CHECK constraint, and it is accurate for those. What is missing is the history guarantee the bug side keeps for the same column. A silent demotion or promotion by the backfill's replace_patchset_maintainer_sections cannot be reconstructed later. Confirmation that would close this: either a patchset audit sink with an AFTER UPDATE OF source trigger, or a note that provenance changes are intentionally unaudited here.",
+    "locations": [
+     {
+      "code_snippet": "CREATE INDEX IF NOT EXISTS idx_patchset_maintainer_sections_authorizing ON patchset_maintainer_sections(patchset_id, subsystem) WHERE source = 'maintainers_section';",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "CREATE TABLE patchset_maintainer_sections",
+      "line": "None",
+      "why_this_location_matters": "The migration ends with indexes and no audit trigger, although source is the column that confers authority."
+     },
+     {
+      "code_snippet": "CREATE TRIGGER IF NOT EXISTS trg_bug_subsystems_audit_source AFTER UPDATE OF source ON bug_subsystems FOR EACH ROW WHEN old.source <> new.source",
+      "file": "src/migrations/002_bugs.sql",
+      "function_or_symbol": "trg_bug_subsystems_audit_source",
+      "line": "300",
+      "why_this_location_matters": "The bug-side audit of provenance changes that the patchset table does not mirror."
+     },
+     {
+      "code_snippet": "ON CONFLICT(patchset_id, subsystem) DO UPDATE SET source = excluded.source",
+      "file": "src/db.rs",
+      "function_or_symbol": "UPSERT_PATCHSET_SECTION_SQL",
+      "line": "None",
+      "why_this_location_matters": "This is the path that rewrites provenance without leaving any record."
+     }
+    ]
+   }
+  ],
+  "dismissed_concerns_DO_NOT_COUNT": [
+   {
+    "description": "ON DELETE CASCADE on patchset_maintainer_sections might be inert and leave orphaned authorization rows.",
+    "reasoning": "Database::new executes PRAGMA foreign_keys = ON on the connection it keeps, and the new queries use that connection. The migration declares FOREIGN KEY(patchset_id) REFERENCES patchsets(id) ON DELETE CASCADE, so the cascade is enforced.",
+    "locations": [
+     {
+      "code_snippet": "conn.execute(\"PRAGMA foreign_keys = ON;\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "1383",
+      "why_this_location_matters": "Enables foreign key enforcement."
+     },
+     {
+      "code_snippet": "FOREIGN KEY(patchset_id) REFERENCES patchsets(id) ON DELETE CASCADE",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "patchset_maintainer_sections table",
+      "line": "38",
+      "why_this_location_matters": "Declares the cascade."
+     }
+    ]
+   },
+   {
+    "description": "An unexpected stored source string could be read back as authority-conferring.",
+    "reasoning": "The authorizing query filters on the literal 'maintainers_section' in SQL. The display read goes through SubsystemSource::from_stored, which maps unknown strings to CallerSupplied. The migration CHECK constraint also limits the values.",
+    "locations": [
+     {
+      "code_snippet": "_ => Self::CallerSupplied,",
+      "file": "src/db.rs",
+      "function_or_symbol": "SubsystemSource::from_stored",
+      "line": "718",
+      "why_this_location_matters": "Unknown provenance parses to the least privileged value."
+     }
+    ]
+   },
+   {
+    "description": "Migration 9 could race between processes or leave a half-applied schema with user_version not bumped.",
+    "reasoning": "The DDL and PRAGMA user_version = 9 run in one transaction and commit together, so schema and version cannot diverge. The SQL uses CREATE TABLE IF NOT EXISTS and CREATE INDEX IF NOT EXISTS, so a second concurrent application is a no-op.",
+    "locations": [
+     {
+      "code_snippet": "let tx = self.conn.transaction().await?;\n            tx.execute_batch(include_str!(\n                \"migrations/009_patchset_maintainer_sections.sql\"\n            ))\n            .await?;\n            tx.execute(\"PRAGMA user_version = 9\", ()).await?;\n            tx.commit().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::run_migrations",
+      "line": "1526",
+      "why_this_location_matters": "DDL and version bump commit atomically."
+     }
+    ]
+   },
+   {
+    "description": "The read cursor in replace_patchset_maintainer_sections might still be open when writes happen.",
+    "reasoning": "The SELECT runs in an inner block that drains rows into a Vec. The cursor is dropped at the closing brace, before any DELETE or UPSERT executes.",
+    "locations": [
+     {
+      "code_snippet": "let existing: Vec<String> = {\n            let mut rows = self\n                .conn\n                .query(\n                    \"SELECT subsystem FROM patchset_maintainer_sections WHERE patchset_id = ?\",\n                    libsql::params![patchset_id],\n                )\n                .await?;\n            let mut found = Vec::new();\n            while let Some(row) = rows.next().await? {\n                found.push(row.get::<String>(0)?);\n            }\n            found\n        };",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "2286",
+      "why_this_location_matters": "The cursor is scoped and dropped before the writes."
+     }
+    ]
+   },
+   {
+    "description": "authorizing_sections_for_patchset builds SQL with format! and could be injectable.",
+    "reasoning": "The only interpolated value is SubsystemSource::MaintainersSection.as_str(), which returns &'static str from an enum variant, so no caller text reaches the SQL. patchset_id is bound as a parameter.",
+    "locations": [
+     {
+      "code_snippet": "pub fn as_str(&self) -> &'static str {",
+      "file": "src/db.rs",
+      "function_or_symbol": "SubsystemSource::as_str",
+      "line": "708",
+      "why_this_location_matters": "A static return type means the fragment is a compile-time constant."
+     }
+    ]
+   },
+   {
+    "description": "The prune and reattribute test might pass even if replace did not delete stale rows or update the source.",
+    "reasoning": "The test asserts an exact non-empty vec after replace. Without the DELETE branch, NETWORKING [GENERAL] would remain and the first assertion would fail. Without the upsert updating source, 'net' would stay path_prefix and the second assertion would fail.",
+    "locations": [
+     {
+      "code_snippet": "if !wanted.contains_key(section.as_str()) {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::replace_patchset_maintainer_sections",
+      "line": "None",
+      "why_this_location_matters": "The pruning branch that the test would catch if removed."
+     }
+    ]
+   },
+   {
+    "description": "The new tests might run against a hand-built schema or share state instead of the real migration.",
+    "reasoning": "The tests use setup_db, which builds a fresh database and calls migrate(), applying migration 009 with its CHECK, primary key and foreign key. Each test gets its own database.",
+    "locations": [
+     {
+      "code_snippet": "db.migrate().await.unwrap();",
+      "file": "src/db.rs",
+      "function_or_symbol": "setup_db",
+      "line": "8874",
+      "why_this_location_matters": "Tests exercise the real migration path."
+     }
+    ]
+   },
+   {
+    "description": "Migration 009 creates an empty patchset_maintainer_sections table and nothing backfills existing patchsets. authorizing_sections_for_patchset returns an empty Vec both for 'nobody identified' and for 'not yet computed', so a future reader could deny legitimate maintainers silently.",
+    "reasoning": "1. git_grep of authorizing_sections_for_patchset and patchset_maintainer_sections at 505a0249 shows every use outside the definitions is in the new unit tests (src/db.rs lines 8897-9051). There is no production caller: no HTTP route, CLI, NATS handler or transcript-rule code reads the table. With no reader, an empty result cannot cause a wrong denial or a wrong grant today on any platform. The commit message says 'Nothing reads these rows yet', and the grep confirms it.\n2. Series check: git_log for 505a0249..HEAD returns no commits, so there is no later patch in this series that adds a backfill, a meta key or a per-patchset marker. The candidate is therefore not resolved by the series. It is also not triggered by it, because the series adds no reader that could treat an empty result as a final denial.\n3. The only occurrence of 'backfill' outside the migration is a doc comment on replace_patchset_maintainer_sections, which names the backfill as a future caller. That is a statement of intent, not code.\n4. Failure direction: the table default is the least privileged source and the authorizing query selects only source = maintainers_section. A missing row set yields an empty list, which can only withhold access, never grant it. The risk is over-denial, not a leak, and the shape is the same as the existing bug_subsystems design that this table mirrors.\n5. This is a design constraint on the future patch that wires in the reader. That patch must either backfill existing patchsets before relying on an empty result, or record whether attribution has been computed, so that 'unowned' and 'not computed' can be told apart. Because no path in the current code is affected, there is no concrete defect to report here.\n6. The missing v8 to v9 upgrade test is not a finding. The migration is a plain CREATE TABLE IF NOT EXISTS inside a transaction with no data transformation, so the existing test setup, which runs the full migration chain, already exercises it.",
+    "locations": [
+     {
+      "code_snippet": "pub async fn authorizing_sections_for_patchset(&self, patchset_id: i64) -> Result<Vec<String>> {",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::authorizing_sections_for_patchset",
+      "line": "2344",
+      "why_this_location_matters": "Its only callers in the tree at this commit are unit tests, so the ambiguous empty result has no production consumer yet."
+     },
+     {
+      "code_snippet": "CREATE TABLE IF NOT EXISTS patchset_maintainer_sections (",
+      "file": "src/migrations/009_patchset_maintainer_sections.sql",
+      "function_or_symbol": "CREATE TABLE patchset_maintainer_sections",
+      "line": "32",
+      "why_this_location_matters": "The table is created empty and the default source is the least privileged value, so absence of rows can only withhold authority, never grant it."
+     }
+    ]
+   },
+   {
+    "description": "No test covers the v8 to v9 upgrade, the ON DELETE CASCADE, or overlapping section names across patchsets, so the isolation test only partly exercises the patchset_id predicate.",
+    "reasoning": "1) Upgrade path: a fresh database also runs the version 9 branch, because current_version is 0 and `current_version < 9` is true. setup_db() calls Database::new and then migrate(), so the same transaction runs the same migration 009 SQL through execute_batch, then the PRAGMA user_version = 9 write and the commit. An upgrade from 8 differs only in which earlier branches are skipped, and the 009 SQL is CREATE TABLE/INDEX IF NOT EXISTS. It touches no existing table, so the body is exercised. The suite already has a downgrade-and-rerun pattern, `PRAGMA user_version = 3` followed by migrate(), in test_migration_retires_folded_bugs_left_in_the_pipeline. A version 8 variant would be a stronger assertion on an already-tested branch, which the false-positive guide says to leave as a suggestion. 2) The premise about the predicate is wrong. The isolation test uses disjoint names on purpose: patchset 1 holds BTRFS FILE SYSTEM and patchset 2 holds NETWORKING [GENERAL]. If the `patchset_id = ?` predicate were deleted from authorizing_sections_for_patchset, the query for patchset 1 would return both names, sorted, and `assert_eq!(..., vec![\"BTRFS FILE SYSTEM\".to_string()])` would fail. So the mutation does make the test fail. The test also asserts non-empty expected vectors, so it cannot pass on an empty set. 3) Cascade: Database::new executes `PRAGMA foreign_keys = ON`, and the migration declares `FOREIGN KEY(patchset_id) REFERENCES patchsets(id) ON DELETE CASCADE`. That is a schema declaration, not new branching logic in the change, and nothing reads these rows yet. The missing delete test is an optional suggestion, not a defect of the change. Separately, not verified here: the merge path in src/db.rs deletes the merged patchset (`DELETE FROM patchsets WHERE id = ?`) and explicitly clears patchsets_subsystems, but I did not check whether it carries the new sections over to the target. If it does not, the cascade would drop the attribution, which fails closed. This is worth checking when a reader is added, and it is not a test-coverage finding.",
+    "locations": [
+     {
+      "code_snippet": "assert_eq!(\n            db.authorizing_sections_for_patchset(btrfs).await?,\n            vec![\"BTRFS FILE SYSTEM\".to_string()]\n        );",
+      "file": "src/db.rs",
+      "function_or_symbol": "test_patchset_sections_do_not_leak_between_patchsets",
+      "line": "None",
+      "why_this_location_matters": "The disjoint names make a missing patchset_id predicate return an extra row, so this assertion would fail."
+     },
+     {
+      "code_snippet": "if current_version < 9 {\n            info!(\"Applying database migration version 9 (patchset maintainer sections)...\");\n            let tx = self.conn.transaction().await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::migrate",
+      "line": "1526",
+      "why_this_location_matters": "This branch runs for every database below version 9, including the fresh one built by setup_db(), so the migration body is exercised."
+     },
+     {
+      "code_snippet": "conn.execute(\"PRAGMA foreign_keys = ON;\", ()).await?;",
+      "file": "src/db.rs",
+      "function_or_symbol": "Database::new",
+      "line": "1383",
+      "why_this_location_matters": "Foreign keys are enforced on every connection, so the declared ON DELETE CASCADE is active."
+     }
+    ]
+   }
+  ]
+ }
+}
