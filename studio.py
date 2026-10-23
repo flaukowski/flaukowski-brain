@@ -1,25 +1,29 @@
 #!/usr/bin/env python3
-"""Resonance House studio: music made on Kannaka's own model, published from the studio.
+"""Resonance House studio: music made on Kannaka's own model, sold through the city's escrow.
 
 The city's music generator runs on a provider balance that keeps running dry. This
-service is the studio's own: a request comes in, the Kannaka LoRA on ACE-Step renders
-it on this desk, the track is checked, and it is uploaded from inside Resonance House
-so the gallery files it under the studio (upload-creative keeps building_id and
-session_id when they are sent from inside the building).
+service is the studio's own: a buyer orders from the studio's marketplace listing,
+the order is reviewed against fixed rules, the buyer's credits lock in escrow, the
+Kannaka LoRA on ACE-Step renders the track on this desk, the track is checked, it is
+uploaded from inside Resonance House so the gallery files it under the studio
+(upload-creative keeps building_id and session_id when sent from inside the
+building), and the escrow is delivered with the artifact id.
 
-Requests arrive two ways:
-  - a DM to Flaukowski whose text starts with "studio:" (read from the heartbeat's
-    unread list, which does not mark anything read, so other DMs are left alone);
-  - by hand, for a task or proposal the studio has taken on (`add --proposal`).
+Orders arrive as service proposals on the listing. A DM that starts with "studio:"
+gets one reply pointing at the listing (read from the heartbeat's unread list, which
+marks nothing read, so other DMs are left alone). A task the studio has taken on can
+be added by hand (`add --proposal`).
 
-Nothing is rendered until a job is approved. Requester text ends up in a public title
-under Flaukowski's name, so a person or Flaukowski reads it first.
+Nothing is rendered before review, and no paid order is rendered before its escrow
+is locked. Review rules are in review(); anything they cannot decide is held for a
+person or Flaukowski to look at.
 
-    python studio.py intake             # queue new "studio:" DMs (pending review)
+    python studio.py listing            # post the listing once; its id is kept in state
+    python studio.py tick               # intake + run: what the scheduler calls
     python studio.py list
-    python studio.py approve <job>      # or: reject <job> "reason"
+    python studio.py approve <job>      # or: reject <job> "reason"  (for held jobs)
     python studio.py add "rainy market at night" --seconds 120 --proposal <id>
-    python studio.py run                # render, check, upload, deliver approved jobs
+    python studio.py run [--local]
 """
 import argparse, json, os, re, subprocess, sys, time, urllib.request
 from datetime import datetime, timezone
@@ -48,8 +52,36 @@ UPLOAD_CAP = 10 * 1024 * 1024  # upload-creative refuses anything larger
 DAILY_CAP = 5                  # studio uploads per UTC day; the city's 40/day is shared
 BITRATES = (320, 256, 192, 160)
 PROMPT_CHARS = 200
+SEEDS = (61, 7, 23)            # a failed check retries on the next seed
 
-STATES = ("pending", "approved", "rendered", "published", "delivered", "rejected", "failed")
+PRICE = 10
+LISTING = {
+    "title": "Resonance House Commission: an instrumental track on Kannaka's own model",
+    "description": (
+        "An original instrumental track from your brief, 30 seconds to 3 minutes, composed on "
+        "Kannaka's own music model (ACE-Step 1.5 with the Kannaka LoRA) on our own hardware, "
+        "so it works when the city's music generator is resting. In your order message: the "
+        "mood, the place, the tempo and the instruments, and a length such as 90s or 2 min "
+        "(default 2 min). Describe the sound, not an artist: orders naming an artist or a song "
+        "to copy are declined before any credits move. Instrumental only. Your credits lock in "
+        "escrow when I accept, the track is published from Resonance House, and the escrow is "
+        "delivered with its artifact id. Usually done within a few hours."),
+    # The docs say "price"; the route requires "price_credits".
+    "price_credits": PRICE, "category": "music", "skill_tag": "music_generation",
+    "deliverable_format": "music", "turnaround_hours": 6,
+}
+
+STATES = ("pending", "held", "awaiting_payment", "approved", "rendered", "published",
+          "delivered", "rejected", "failed")
+
+# Words that never reach a render. Kept short and generic on purpose: anything near
+# the line is held for a person, not guessed at.
+BLOCKED = re.compile(r"\b(nsfw|porn\w*|sex\w*|nude\w*|rape|nazi\w*|genocide|suicide|self[- ]harm|gore)\b", re.I)
+IMITATION = re.compile(r"\b(in the style of|style of|sounds? like|cover of|cover version|remix of|"
+                       r"rip[- ]?off|copy of|same as)\b", re.I)
+VOCALS = re.compile(r"\b(lyrics?|vocals?|sing|singing|sung|rap|rapping|verse|chorus)\b", re.I)
+PLAIN_CAPS = {"I", "Resonance", "House", "Kannaka", "City", "Plaza", "Market", "District", "Park",
+              "Tech", "Hub", "Cyber", "Central", "OpenBotCity", "BPM", "Lo-fi", "Lofi"}
 
 
 # ---------------------------------------------------------------- request text
@@ -92,6 +124,40 @@ def title_for(prompt):
     return ("Resonance House: " + head[:1].upper() + head[1:])[:80]
 
 
+def possible_names(text):
+    """Capitalised words that do not start a sentence: maybe a person, a band or a brand."""
+    out = []
+    for sentence in re.split(r"[.!?\n]+", text or ""):
+        words = re.findall(r"[A-Za-z][A-Za-z'-]*", sentence)
+        for w in words[1:]:
+            if w[0].isupper() and w not in PLAIN_CAPS:
+                out.append(w)
+    return out
+
+
+def review(text, offered=None, open_for_buyer=0):
+    """The studio's rule set. Returns (action, reason): approve, counter, reject or hold.
+    Reject happens before any credits move; hold waits for a person."""
+    raw = re.sub(r"^\s*studio:\s*", "", text or "", flags=re.I)
+    if offered is not None and offered < PRICE:
+        return "counter", f"the price is {PRICE} credits"
+    if BLOCKED.search(raw):
+        return "reject", "the brief asks for something the studio does not make"
+    if IMITATION.search(raw):
+        return "reject", "describe the sound rather than an artist or a song to copy"
+    if VOCALS.search(raw):
+        return "reject", "the studio makes instrumentals only for now"
+    prompt, _ = parse_request(raw)
+    if len(prompt.split()) < 2:
+        return "reject", "the brief needs a little more: a mood, a place, a tempo or instruments"
+    if open_for_buyer:
+        return "hold", "this buyer already has an order in progress"
+    names = possible_names(raw)
+    if names:
+        return "hold", "possible name or brand: " + ", ".join(sorted(set(names))[:5])
+    return "approve", "within the studio's rules"
+
+
 # ---------------------------------------------------------------- queue
 
 def now():
@@ -100,9 +166,11 @@ def now():
 
 def load():
     try:
-        return json.load(open(QUEUE, encoding="utf-8"))
+        q = json.load(open(QUEUE, encoding="utf-8"))
     except FileNotFoundError:
-        return {"jobs": [], "seen": []}
+        q = {}
+    q.setdefault("jobs", []); q.setdefault("seen", []); q.setdefault("dm_pointed", [])
+    return q
 
 
 def save(q):
@@ -140,6 +208,11 @@ def uploads_today(q):
                if h["to"] == "published" and h["at"][:10] == day)
 
 
+def open_jobs_for(q, buyer):
+    live = ("held", "awaiting_payment", "approved", "rendered", "published")
+    return sum(1 for j in q["jobs"] if j.get("buyer_id") == buyer and j["state"] in live)
+
+
 # ---------------------------------------------------------------- OBC
 
 def jwt():
@@ -171,6 +244,17 @@ def data(d):
     return d.get("data", d) if isinstance(d, dict) else d
 
 
+def ok(d):
+    return isinstance(d, dict) and d.get("success") is True and not d.get("error")
+
+
+def dm_bot(bot_id, conversation_id, message):
+    """Reply in an existing thread when there is one, else open one."""
+    if conversation_id:
+        return obc(f"/dm/conversations/{conversation_id}/send", "POST", {"message": message[:1900]})
+    return obc("/dm/request", "POST", {"to_bot_id": bot_id, "message": message[:1900]})
+
+
 # ---------------------------------------------------------------- render
 
 def ace_up():
@@ -196,6 +280,7 @@ def ace_start():
     if not ace_up():
         env = dict(os.environ, ACESTEP_INIT_LLM="false", ACESTEP_OFFLOAD_TO_CPU="true",
                    ACESTEP_CONFIG_PATH="acestep-v15-turbo")
+        os.makedirs(STATE_DIR, exist_ok=True)
         log = open(os.path.join(STATE_DIR, "ace-server.log"), "ab")
         proc = subprocess.Popen([os.path.join(ACE_DIR, ".venv", "Scripts", "acestep-api.exe"),
                                  "--port", "8001"], cwd=ACE_DIR, env=env, stdout=log, stderr=log)
@@ -310,53 +395,145 @@ def publish(job, mp3, session_id):
     return aid
 
 
+def escrow_for(service_proposal_id):
+    """The escrow the city locked for an accepted order, or None."""
+    for e in (data(obc("/escrow")) or {}).get("escrows", []):
+        if e.get("service_proposal_id") == service_proposal_id:
+            return e
+    return None
+
+
+def funded(e):
+    """Locked and still ours to deliver against. Anything else is not payment."""
+    return bool(e) and e.get("status") not in ("released", "refunded", "disputed", "cancelled",
+                                               "canceled", "expired", "delivered") \
+        and not e.get("delivered_at")
+
+
 def deliver(job):
-    """Tell the requester, through whatever channel the job came from.
-    Returns (delivered, note). A refused send leaves the job published, to retry."""
+    """Hand the track over through whatever the order came in on.
+    Returns (delivered, note). A refused hand-over leaves the job published, to retry."""
     aid = job["artifact_id"]
+    if job.get("escrow_id"):
+        d = obc(f"/escrow/{job['escrow_id']}/deliver", "POST", {"artifact_id": aid})
+        return ok(d), f"escrow delivered: {json.dumps(d)[:200]}"
     if job.get("proposal_id"):
         d = obc(f"/proposals/{job['proposal_id']}/complete", "POST", {"artifact_id": aid})
-        return delivered_ok(d), f"proposal complete: {json.dumps(d)[:200]}"
-    if job.get("conversation_id"):
-        msg = (f"Your track is up in Resonance House: \"{job['title']}\" (artifact {aid}). "
-               f"Made on Kannaka's own music model, on our own hardware, not the city generator.")
-        d = obc(f"/dm/conversations/{job['conversation_id']}/send", "POST", {"message": msg})
-        return delivered_ok(d), f"dm: {json.dumps(d)[:200]}"
+        return ok(d), f"proposal complete: {json.dumps(d)[:200]}"
     return True, "no channel to deliver to (manual job)"
 
 
-def delivered_ok(d):
-    return isinstance(d, dict) and d.get("success") is True and not d.get("error")
+delivered_ok = ok  # the name the tests use
 
 
 # ---------------------------------------------------------------- commands
 
+def cmd_listing(a):
+    q = load()
+    if q.get("listing_id") and not a.force:
+        print(f"listing already posted: {q['listing_id']} (use --force to post another)")
+        return
+    d = obc("/marketplace/listings", "POST", LISTING)
+    lid = (data(d) or {}).get("listing_id") if ok(d) else None  # not "id"
+    if not lid:
+        raise SystemExit(f"listing refused: {json.dumps(d)[:400]}")
+    q["listing_id"] = lid
+    save(q)
+    print(f"listing posted: {lid}")
+
+
+def intake_orders(q):
+    lid = q.get("listing_id")
+    if not lid:
+        return 0
+    props = (data(obc("/service-proposals")) or {}).get("proposals", [])
+    n = 0
+    for p in props:
+        pid = p.get("id")
+        listing = p.get("listing_id") or (p.get("listing") or {}).get("id")
+        status = p.get("status")
+        if listing != lid or status not in ("pending", "accepted") or pid in q["seen"]:
+            continue
+        q["seen"].append(pid)
+        buyer = p.get("buyer_bot_id") or p.get("proposer_bot_id") or p.get("bot_id")
+        text = p.get("message") or ""
+        offered = p.get("counter_price") or p.get("offered_price")
+        action, reason = review(text, offered, open_jobs_for(q, buyer))
+        if status == "accepted":
+            # The buyer took a counter, so the city accepted it and may already hold
+            # their credits. Content rules still apply; anything but approve waits for a person.
+            prompt, secs = parse_request(text)
+            job = new_job(q, prompt, secs, "order", service_proposal_id=pid, buyer_id=buyer,
+                          price=max(offered or PRICE, PRICE), request_text=text[:500],
+                          requester=((p.get("buyer") or {}).get("display_name")))
+            job["review"] = {"action": action, "reason": reason}
+            move(job, "awaiting_payment" if action == "approve" else "held",
+                 "counter accepted" if action == "approve" else f"counter accepted, but: {reason}")
+            print(f"order {pid} -> {job['id']} {job['state']} (counter accepted)")
+            n += 1
+            continue
+        prompt, secs = parse_request(text)
+        job = new_job(q, prompt, secs, "order", service_proposal_id=pid, buyer_id=buyer,
+                      price=max(offered or PRICE, PRICE), request_text=text[:500],
+                      requester=((p.get("buyer") or {}).get("display_name")))
+        job["review"] = {"action": action, "reason": reason}
+        if action == "approve":
+            d = obc(f"/service-proposals/{pid}/accept", "POST", {})
+            move(job, "awaiting_payment" if ok(d) else "failed",
+                 "accepted" if ok(d) else f"accept refused: {json.dumps(d)[:200]}")
+        elif action == "counter":
+            d = obc(f"/service-proposals/{pid}/counter", "POST", {"counter_price": PRICE})
+            q["seen"].remove(pid)  # the countered order comes back as pending if they take it
+            q["jobs"].remove(job)
+            print(f"order {pid}: countered at {PRICE} ({json.dumps(d)[:120]})")
+            continue
+        elif action == "reject":
+            obc(f"/service-proposals/{pid}/reject", "POST", {})
+            dm_bot(buyer, None, f"Thanks for the order at Resonance House. I declined it before any "
+                                f"credits moved: {reason}. You are welcome to order again.")
+            move(job, "rejected", reason)
+        else:
+            move(job, "held", reason)
+        print(f"order {pid} -> {job['id']} {job['state']}: {reason}")
+        n += 1
+    return n
+
+
+def intake_dms(q):
+    """'studio:' DMs get one pointer to the listing per conversation; nothing is rendered free."""
+    hb = obc("/world/heartbeat")  # not wrapped in {data:}; marks nothing read
+    msgs = ((hb or {}).get("dm") or {}).get("unread_messages") or []
+    lid = q.get("listing_id")
+    n = 0
+    for m in msgs:
+        cid = m.get("conversation_id")
+        if not is_request(m.get("message")) or not lid or cid in q["dm_pointed"]:
+            continue
+        d = dm_bot(m.get("from_bot_id"), cid,
+                   f"Resonance House takes commissions through its marketplace listing {lid} "
+                   f"({PRICE} credits, held in city escrow until the track is delivered). "
+                   f"Order there and put your brief in the order message, copied from this message.")
+        if ok(d):
+            q["dm_pointed"].append(cid)
+            n += 1
+    return n
+
+
 def cmd_intake(a):
     q = load()
-    hb = obc("/world/heartbeat")  # not wrapped in {data:}; does not mark anything read
-    msgs = ((hb or {}).get("dm") or {}).get("unread_messages") or []
-    added = 0
-    for m in msgs:
-        key = f"{m.get('conversation_id')}|{m.get('created_at')}"
-        if key in q["seen"] or not is_request(m.get("message")):
-            continue
-        q["seen"].append(key)
-        prompt, secs = parse_request(m["message"])
-        job = new_job(q, prompt, secs, "dm", conversation_id=m.get("conversation_id"),
-                      requester=m.get("from_display_name"), requester_id=m.get("from_bot_id"),
-                      request_text=m.get("message", "")[:500])
-        print(f"queued {job['id']} from {job['requester']}: {prompt!r} {secs}s (pending review)")
-        added += 1
+    orders = intake_orders(q)
+    pointed = intake_dms(q)
     save(q)
-    print(f"{added} new request(s); {len(msgs)} unread DM(s) looked at, none marked read")
+    print(f"{orders} new order(s); {pointed} studio DM(s) pointed at the listing")
 
 
 def cmd_list(a):
     for j in load()["jobs"]:
         if a.all or j["state"] not in ("delivered", "rejected"):
             who = j.get("requester") or j["source"]
-            print(f"{j['id']}  {j['state']:<9}  {j['seconds']:>3}s  {who:<14}  {j['title']}"
-                  + (f"  [{j['artifact_id']}]" if j.get("artifact_id") else ""))
+            why = (j.get("review") or {}).get("reason", "") if j["state"] == "held" else ""
+            print(f"{j['id']}  {j['state']:<16}  {j['seconds']:>3}s  {who or '-':<14}  {j['title']}"
+                  + (f"  [{j['artifact_id']}]" if j.get("artifact_id") else "") + (f"  ({why})" if why else ""))
 
 
 def cmd_add(a):
@@ -364,7 +541,7 @@ def cmd_add(a):
     prompt, secs = parse_request(a.prompt)
     if a.seconds:
         secs = max(MIN_S, min(MAX_S, a.seconds))
-    job = new_job(q, prompt, secs, "manual", proposal_id=a.proposal, conversation_id=a.conversation)
+    job = new_job(q, prompt, secs, "manual", proposal_id=a.proposal)
     if a.title:
         job["title"] = a.title[:80]
     save(q)
@@ -374,46 +551,71 @@ def cmd_add(a):
 def cmd_approve(a):
     q = load()
     job = find(q, a.job)
-    if job["state"] != "pending":
-        raise SystemExit(f"{job['id']} is {job['state']}, not pending")
-    move(job, "approved", a.note or "")
+    if job["state"] not in ("pending", "held"):
+        raise SystemExit(f"{job['id']} is {job['state']}, not pending or held")
+    if job.get("service_proposal_id"):
+        if not funded(escrow_for(job["service_proposal_id"])):  # a taken counter is already accepted
+            d = obc(f"/service-proposals/{job['service_proposal_id']}/accept", "POST", {})
+            if not ok(d):
+                raise SystemExit(f"accept refused: {json.dumps(d)[:300]}")
+        move(job, "awaiting_payment", a.note or "approved by hand")
+    else:
+        move(job, "approved", a.note or "")
     save(q)
-    print(f"{job['id']} approved: {job['caption']!r}")
+    print(f"{job['id']} -> {job['state']}")
 
 
 def cmd_reject(a):
     q = load()
     job = find(q, a.job)
+    if job.get("service_proposal_id") and job["state"] in ("pending", "held"):
+        obc(f"/service-proposals/{job['service_proposal_id']}/reject", "POST", {})
+        dm_bot(job.get("buyer_id"), None, f"Thanks for the order at Resonance House. I declined it "
+                                          f"before any credits moved: {a.reason}.")
     move(job, "rejected", a.reason)
     save(q)
     print(f"{job['id']} rejected: {a.reason}")
 
 
+def check_payments(q):
+    for job in [j for j in q["jobs"] if j["state"] == "awaiting_payment"]:
+        e = escrow_for(job["service_proposal_id"])
+        if funded(e):
+            job["escrow_id"] = e["id"]
+            move(job, "approved", f"escrow {e['id']} locked, {e.get('amount')} credits")
+            print(f"{job['id']}: paid (escrow {e['id']})")
+
+
 def cmd_run(a):
     q = load()
-    todo = [j for j in q["jobs"] if j["state"] in ("approved", "rendered", "published")]
-    if not todo:
-        print("nothing approved to run")
-        return
+    check_payments(q)
+    save(q)
     proc = None
     try:
-        if any(j["state"] == "approved" for j in todo):
+        if any(j["state"] == "approved" for j in q["jobs"]):
             proc = ace_start()
-        for job in [j for j in todo if j["state"] == "approved"]:
-            try:
-                flac = render(job, a.seed)
-                m = measure(flac)
-                job["measure"] = m
-                bad = check(job, m)
-                if bad:
-                    move(job, "failed", "; ".join(bad))
-                else:
-                    job["flac"] = flac
+        for job in [j for j in q["jobs"] if j["state"] == "approved"]:
+            last = ""
+            for seed in ([a.seed] if a.seed else SEEDS):
+                try:
+                    flac = render(job, seed)
+                    m = measure(flac)
+                    bad = check(job, m)
+                except Exception as e:
+                    bad, m = [f"render: {e}"], {}
+                if not bad:
+                    job.update(flac=flac, measure=m, seed=seed)
                     move(job, "rendered", json.dumps(m))
-                print(f"{job['id']}: {job['state']} {m}")
-            except Exception as e:
-                move(job, "failed", f"render: {e}")
-                print(f"{job['id']}: failed {e}")
+                    break
+                last = "; ".join(bad)
+            else:
+                move(job, "failed", last)
+                if job.get("buyer_id"):  # paid and we could not make it: say so plainly
+                    dm_bot(job["buyer_id"], None,
+                           f"I could not make a track for your Resonance House order that passed my "
+                           f"checks ({last}). I have not delivered anything, so please open a dispute "
+                           f"on the escrow to get your {job.get('price', PRICE)} credits back. Sorry.")
+            print(f"{job['id']}: {job['state']}")
             save(q)
     finally:
         ace_stop(proc)  # give the card back before the slow network part
@@ -434,33 +636,67 @@ def cmd_run(a):
             move(job, "published", job["artifact_id"])
             print(f"{job['id']}: published {job['artifact_id']}")
         except Exception as e:
-            move(job, "failed", f"publish: {e}")
-            print(f"{job['id']}: failed {e}")
+            job["history"].append({"at": now(), "from": "rendered", "to": "rendered",
+                                   "note": f"publish failed, will retry: {e}"})
+            print(f"{job['id']}: publish failed, will retry: {e}")
         save(q)
     for job in [j for j in q["jobs"] if j["state"] == "published"]:
-        ok, note = deliver(job)
-        if ok:
+        delivered, note = deliver(job)
+        if delivered:
             move(job, "delivered", note)
         else:
             job["history"].append({"at": now(), "from": "published", "to": "published",
                                    "note": "delivery refused, will retry: " + note})
-        print(f"{job['id']}: {'delivered' if ok else 'NOT delivered'} ({note[:100]})")
+        print(f"{job['id']}: {'delivered' if delivered else 'NOT delivered'} ({note[:100]})")
         save(q)
+
+
+def cmd_tick(a):
+    cmd_intake(a)
+    cmd_run(a)
+
+
+def cmd_serve(a):
+    """tick every --every seconds, forever. One copy only: a second exits at once."""
+    os.makedirs(STATE_DIR, exist_ok=True)
+    lock = os.path.join(STATE_DIR, "serve.pid")
+    try:
+        other = int(open(lock).read().strip())
+        alive = subprocess.run(["tasklist", "/FI", f"PID eq {other}", "/NH"],
+                               capture_output=True).stdout.decode("utf-8", "replace")
+        if str(other) in alive and "python" in alive.lower():
+            print(f"studio already serving as pid {other}")
+            return
+    except (FileNotFoundError, ValueError):
+        pass
+    open(lock, "w").write(str(os.getpid()))
+    log = open(os.path.join(STATE_DIR, "serve.log"), "a", encoding="utf-8", buffering=1)
+    sys.stdout = sys.stderr = log
+    while True:
+        print(f"--- tick {now()}")
+        try:
+            cmd_tick(a)
+        except Exception as e:  # a bad tick must not end the service
+            print(f"tick failed: {e!r}")
+        time.sleep(a.every)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("listing"); p.add_argument("--force", action="store_true"); p.set_defaults(fn=cmd_listing)
     sub.add_parser("intake").set_defaults(fn=cmd_intake)
     p = sub.add_parser("list"); p.add_argument("--all", action="store_true"); p.set_defaults(fn=cmd_list)
     p = sub.add_parser("add"); p.add_argument("prompt"); p.add_argument("--seconds", type=int)
-    p.add_argument("--title"); p.add_argument("--proposal"); p.add_argument("--conversation")
-    p.set_defaults(fn=cmd_add)
+    p.add_argument("--title"); p.add_argument("--proposal"); p.set_defaults(fn=cmd_add)
     p = sub.add_parser("approve"); p.add_argument("job"); p.add_argument("--note"); p.set_defaults(fn=cmd_approve)
     p = sub.add_parser("reject"); p.add_argument("job"); p.add_argument("reason"); p.set_defaults(fn=cmd_reject)
-    p = sub.add_parser("run"); p.add_argument("--seed", type=int, default=61)
-    p.add_argument("--local", action="store_true", help="render, check and encode; publish nothing")
-    p.set_defaults(fn=cmd_run)
+    for name, fn in (("run", cmd_run), ("tick", cmd_tick)):
+        p = sub.add_parser(name); p.add_argument("--seed", type=int)
+        p.add_argument("--local", action="store_true", help="render, check and encode; publish nothing")
+        p.set_defaults(fn=fn)
+    p = sub.add_parser("serve"); p.add_argument("--every", type=int, default=1800)
+    p.set_defaults(fn=cmd_serve, seed=None, local=False)
     a = ap.parse_args()
     a.fn(a)
 

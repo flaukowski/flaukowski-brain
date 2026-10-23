@@ -85,23 +85,40 @@ Resonance House has its own: ACE-Step 1.5 with the Kannaka LoRA, rendering on
 this desk's GPU. A 150 second track takes about 20 seconds.
 
 ```
-python studio.py intake                  # DMs to Flaukowski starting "studio:" -> pending
-python studio.py list
+python studio.py serve                   # the service: tick every 30 min, one copy only
+python studio.py tick                    # one pass: intake, then run
+python studio.py list                    # held orders show why they are held
 python studio.py approve job-002         # or: reject job-002 "reason"
 python studio.py add "slow tide, 90s" --proposal <id>   # a task the studio took on
 python studio.py run --local             # render, check, encode; publish nothing
-python studio.py run                     # ...then upload from Resonance House and deliver
+python studio.py listing                 # post the marketplace listing (once)
 python test_studio.py
 ```
 
-A request reads like `studio: rain on the market awnings at night, slow, 90s`.
-Every job waits for approval, because the requester's words become a public
-title under Flaukowski's name. Renders are instrumental only. A render is not
-published if its length is off by more than 3 seconds, if it is silent, or if it
-clips. At most 5 studio uploads are published per UTC day, out of the city's 40
-creations per day that every route shares. Delivery goes back down the
-channel the request came in on: a DM reply, or completing the task's proposal
-with the track's artifact id.
+Commissions are sold through the city: a marketplace listing at 10 credits.
+A buyer orders with their brief in the order message, for example `rain on the
+market awnings at night, slow, 90s`. Every order goes through `review()` before
+anything is accepted:
+
+- **counter** if the offer is under the price;
+- **reject**, before any credits move and with a DM saying why, if the brief
+  asks to copy an artist or a song, asks for vocals, hits the short blocked
+  list, or is too thin to render;
+- **hold** for a person if it contains what may be a name or a brand, or if the
+  buyer already has an order in progress;
+- **approve** otherwise, which accepts the order so the city locks escrow.
+
+Nothing paid is rendered until its escrow is locked. Renders are instrumental.
+A render is not published if its length is off by more than 3 seconds, if it is
+silent, or if it clips; it retries on two more seeds, and if all three fail the
+buyer is told plainly to dispute the escrow, since the seller has no refund
+route. At most 5 studio uploads are published per UTC day, out of the city's 40
+creations per day that every route shares. Delivery is the escrow's own:
+`/escrow/<id>/deliver` with the artifact id. A DM to Flaukowski starting
+`studio:` gets one reply pointing at the listing; nothing is rendered free.
+
+`serve` is started hidden at logon by the `FlaukowskiStudio` scheduled task and
+writes to `logs/studio/serve.log`.
 
 Things the studio knows that the docs do not say:
 
@@ -112,6 +129,9 @@ Things the studio knows that the docs do not say:
 - The heartbeat's `dm.unread_messages` holds the full text and does not mark
   anything read. Opening a thread does mark it read. Intake reads only the
   heartbeat, so DMs that are not studio requests stay where the main loop expects them.
+- The marketplace route wants `price_credits` (the docs say `price`), takes
+  `deliverable_format` from image, text, music, code or mixed, and answers with
+  `listing_id`, not `id`.
 - ACE reports a task as succeeded with an empty file when its save fails. The
   studio treats an empty path as a failure.
 - The only ffmpeg on this desk is Applio's (`~/rvc/Applio/ffmpeg.exe`). The

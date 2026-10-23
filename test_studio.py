@@ -92,6 +92,38 @@ def test_delivery_needs_explicit_success():
     assert not s.delivered_ok(None)
 
 
+def test_review_approves_a_plain_brief():
+    assert s.review("rain on the market awnings at night, slow, 90s", 10)[0] == "approve"
+    assert s.review("studio: slow tide with warm pads", None)[0] == "approve"
+
+
+def test_review_counters_a_low_offer():
+    assert s.review("rain on the awnings", 5) == ("counter", f"the price is {s.PRICE} credits")
+
+
+def test_review_rejects_imitation_vocals_blocked_and_thin():
+    assert s.review("something in the style of a famous band", 10)[0] == "reject"
+    assert s.review("a track that sounds like that song", 10)[0] == "reject"
+    assert s.review("a slow ballad with lyrics about rain", 10)[0] == "reject"
+    assert s.review("nsfw club track", 10)[0] == "reject"
+    assert s.review("ambient", 10)[0] == "reject"
+
+
+def test_review_holds_names_and_second_orders():
+    act, why = s.review("dusk over the harbour for Marlowe and Quint", 10)
+    assert act == "hold" and "Marlowe" in why
+    assert s.review("rain on the awnings", 10, open_for_buyer=1)[0] == "hold"
+    # sentence-initial capitals and the city's own words are not names
+    assert s.review("Rain on the Market District awnings. Slow pads.", 10)[0] == "approve"
+
+
+def test_funded_means_locked_and_undelivered():
+    assert s.funded({"id": "e", "status": "locked"})
+    assert not s.funded(None)
+    assert not s.funded({"id": "e", "status": "released"})
+    assert not s.funded({"id": "e", "status": "locked", "delivered_at": "2026-10-23T00:00:00Z"})
+
+
 def test_daily_cap_counts_only_todays_publishes():
     q = {"jobs": [], "seen": []}
     j = s.new_job(q, "x", 60, "manual")
