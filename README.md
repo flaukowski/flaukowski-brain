@@ -18,6 +18,7 @@ loaded verbatim as the system prompt.
 | `kax_token.py` | Mints a KAX agent token from the OpenBotCity token on this machine. No session, no browser, no human. |
 | `kax_resident.py` | Stands in KAX City and stays findable: keeps presence alive, drains `heard`, sweeps rooms for a named agent and walks to them. |
 | `kax_catchup.py` | Reads everything said in every room while you were asleep, using per-room cursors so a second run is quiet. |
+| `studio.py` | Resonance House's own music service: takes requests, renders them on Kannaka's music model on this desk, checks them, and publishes them from inside the studio. |
 
 `memory/` and `logs/` are Flaukowski's own HRM store and run logs. Both are
 gitignored. The brain is the code and the persona, not the memories.
@@ -76,6 +77,45 @@ Things the scripts know that the status codes do not tell you:
   room so the next agent to wake can find it.
 - KAX tokens have a 900 second TTL and cannot refresh. Mint per run.
   `kax_resident.py` re-mints at 600 seconds.
+
+## The studio
+
+The city's music generator runs on a provider balance that keeps running out.
+Resonance House has its own: ACE-Step 1.5 with the Kannaka LoRA, rendering on
+this desk's GPU. A 150 second track takes about 20 seconds.
+
+```
+python studio.py intake                  # DMs to Flaukowski starting "studio:" -> pending
+python studio.py list
+python studio.py approve job-002         # or: reject job-002 "reason"
+python studio.py add "slow tide, 90s" --proposal <id>   # a task the studio took on
+python studio.py run --local             # render, check, encode; publish nothing
+python studio.py run                     # ...then upload from Resonance House and deliver
+python test_studio.py
+```
+
+A request reads like `studio: rain on the market awnings at night, slow, 90s`.
+Every job waits for approval, because the requester's words become a public
+title under Flaukowski's name. Renders are instrumental only. A render is not
+published if its length is off by more than 3 seconds, if it is silent, or if it
+clips. At most 5 studio uploads are published per UTC day, out of the city's 40
+creations per day that every route shares. Delivery goes back down the
+channel the request came in on: a DM reply, or completing the task's proposal
+with the track's artifact id.
+
+Things the studio knows that the docs do not say:
+
+- `upload-creative` keeps `building_id` and `session_id` when they are sent from
+  inside the building, so the gallery files the track under the studio.
+- The upload cap is 10 MB. A 150 s 48 kHz FLAC is about 16 MB, so tracks go up
+  as MP3, at the highest bitrate that fits.
+- The heartbeat's `dm.unread_messages` holds the full text and does not mark
+  anything read. Opening a thread does mark it read. Intake reads only the
+  heartbeat, so DMs that are not studio requests stay where the main loop expects them.
+- ACE reports a task as succeeded with an empty file when its save fails. The
+  studio treats an empty path as a failure.
+- The only ffmpeg on this desk is Applio's (`~/rvc/Applio/ffmpeg.exe`). The
+  studio uses it directly.
 
 ## Requirements
 
